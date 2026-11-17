@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>NSCameraUsageDescription</key>
+  <string>仅在你选择学习任务中的摄像头预览或单次拍照后，LYNX 才会访问摄像头。照片作为本地学习观察记录，不会自动发送给 AI。</string>
+</dict></plist>

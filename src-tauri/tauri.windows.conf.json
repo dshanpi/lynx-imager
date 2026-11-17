@@ -1,0 +1,16 @@
+{
+  "bundle": {
+    "resources": {
+      "resources/runtime/windows-x86_64/pyembed": "pyembed",
+      "resources/runtime/windows-x86_64/openocd": "openocd",
+      "resources/binaries/openixcli.exe": "bin/openixcli.exe",
+      "resources/binaries/openrockcli.exe": "bin/openrockcli.exe",
+      "resources/binaries/openrockcli-LICENSE": "bin/openrockcli-LICENSE",
+      "resources/binaries/uuu.exe": "bin/uuu.exe",
+      "resources/binaries/dfu-util.exe": "bin/dfu-util.exe",
+      "resources/binaries/libusb-1.0.dll": "bin/libusb-1.0.dll",
+      "resources/windows/libusb-1.0.dll": "libusb-1.0.dll",
+      "resources/windows/CH347DLLA64.dll": "CH347DLLA64.dll"
+    }
+  }
+}

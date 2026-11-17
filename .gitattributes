@@ -1,0 +1,2 @@
+*.patch text eol=lf whitespace=-blank-at-eol,-blank-at-eof
+src-tauri/resources/skills/** text eol=lf

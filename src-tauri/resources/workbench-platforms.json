@@ -1,0 +1,32 @@
+[
+  {
+    "value": "allwinner",
+    "label": "Allwinner 全志",
+    "flasher": "openixcli",
+    "protocol": "FEL / FES"
+  },
+  {
+    "value": "rockchip",
+    "label": "Rockchip 瑞芯微",
+    "flasher": "openrockcli",
+    "protocol": "Maskrom / Loader"
+  },
+  {
+    "value": "nxp",
+    "label": "NXP i.MX",
+    "flasher": "uuu",
+    "protocol": "SDP / Fastboot"
+  },
+  {
+    "value": "kendryte",
+    "label": "嘉楠 Kendryte K230",
+    "flasher": "k230",
+    "protocol": "BROM / U-Boot"
+  },
+  {
+    "value": "st",
+    "label": "STMicroelectronics STM32MP1 / STM32",
+    "flasher": "dfu-util",
+    "protocol": "USB DFU / DfuSe"
+  }
+]

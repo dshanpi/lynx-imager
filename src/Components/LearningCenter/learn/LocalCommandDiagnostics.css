@@ -1,0 +1,23 @@
+.learn-evidence .learn-table {
+  table-layout: fixed;
+}
+
+.learn-evidence .learn-table th:first-child,
+.learn-evidence .learn-table td:first-child {
+  width: 96px;
+  white-space: nowrap;
+}
+
+.learn-evidence .learn-table th:last-child,
+.learn-evidence .learn-table td:last-child {
+  width: 72px;
+  white-space: nowrap;
+}
+
+#root .layout.learn-design-surface .local-command-diagnostics .learn-log-output {
+  min-height: 0;
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

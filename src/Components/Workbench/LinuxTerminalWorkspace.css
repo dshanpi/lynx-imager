@@ -1,0 +1,753 @@
+.linux-terminal-workspace {
+  --terminal-workspace-canvas: #edf3f9;
+  --terminal-workspace-surface: #ffffff;
+  --terminal-workspace-surface-subtle: #f6f9fc;
+  --lynx-terminal-bg: #f8fbff;
+  --lynx-terminal-text: #24364d;
+
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  grid-template-rows: 48px minmax(0, 1fr) 30px;
+  overflow: hidden;
+  background: var(--terminal-workspace-canvas);
+  color: var(--lynx-text-primary, #0d1830);
+  font-family: var(--lynx-font-sans);
+}
+
+[data-theme='lynx-dark'] .linux-terminal-workspace {
+  --terminal-workspace-canvas: #050607;
+  --terminal-workspace-surface: #111316;
+  --terminal-workspace-surface-subtle: #0b0d0f;
+  --lynx-terminal-bg: #030405;
+  --lynx-terminal-text: #e2e6eb;
+}
+
+.linux-terminal-workspace,
+.linux-terminal-workspace *,
+.linux-terminal-workspace *::before,
+.linux-terminal-workspace *::after {
+  box-sizing: border-box;
+}
+
+.terminal-workspace-toolbar {
+  grid-column: 1 / -1;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 18px;
+  border-bottom: 1px solid var(--lynx-border);
+  padding: 0 10px 0 14px;
+  background: var(--terminal-workspace-surface);
+}
+
+.terminal-workspace-brand,
+.terminal-workspace-brand > span,
+.terminal-workspace-actions,
+.terminal-workspace-shortcuts {
+  display: flex;
+  align-items: center;
+}
+
+.terminal-workspace-brand {
+  min-width: 250px;
+  gap: 10px;
+  color: var(--lynx-accent);
+}
+
+.terminal-workspace-brand > span {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.terminal-workspace-brand strong {
+  color: var(--lynx-text-primary, #0d1830);
+  font-size: 13px;
+}
+
+.terminal-workspace-brand small,
+.terminal-workspace-shortcuts,
+.terminal-workspace-pane-detail {
+  color: var(--lynx-text-muted, #8292a6);
+  font-size: 12px;
+}
+
+.terminal-workspace-shortcuts {
+  flex: 1;
+  justify-content: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.terminal-workspace-shortcuts span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-workspace-actions {
+  gap: 6px;
+}
+
+.terminal-workspace-actions button,
+.terminal-workspace-pane-header > button {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--lynx-border);
+  border-radius: 5px;
+  padding: 0 10px;
+  background: var(--terminal-workspace-surface);
+  color: var(--lynx-text-secondary, #64748b);
+  font-size: 12px;
+}
+
+.terminal-workspace-actions button:hover:not(:disabled),
+.terminal-workspace-actions button.is-active,
+.terminal-workspace-pane-header button:hover {
+  border-color: var(--lynx-accent);
+  background: var(--lynx-accent-subtle);
+  color: var(--lynx-accent);
+}
+
+.terminal-workspace-actions button:disabled {
+  opacity: 0.48;
+}
+
+.terminal-workspace-actions button.is-exit {
+  color: var(--lynx-text-primary, #0d1830);
+}
+
+.terminal-workspace-rail {
+  grid-row: 2;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  flex-direction: column;
+  gap: 5px;
+  overflow: clip;
+  border-right: 1px solid var(--lynx-border);
+  padding: 9px 6px;
+  background: var(--terminal-workspace-surface-subtle);
+  contain: strict;
+}
+
+.terminal-workspace-rail button {
+  position: relative;
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  max-width: 100%;
+  height: 38px;
+  min-width: 0;
+  overflow: clip;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 0;
+  contain: layout paint;
+  background: transparent;
+  color: var(--lynx-text-muted, #8b9bb0);
+}
+
+.terminal-workspace-rail button > svg,
+.terminal-workspace-pane-header button > svg,
+.terminal-workspace-pane-actions button > svg {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  flex: 0 0 auto;
+}
+
+.terminal-workspace-rail button > svg {
+  width: 20px !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+  overflow: hidden;
+}
+
+.terminal-workspace-rail button:hover,
+.terminal-workspace-rail button.is-active {
+  border-color: color-mix(in srgb, var(--lynx-accent) 52%, var(--lynx-border));
+  background: var(--lynx-accent-subtle);
+  color: var(--lynx-accent);
+}
+
+.terminal-workspace-rail button.is-waiting {
+  opacity: 0.56;
+}
+
+.terminal-workspace-rail button > i,
+.terminal-workspace-pane-header i,
+.terminal-workspace-statusbar i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lynx-text-muted, #8292a6);
+}
+
+.terminal-workspace-rail button > i {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+}
+
+.terminal-workspace-rail i.is-online,
+.terminal-workspace-pane-header i.is-online,
+.terminal-workspace-statusbar i.is-online {
+  background: var(--lynx-success);
+}
+
+/* The confirmed 1920×1080 five-pane composition is the workspace itself.
+ * A separate launcher rail only steals width and duplicates the pane headers,
+ * so it is omitted when all five panes are already visible. */
+.linux-terminal-workspace[data-layout-profile='five-pane'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.linux-terminal-workspace[data-layout-profile='five-pane'] .terminal-workspace-rail {
+  display: none;
+}
+
+.linux-terminal-workspace[data-layout-profile='five-pane'] .terminal-workspace-grid {
+  grid-column: 1;
+}
+
+.terminal-workspace-grid {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-areas: var(--terminal-workspace-areas);
+  grid-template-columns: var(--terminal-workspace-columns);
+  grid-template-rows: var(--terminal-workspace-rows);
+  gap: 8px;
+  overflow: hidden;
+  padding: 8px;
+  background: var(--terminal-workspace-canvas);
+}
+
+.terminal-workspace-pane {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: 38px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--lynx-border);
+  border-radius: 6px;
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  background: var(--lynx-terminal-bg, #0b1422);
+}
+
+/* Auxiliary columns do not have enough horizontal room for identity, target,
+ * actions and state on one line. Give them a compact two-row chrome while the
+ * wide primary SSH pane keeps the single-row header. */
+.terminal-workspace-pane[data-workspace-slot^='auxiliary-'] {
+  grid-template-rows: 62px minmax(0, 1fr);
+}
+
+.terminal-workspace-pane[data-workspace-slot^='auxiliary-'] .terminal-workspace-pane-header {
+  grid-template-columns: minmax(0, 1fr) max-content 28px;
+  grid-template-rows: 31px 30px;
+  gap: 0 6px;
+}
+
+.terminal-workspace-pane[data-workspace-slot^='auxiliary-'] .terminal-workspace-pane-header > div {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.terminal-workspace-pane[data-workspace-slot^='auxiliary-'] .terminal-workspace-pane-detail {
+  grid-column: 1;
+  grid-row: 2;
+  padding-left: 14px;
+  text-align: left;
+}
+
+.terminal-workspace-pane[data-workspace-slot^='auxiliary-'] .terminal-workspace-pane-actions {
+  grid-column: 2 / -1;
+  grid-row: 2;
+  justify-content: flex-end;
+}
+
+.terminal-workspace-pane[data-workspace-slot^='auxiliary-'] .terminal-workspace-pane-mode {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.terminal-workspace-pane[data-workspace-slot^='auxiliary-']
+  .terminal-workspace-pane-header
+  > button {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.terminal-workspace-pane.is-active {
+  z-index: 2;
+  outline-color: var(--lynx-accent);
+}
+
+.terminal-workspace-grid.is-maximized .terminal-workspace-pane:not(.is-pane-maximized) {
+  display: none;
+}
+
+.terminal-workspace-grid.is-maximized .terminal-workspace-pane.is-pane-maximized {
+  grid-column: 1 / -1 !important;
+  grid-row: 1 / -1 !important;
+}
+
+.terminal-workspace-pane-header {
+  display: grid;
+  min-width: 0;
+  max-width: 100%;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.6fr) minmax(0, 140px) max-content 28px;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--lynx-border);
+  padding: 0 6px 0 10px;
+  background: var(--terminal-workspace-surface-subtle);
+  cursor: grab;
+  user-select: none;
+}
+
+.terminal-workspace-pane-header > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.terminal-workspace-pane-header > div,
+.terminal-workspace-pane-header > div > span {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.terminal-workspace-pane-header > div {
+  gap: 8px;
+}
+
+.terminal-workspace-pane-header > div > span {
+  align-items: flex-start;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.terminal-workspace-pane-header small {
+  overflow: hidden;
+  color: var(--lynx-text-muted, #8b9bb0);
+  font-family: var(--lynx-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-workspace-pane-header strong {
+  overflow: hidden;
+  color: var(--lynx-text-primary, #0d1830);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-workspace-pane-detail {
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-workspace-pane-mode {
+  overflow: hidden;
+  color: var(--lynx-success);
+  font-family: var(--lynx-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-workspace-pane-actions {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.terminal-workspace-pane-actions button {
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  min-height: 28px;
+  border: 1px solid var(--lynx-border);
+  border-radius: 4px;
+  padding: 0 6px;
+  background: transparent;
+  background: var(--terminal-workspace-surface);
+  color: var(--lynx-text-secondary, #64748b);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-workspace-pane-actions button:hover:not(:disabled) {
+  border-color: var(--lynx-accent);
+  color: var(--lynx-accent);
+}
+
+.terminal-workspace-pane-header > button {
+  width: 28px;
+  max-width: 100%;
+  min-width: 28px;
+  min-height: 26px;
+  justify-content: center;
+  padding: 0;
+}
+
+.terminal-workspace-pane-content {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--lynx-terminal-bg, #f8fbff);
+}
+
+.terminal-workspace-board-channel,
+.terminal-workspace-board-channel .board-xterm {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.terminal-workspace-board-channel {
+  display: flex;
+  overflow: hidden;
+}
+
+.terminal-workspace-task-log {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  margin: 0;
+  padding: 9px 11px;
+  background: var(--lynx-terminal-bg, #f8fbff);
+  color: var(--lynx-terminal-text, #24364d);
+  font: 12px/1.5 var(--lynx-font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  scrollbar-color: color-mix(in srgb, var(--lynx-border) 70%, transparent) transparent;
+}
+
+.terminal-workspace-device-status {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  grid-template-rows: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  gap: 8px;
+  overflow: auto;
+  padding: 9px;
+  background: var(--lynx-terminal-bg, #f8fbff);
+  color: var(--lynx-text-primary, #0d1830);
+  scrollbar-color: color-mix(in srgb, var(--lynx-border) 70%, transparent) transparent;
+}
+
+.terminal-workspace-device-status > section {
+  min-height: 0;
+  border: 1px solid var(--lynx-border);
+  border-radius: 5px;
+  padding: 9px;
+  background: var(--terminal-workspace-surface, #ffffff);
+}
+
+.terminal-workspace-device-status section > header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.terminal-workspace-device-status section > header span {
+  color: var(--lynx-text-secondary, #64748b);
+  font: 600 11px var(--lynx-font-mono);
+  letter-spacing: 0.1em;
+}
+
+.terminal-workspace-device-status section > header strong {
+  overflow: hidden;
+  color: var(--lynx-accent);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-workspace-link-status > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.terminal-workspace-link-status > div > span {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 7px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--lynx-border);
+  border-radius: 4px;
+  padding: 5px 6px;
+  background: var(--terminal-workspace-surface-subtle, #f6f9fc);
+}
+
+.terminal-workspace-link-status > div > span > i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lynx-text-disabled, #aab5c3);
+}
+
+.terminal-workspace-link-status > div > span.is-online > i {
+  background: var(--lynx-success);
+}
+
+.terminal-workspace-link-status > div small {
+  overflow: hidden;
+  color: var(--lynx-text-secondary, #64748b);
+  font: 10px var(--lynx-font-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-workspace-link-status > div strong {
+  color: var(--lynx-text-muted, #8b9bb0);
+  font-size: 10px;
+}
+
+.terminal-workspace-link-status > div .is-online strong,
+.terminal-workspace-link-status > div > span.is-online strong {
+  color: var(--lynx-success);
+}
+
+.terminal-workspace-link-status > div em {
+  grid-column: 2 / -1;
+  overflow: hidden;
+  color: var(--lynx-text-muted, #8b9bb0);
+  font: normal 10px var(--lynx-font-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-workspace-device-status dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 10px;
+  margin: 8px 0 0;
+}
+
+.terminal-workspace-device-status dl > div {
+  display: flex;
+  min-width: 0;
+  justify-content: space-between;
+  gap: 6px;
+  border-bottom: 1px solid color-mix(in srgb, var(--lynx-border) 72%, transparent);
+  padding-bottom: 3px;
+}
+
+.terminal-workspace-device-status dt,
+.terminal-workspace-device-status dd {
+  overflow: hidden;
+  margin: 0;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-workspace-device-status dt {
+  color: var(--lynx-text-muted, #8b9bb0);
+}
+
+.terminal-workspace-device-status dd {
+  color: var(--lynx-text-primary, #0d1830);
+  font-family: var(--lynx-font-mono);
+}
+
+.terminal-workspace-link-status > p {
+  margin: 8px 0 0;
+  color: var(--lynx-text-muted, #8b9bb0);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.terminal-workspace-flash-progress {
+  position: relative;
+  height: 18px;
+  overflow: hidden;
+  border: 1px solid var(--lynx-border);
+  border-radius: 4px;
+  background: var(--terminal-workspace-surface-subtle, #f6f9fc);
+}
+
+.terminal-workspace-flash-progress > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--lynx-accent);
+}
+
+.terminal-workspace-flash-progress > strong {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  height: 100%;
+  place-items: center;
+  color: var(--lynx-text-primary, #0d1830);
+  font: 10px var(--lynx-font-mono);
+}
+
+.terminal-workspace-statusbar {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 20px;
+  border-top: 1px solid var(--lynx-border);
+  padding: 0 12px;
+  background: var(--terminal-workspace-surface);
+  color: var(--lynx-text-secondary, #64748b);
+  font-family: var(--lynx-font-mono);
+  font-size: 12px;
+}
+
+.terminal-workspace-statusbar span {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-workspace-statusbar strong {
+  margin-left: auto;
+  color: var(--lynx-accent);
+  font-size: 12px;
+}
+
+.terminal-workspace-error {
+  position: absolute;
+  right: 12px;
+  bottom: 38px;
+  max-width: 520px;
+  border: 1px solid var(--lynx-danger);
+  padding: 8px 10px;
+  background: var(--terminal-workspace-surface);
+  color: var(--lynx-danger);
+  font-size: 12px;
+}
+
+/* FlatUI is loaded after page styles. Keep the fullscreen workspace controls
+ * on the same LYNX light palette regardless of generic button defaults. */
+#root .layout .linux-terminal-workspace :is(button, button:not([class])) {
+  box-shadow: none !important;
+}
+
+#root .layout .linux-terminal-workspace .terminal-workspace-actions button,
+#root .layout .linux-terminal-workspace .terminal-workspace-rail button,
+#root .layout .linux-terminal-workspace .terminal-workspace-pane-header button,
+#root .layout .linux-terminal-workspace .terminal-workspace-pane-actions button,
+#root .layout .linux-terminal-workspace .sdk-terminal-workspace-actions button {
+  border-color: var(--lynx-border);
+  background-color: var(--terminal-workspace-surface);
+  color: var(--lynx-text-secondary, #64748b);
+}
+
+#root .layout .linux-terminal-workspace .terminal-workspace-actions button {
+  min-height: 30px;
+}
+
+#root .layout .linux-terminal-workspace .terminal-workspace-rail button {
+  width: 38px;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  padding: 0;
+}
+
+#root .layout .linux-terminal-workspace .terminal-workspace-pane-header button,
+#root .layout .linux-terminal-workspace .terminal-workspace-pane-actions button,
+#root .layout .linux-terminal-workspace .sdk-terminal-workspace-actions button {
+  min-height: 28px;
+}
+
+#root .layout .linux-terminal-workspace .terminal-workspace-actions button:hover:not(:disabled),
+#root .layout .linux-terminal-workspace .terminal-workspace-rail button:hover:not(:disabled),
+#root .layout .linux-terminal-workspace .terminal-workspace-pane-header button:hover:not(:disabled),
+#root
+  .layout
+  .linux-terminal-workspace
+  .terminal-workspace-pane-actions
+  button:hover:not(:disabled),
+#root
+  .layout
+  .linux-terminal-workspace
+  .sdk-terminal-workspace-actions
+  button:hover:not(:disabled) {
+  border-color: var(--lynx-accent);
+  background-color: color-mix(in srgb, var(--lynx-accent) 12%, transparent);
+  color: var(--lynx-accent);
+}
+
+@media (max-width: 1500px) {
+  .terminal-workspace-shortcuts {
+    display: none;
+  }
+
+  .terminal-workspace-brand {
+    flex: 1;
+  }
+}
+
+@media (max-width: 1100px) {
+  .terminal-workspace-actions button:not(.is-exit) {
+    width: 32px;
+    overflow: hidden;
+    padding: 0 7px;
+    white-space: nowrap;
+  }
+
+  .terminal-workspace-statusbar span:nth-of-type(3),
+  .terminal-workspace-statusbar span:nth-of-type(4) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .linux-terminal-workspace *,
+  .linux-terminal-workspace *::before,
+  .linux-terminal-workspace *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,45 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+release/
+/build/
+/tools/**/target/
+/firmware/*/build/
+*.local
+__pycache__/
+*.py[cod]
+
+# Platform sidecars are produced by CI for each target.
+src-tauri/resources/binaries/*
+!src-tauri/resources/binaries/README.md
+!src-tauri/resources/binaries/openrockcli-LICENSE
+src-tauri/resources/windows/
+
+# Reproducible embedded Python runtimes are downloaded during packaging.
+src-tauri/resources/runtime/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+docs/data/*
+
+# Generated locally and uploaded by CI as release-gate evidence. Never commit
+# screenshots, package inventories, runtime logs or local release binaries.
+/artifacts/

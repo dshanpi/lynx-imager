@@ -1,0 +1,36 @@
+.learn-practice-sync {
+  border-top: 1px solid var(--color-border);
+  margin-top: 24px;
+  padding-top: 20px;
+}
+.learn-practice-sync > details {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  margin: 12px 0;
+  padding: 12px;
+  overflow-wrap: anywhere;
+}
+.learn-practice-sync summary {
+  cursor: pointer;
+}
+.learn-practice-sync label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 12px 0;
+}
+.learn-practice-sync input[type='checkbox'] {
+  flex: none;
+  margin-top: 4px;
+}
+.learn-practice-batch {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--color-surface0);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.learn-practice-batch small {
+  display: block;
+}

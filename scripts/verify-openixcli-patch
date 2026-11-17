@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+  echo "usage: $0 /path/to/patched/OpenixCLI" >&2
+  exit 2
+fi
+
+openix_dir=$(cd "$1" && pwd)
+repo_dir=$(cd "$(dirname "$0")/.." && pwd)
+libefex_dir="$repo_dir/src-tauri/libs/libefex/rust/libefex"
+manifest="$openix_dir/Cargo.toml"
+
+if [[ ! -f "$manifest" ]]; then
+  echo "OpenixCLI manifest not found: $manifest" >&2
+  exit 2
+fi
+
+if [[ ! -f "$libefex_dir/Cargo.toml" ]]; then
+  echo "LYNX libefex manifest not found: $libefex_dir/Cargo.toml" >&2
+  exit 2
+fi
+
+if grep -q 'git = "https://github.com/100askTeam/libefex"' "$manifest"; then
+  libefex_source="https://github.com/100askTeam/libefex"
+else
+  libefex_source="https://github.com/YuzukiTsuru/libefex"
+fi
+
+libefex_patch="patch.\"$libefex_source\".libefex.path=\"$libefex_dir\""
+cargo test --manifest-path "$manifest" --config "$libefex_patch"
+cargo metadata --format-version 1 --manifest-path "$manifest" --config "$libefex_patch" \
+  | jq -e --arg expected "$libefex_dir/Cargo.toml" \
+    '.packages[] | select(.name == "libefex") | (.manifest_path | gsub("\\\\"; "/")) == ($expected | gsub("\\\\"; "/"))' >/dev/null
+cargo clippy --manifest-path "$manifest" --all-targets --config "$libefex_patch" -- -D warnings

@@ -1,0 +1,4 @@
+interface:
+  display_name: "LYNX MCU Incident Triage"
+  short_description: "Triage sanitized MCU-channel LYNX failures safely"
+  default_prompt: "Use $mcu-incident-triage to diagnose this sanitized LYNX MCU incident without changing hardware state."

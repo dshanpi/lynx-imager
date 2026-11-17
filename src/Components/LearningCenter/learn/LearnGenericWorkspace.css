@@ -1,0 +1,441 @@
+/* Dynamic courses can have many units; only the chapter strip should scroll horizontally. */
+#root .layout.learn-design-surface .learn-generic-workspace,
+#root .layout.learn-design-surface .learn-generic-workspace > .learn-v2-body {
+  min-width: 0;
+  max-width: 100%;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-course-chapters {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 4px 0 10px;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-course-chapters button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  height: auto;
+  min-height: 44px;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-workspace-topbar > strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-workspace-topbar > span {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.learn-generic-workspace .learn-cloud-grid {
+  min-width: 0;
+}
+.learn-generic-workspace .learn-cloud-content {
+  overflow-wrap: anywhere;
+}
+
+.learn-generic-workspace .learn-cloud-agent label {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+}
+.learn-generic-workspace .learn-cloud-agent textarea,
+.learn-generic-workspace .learn-cloud-agent select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.learn-generic-progress {
+  border-top: 1px solid var(--border-color, #cbd5e1);
+  margin-top: 18px;
+  padding-top: 12px;
+}
+.learn-generic-progress .learn-record-entry {
+  margin-top: 16px;
+}
+.learn-generic-progress label,
+.learn-generic-progress small {
+  display: block;
+  margin: 8px 0;
+}
+.learn-generic-progress textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+  padding: 8px;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+}
+.learn-generic-progress button {
+  margin-top: 8px;
+}
+
+.learn-generic-environment {
+  margin: 16px 0;
+  padding: 16px;
+  min-width: 0;
+}
+.learn-generic-environment label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0;
+}
+.learn-generic-environment input,
+.learn-generic-environment select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 8px;
+  color: inherit;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+.learn-generic-environment code,
+.learn-environment-result dd {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.learn-environment-result dd {
+  margin: 4px 0 12px;
+}
+
+.learn-generic-environment textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 90px;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: inherit;
+}
+
+.learn-document-markdown pre {
+  white-space: pre;
+  overflow: auto;
+  max-width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+}
+.learn-source-image {
+  display: block;
+  margin: 12px 0;
+}
+.learn-source-image img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+.learn-source-image small {
+  display: block;
+  margin-top: 6px;
+}
+.learn-generic-actions .learn-action-attempt,
+.learn-generic-board .learn-action-attempt {
+  border-top: 1px solid var(--border-color, #dfe3e8);
+  margin-top: 16px;
+  padding-top: 12px;
+}
+.learn-generic-actions pre {
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.learn-generic-actions dd,
+.learn-generic-actions code,
+.learn-generic-actions small,
+.learn-generic-board dd,
+.learn-generic-board code,
+.learn-generic-board small {
+  overflow-wrap: anywhere;
+}
+.learn-generic-board {
+  min-width: 0;
+}
+.learn-generic-board dd {
+  margin: 4px 0 12px;
+}
+.learn-generic-actions label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.learn-document-html {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.75;
+}
+.learn-document-html p,
+.learn-document-html ul,
+.learn-document-html ol {
+  margin: 0.75em 0;
+}
+.learn-document-html ul,
+.learn-document-html ol {
+  padding-left: 1.5em;
+}
+.learn-document-html figure {
+  margin: 1em 0;
+}
+.learn-document-html blockquote {
+  border-left: 3px solid var(--border-color, #c8d8ef);
+  margin: 1em 0;
+  padding-left: 1em;
+}
+.learn-document-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.learn-document-html table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.learn-document-html th,
+.learn-document-html td {
+  border: 1px solid var(--border-color, #c8d8ef);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+.learn-document-html pre {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre;
+}
+.learn-document-html [id] {
+  scroll-margin-top: 1em;
+}
+
+/* The reading canvas owns its scroll; course navigation and guidance stay in place. */
+#root .layout.learn-design-surface .learn-generic-workspace > .learn-v2-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  gap: 8px;
+  padding: 12px 16px;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-workspace-topbar,
+#root .layout.learn-design-surface .learn-generic-workspace .learn-course-chapters {
+  flex-shrink: 0;
+  margin: 0;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-workspace-topbar {
+  min-height: 36px;
+  height: 36px;
+  padding: 0;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-course-chapters button {
+  max-width: 360px;
+  white-space: normal;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-grid {
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: 140px minmax(0, 1fr) 220px;
+  gap: 12px;
+  align-items: stretch;
+  margin: 0;
+  overflow: hidden;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-grid > * {
+  display: block;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 16px;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-agent {
+  grid-column: auto;
+  background: var(--learn-wash);
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-steps {
+  padding: 12px 8px;
+  background: var(--learn-wash);
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-steps button {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 10px 8px;
+  text-align: left;
+  margin: 8px 0 16px;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-content {
+  padding: 24px;
+  scroll-behavior: auto;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-content > h1 {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-content > p {
+  color: var(--learn-muted);
+}
+#root .layout.learn-design-surface .learn-reader-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  border-top: 1px solid var(--learn-stroke);
+  border-bottom: 1px solid var(--learn-stroke);
+  padding: 12px 0;
+  margin: 24px 0 12px;
+  font-size: 13px;
+}
+#root .layout.learn-design-surface .learn-reader-tools > strong {
+  margin-right: auto;
+}
+#root .layout.learn-design-surface .learn-reader-tools button {
+  min-height: 30px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+#root .layout.learn-design-surface .learn-reader-outline {
+  flex: 0 1 auto;
+}
+#root .layout.learn-design-surface .learn-reader-outline summary {
+  cursor: pointer;
+  color: var(--learn-blue);
+}
+#root .layout.learn-design-surface .learn-reader-outline[open] {
+  flex-basis: 100%;
+  order: 5;
+}
+#root .layout.learn-design-surface .learn-reader-outline nav {
+  display: grid;
+  gap: 4px;
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px 0;
+}
+#root .layout.learn-design-surface .learn-reader-outline nav button {
+  justify-content: flex-start;
+  text-align: left;
+}
+#root .layout.learn-design-surface .learn-reader-image-note {
+  font-size: 12px;
+  color: var(--learn-muted);
+  margin-bottom: 20px;
+}
+#root .layout.learn-design-surface .learn-document-html {
+  font-size: 15px;
+  line-height: 1.85;
+}
+#root .layout.learn-design-surface .learn-document-html :is(h1, h2, h3, h4) {
+  margin: 1.6em 0 0.7em;
+  line-height: 1.5;
+}
+#root .layout.learn-design-surface .learn-document-html h1 {
+  font-size: 24px;
+}
+#root .layout.learn-design-surface .learn-document-html h2 {
+  font-size: 20px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--learn-stroke);
+}
+#root .layout.learn-design-surface .learn-document-html h3 {
+  font-size: 18px;
+}
+#root .layout.learn-design-surface .learn-document-html p {
+  margin: 0.8em 0 1.1em;
+  line-height: 1.85;
+}
+#root .layout.learn-design-surface .learn-document-html a,
+#root .layout.learn-design-surface .learn-reader-tools a {
+  color: var(--learn-blue);
+  text-decoration-color: color-mix(in srgb, var(--learn-blue) 35%, transparent);
+  text-underline-offset: 3px;
+}
+#root .layout.learn-design-surface .learn-document-html span:has(> a) {
+  display: inline-block;
+  margin-right: 0.6em;
+}
+#root .layout.learn-design-surface .learn-document-html pre {
+  padding: 16px;
+  background: var(--learn-wash);
+  border: 1px solid var(--learn-stroke);
+  font-size: 13px;
+}
+#root .layout.learn-design-surface .learn-document-html :not(pre) > code {
+  padding: 2px 5px;
+  background: var(--learn-wash);
+  border-radius: 4px;
+}
+#root .layout.learn-design-surface .learn-source-image-compact {
+  border: 1px solid var(--learn-stroke);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--learn-wash);
+  text-align: center;
+  margin: 18px 0;
+}
+#root .layout.learn-design-surface .learn-source-image-compact button {
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--learn-muted) !important;
+  font-size: 13px;
+}
+#root .layout.learn-design-surface .learn-source-image-compact img {
+  margin: 0 auto;
+}
+#root .layout.learn-design-surface .learn-cloud-content:focus-visible {
+  outline: 2px solid var(--learn-blue);
+  outline-offset: -2px;
+}
+/* Very narrow windows fall back to one scrollable column with all controls retained. */
+@media (max-width: 900px) {
+  #root .layout.learn-design-surface .learn-generic-workspace > .learn-v2-body {
+    overflow: auto;
+  }
+  #root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-grid {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+  #root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-grid > * {
+    overflow: visible;
+  }
+  #root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  #root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-steps button {
+    width: auto;
+    margin: 0;
+  }
+}
+
+#root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-agent h3 {
+  margin: 18px 0 6px;
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-agent p {
+  margin-bottom: 12px;
+}
+
+#root .layout.learn-design-surface .learn-generic-workspace .learn-guidance-collapsed {
+  grid-template-columns: 140px minmax(0, 1fr);
+}
+#root .layout.learn-design-surface .learn-generic-workspace .learn-cloud-agent[hidden] {
+  display: none;
+}

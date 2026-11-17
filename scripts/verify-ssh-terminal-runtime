@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$repo_root"
+
+if [[ "$(uname -s)" != "Linux" ]]; then
+  printf '%s\n' 'SSH terminal runtime gate NOT VERIFIED: this harness currently supports Linux only.' >&2
+  exit 1
+fi
+
+if [[ -z "${LYNX_SSH_RUNTIME_XVFB_ACTIVE:-}" ]]; then
+  exec env LYNX_SSH_RUNTIME_XVFB_ACTIVE=1 xvfb-run -a "$0"
+fi
+
+for executable in tauri-driver WebKitWebDriver ssh-keygen sshd; do
+  command -v "$executable" >/dev/null 2>&1 || {
+    printf 'SSH terminal runtime gate failed: %s is required.\n' "$executable" >&2
+    exit 1
+  }
+done
+
+if [[ "${LYNX_SSH_RUNTIME_SKIP_BUILD:-0}" != "1" ]]; then
+  npm run tauri build -- --debug --no-bundle
+fi
+
+node scripts/verify-ssh-terminal-runtime.mjs

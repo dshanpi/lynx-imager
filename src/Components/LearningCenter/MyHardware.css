@@ -1,0 +1,337 @@
+.learning-hardware-page {
+  align-content: start;
+}
+
+.learning-hardware-account,
+.learning-hardware-summary > div,
+.learning-hardware-redeem,
+.learning-hardware-onboarding,
+.learning-owned-hardware,
+.learning-owned-card,
+.learning-hardware-empty {
+  border: 1px solid var(--color-border);
+  background-color: var(--color-mantle);
+}
+
+.learning-hardware-account {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  border-radius: 5px;
+  color: var(--color-subtext0);
+}
+
+.learning-hardware-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.learning-hardware-summary > div {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border-radius: 5px;
+}
+
+.learning-hardware-summary span,
+.learning-hardware-redeem p,
+.learning-hardware-onboarding p,
+.learning-owned-hardware p,
+.learning-owned-card small,
+.learning-hardware-empty p {
+  color: var(--color-subtext0);
+}
+
+.learning-hardware-summary strong {
+  font-size: 20px;
+}
+
+.learning-hardware-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+  gap: 16px;
+}
+
+.learning-hardware-redeem,
+.learning-hardware-onboarding,
+.learning-owned-hardware {
+  padding: 18px;
+  border-radius: 7px;
+}
+
+.learning-hardware-redeem > header,
+.learning-hardware-onboarding > header,
+.learning-owned-card > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.learning-hardware-redeem h2,
+.learning-hardware-redeem p,
+.learning-hardware-onboarding h2,
+.learning-hardware-onboarding p,
+.learning-owned-hardware h2,
+.learning-owned-hardware p,
+.learning-owned-card h3 {
+  margin: 0;
+}
+
+.learning-hardware-redeem p,
+.learning-hardware-onboarding p,
+.learning-owned-hardware p {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.learning-hardware-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 5px;
+  background-color: var(--learning-orange);
+  color: #fff;
+}
+
+.learning-hardware-icon.blue {
+  background-color: var(--learning-blue);
+}
+
+.learning-hardware-icon.green {
+  background-color: var(--learning-green);
+}
+
+.learning-hardware-redeem > label {
+  display: block;
+  margin: 20px 0 7px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.learning-hardware-redeem-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto;
+  gap: 8px;
+}
+
+.learning-hardware-redeem-row input {
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  outline: none;
+  background-color: var(--color-base);
+  color: var(--color-text);
+}
+
+.learning-hardware-redeem-row input:focus {
+  border-color: var(--learning-blue);
+}
+
+.learning-hardware-redeem > small {
+  display: block;
+  margin-top: 9px;
+  color: var(--color-subtext1);
+  line-height: 1.5;
+}
+
+.learning-hardware-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+.learning-hardware-result.success {
+  border-color: var(--learning-green);
+  color: var(--learning-green);
+}
+
+.learning-hardware-result.error {
+  border-color: var(--learning-red);
+  color: var(--learning-red);
+}
+
+.learning-hardware-onboarding ol {
+  display: grid;
+  gap: 0;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learning-hardware-onboarding li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  border-top: 1px solid var(--color-border);
+}
+
+.learning-hardware-onboarding li > span {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid var(--learning-blue);
+  border-radius: 50%;
+  color: var(--learning-blue);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.learning-hardware-onboarding li > div {
+  display: grid;
+  gap: 3px;
+}
+
+.learning-hardware-onboarding small {
+  color: var(--color-subtext1);
+}
+
+.learning-owned-hardware .learning-section-heading {
+  margin-bottom: 14px;
+}
+
+.learning-hardware-empty {
+  display: grid;
+  min-height: 220px;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 24px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.learning-hardware-empty > svg {
+  color: var(--learning-blue);
+}
+
+.learning-hardware-empty h3,
+.learning-hardware-empty p {
+  margin: 0;
+}
+
+.learning-hardware-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.learning-owned-card {
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.learning-owned-card > header {
+  padding: 14px;
+}
+
+.learning-owned-card > header > div:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.learning-hardware-status {
+  margin-left: auto;
+  padding: 4px 8px;
+  border: 1px solid var(--learning-green);
+  border-radius: 4px;
+  color: var(--learning-green);
+  font-size: 11px;
+}
+
+.learning-owned-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 12px 14px;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.learning-owned-card dl > div {
+  display: grid;
+  gap: 3px;
+}
+
+.learning-owned-card dt {
+  color: var(--color-subtext1);
+  font-size: 11px;
+}
+
+.learning-owned-card dd {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.learning-device-guides {
+  display: grid;
+}
+
+.learning-device-guides > span {
+  padding: 14px;
+  color: var(--color-subtext1);
+  font-size: 12px;
+}
+
+.learning-device-guides > button {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 8px 14px;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.learning-device-guides > button:first-child {
+  border-top: 0;
+}
+
+.learning-device-guides > button:hover {
+  background-color: var(--color-base);
+}
+
+.learning-device-guides > button > span {
+  display: grid;
+  gap: 2px;
+}
+
+@media (max-width: 1180px) {
+  .learning-hardware-columns,
+  .learning-hardware-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .learning-hardware-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .learning-hardware-redeem-row {
+    grid-template-columns: 1fr;
+  }
+}

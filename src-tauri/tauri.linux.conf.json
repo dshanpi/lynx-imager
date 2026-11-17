@@ -1,0 +1,37 @@
+{
+  "bundle": {
+    "resources": {
+      "resources/runtime/linux-x86_64/pyembed": "pyembed",
+      "resources/runtime/linux-x86_64/openocd": "openocd",
+      "resources/binaries/openixcli": "bin/openixcli",
+      "resources/binaries/openrockcli": "bin/openrockcli",
+      "resources/binaries/openrockcli-LICENSE": "bin/openrockcli-LICENSE",
+      "resources/binaries/uuu": "bin/uuu",
+      "resources/binaries/libusb-1.0.so.0": "bin/libusb-1.0.so.0"
+    },
+    "linux": {
+      "deb": {
+        "depends": [
+          "desktop-file-utils",
+          "xdg-utils",
+          "libusb-1.0-0",
+          "libudev1",
+          "libbz2-1.0",
+          "libzstd1",
+          "zlib1g"
+        ]
+      },
+      "rpm": {
+        "depends": [
+          "desktop-file-utils",
+          "xdg-utils",
+          "libusb1",
+          "systemd-libs",
+          "bzip2-libs",
+          "libzstd",
+          "zlib"
+        ]
+      }
+    }
+  }
+}

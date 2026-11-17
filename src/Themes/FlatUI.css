@@ -1,0 +1,227 @@
+/*
+ * REQ-UI-303: flat visual system.
+ *
+ * This file is intentionally presentation-only.  It is loaded after every
+ * page stylesheet and changes surfaces, borders, typography and interaction
+ * states without changing DOM structure, routes, event handlers or IPC.
+ */
+:root {
+  --flat-radius-control: 4px;
+  --flat-radius-card: 6px;
+  --flat-border: var(--color-border);
+  --flat-surface: var(--color-base);
+  --flat-surface-raised: var(--color-mantle);
+  --flat-surface-interactive: var(--color-interactive);
+  --flat-surface-hover: var(--color-interactive-hover);
+  --flat-focus-ring: color-mix(in srgb, var(--color-accent) 78%, transparent);
+}
+
+#root .layout {
+  --ui-radius-control: var(--flat-radius-control);
+  --ui-radius-card: var(--flat-radius-card);
+  --ai-ui-radius: var(--flat-radius-card);
+  --ai-ui-shadow: none;
+  background: var(--color-base);
+}
+
+/* A flat product has no hidden elevation or texture on any mounted surface.
+ * SVG/canvas content is unaffected because this only changes CSS paint. */
+#root .layout * {
+  box-shadow: none !important;
+  background-image: none !important;
+}
+
+/* Flat surfaces: solid colors and borders provide hierarchy. */
+#root
+  .layout
+  :is(
+    .workbench-card,
+    .engineering-panel,
+    .board-console-panel,
+    .board-list,
+    .device-workbench-header,
+    .device-workbench-empty,
+    .ais-card,
+    .record-panel,
+    .learning-continue-card,
+    .learning-course-card,
+    .learning-side-card,
+    .learning-lab-card,
+    .learning-detail-card,
+    .learning-check-panel,
+    .learning-step-panel,
+    .learning-workspace-center,
+    .learning-workspace-footer,
+    .settings-panel,
+    .popup,
+    .workbench-settings-dialog,
+    .sdk-terminal-shell,
+    .sdk-terminal-stage,
+    .sdk-terminal-empty,
+    .tool-card,
+    .card,
+    .panel
+  ) {
+  background-image: none !important;
+  box-shadow: none !important;
+  border: 1px solid var(--flat-border);
+  border-radius: var(--flat-radius-card);
+}
+
+/* Remove decorative gradients from visible navigation and action surfaces. */
+#root
+  .layout
+  :is(
+    .sidebar-header,
+    .sidebar-item.active,
+    .sidebar-item.active:hover,
+    .settings-btn-primary,
+    .settings-progress-fill,
+    .board-console-progress,
+    .device-board-card-select,
+    .sdk-terminal-page,
+    .sdk-terminal-shell,
+    .ais-card button,
+    .ais-refresh
+  ) {
+  background-image: none !important;
+}
+
+#root .layout :is(.sidebar-header, .layout-main, .page-container, .ais-root) {
+  background-color: var(--flat-surface);
+}
+
+#root .layout :is(.sidebar, .sidebar-header, .sidebar-nav) {
+  border-color: var(--flat-border);
+}
+
+/* Controls use one compact shape.  Circular indicators are excluded below. */
+#root
+  .layout
+  :is(
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    .device-tab,
+    .ais-section-tabs button,
+    .record-center-tabs button
+  ) {
+  border-radius: var(--flat-radius-control);
+  box-shadow: none !important;
+}
+
+#root .layout :is(input, select, textarea) {
+  border: 1px solid var(--flat-border);
+  background-color: var(--flat-surface-raised);
+  color: var(--color-text);
+}
+
+#root .layout :is(button, .device-tab, .ais-section-tabs button, .record-center-tabs button) {
+  border: 1px solid var(--flat-border);
+  background-color: var(--flat-surface-interactive);
+  color: var(--color-text);
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+#root
+  .layout
+  :is(button, .device-tab, .ais-section-tabs button, .record-center-tabs button):hover:not(
+    :disabled
+  ) {
+  background-color: var(--flat-surface-hover);
+  border-color: var(--color-accent);
+}
+
+#root
+  .layout
+  :is(
+    button,
+    .device-tab,
+    .ais-section-tabs button,
+    .record-center-tabs button
+  )[aria-pressed='true'],
+#root
+  .layout
+  :is(
+    .sidebar-item.active,
+    .device-tab.active,
+    .ais-section-tabs button.active,
+    .record-center-tabs button.active
+  ) {
+  background-color: var(--color-accent) !important;
+  background-image: none !important;
+  border-color: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+/* The shared hover rule must not paint blue text on the selected blue row. */
+#root .layout .sidebar-item.active:hover:not(:disabled) {
+  color: var(--color-accent-text);
+}
+
+#root .layout :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--flat-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Preserve status semantics: dots remain circular and never rely on shadow. */
+#root
+  .layout
+  :is(.status-dot, .sidebar-release i, .online-dot, .device-status-dot, [data-status-dot]) {
+  border-radius: 50%;
+  box-shadow: none !important;
+}
+
+/* Terminal/editor surfaces remain flat; their light/dark palette is page-owned. */
+#root
+  .layout
+  :is(.sdk-terminal-page, .sdk-terminal-shell, .sdk-terminal-stage, .sdk-terminal-xterm, .xterm) {
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+#root .layout :is(.sdk-terminal-page, .sdk-terminal-shell, .sdk-terminal-stage) {
+  border-radius: var(--flat-radius-card);
+}
+
+#root .layout .sdk-terminal-hero {
+  border-color: var(--lynx-border, var(--flat-border));
+  background-color: var(--lynx-bg-surface, var(--flat-surface-raised));
+}
+
+#root .layout .sdk-terminal-visibility {
+  border-color: var(--lynx-border, var(--flat-border));
+  background-color: var(--lynx-bg-subtle, var(--flat-surface-raised));
+}
+
+/* Toasts and modal overlays keep their functional layering without elevation. */
+#root .layout :is(.popup-overlay, .settings-overlay, .workbench-settings-backdrop) {
+  box-shadow: none !important;
+}
+
+#root .layout :is(.popup, .settings-panel, .workbench-settings-dialog) {
+  border-radius: var(--flat-radius-card);
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root .layout *,
+  #root .layout *::before,
+  #root .layout *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (min-resolution: 1.25dppx) {
+  #root .layout :is(button, input, select, textarea) {
+    min-height: 36px;
+  }
+}

@@ -1,0 +1,670 @@
+/* Scoped above the global flat-control rules: this panel owns its density and states. */
+#root .layout .firmware-page {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  color: var(--lynx-text-primary);
+  container-type: inline-size;
+  font-size: var(--ui-text-control);
+}
+#root .layout .firmware-page button,
+#root .layout .firmware-page select {
+  font: inherit;
+  font-size: var(--ui-text-control);
+  color: inherit;
+  border: 1px solid var(--lynx-border);
+  border-radius: 6px;
+  background: var(--lynx-bg-surface);
+  min-height: 32px;
+  padding: 5px 10px;
+}
+#root .layout .firmware-page button {
+  cursor: pointer;
+}
+#root .layout .firmware-page button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+#root .layout .firmware-page :is(button, select, input):focus-visible {
+  outline: 2px solid var(--lynx-accent);
+  outline-offset: 2px;
+}
+#root .layout .firmware-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+#root .layout .firmware-title h2 {
+  font-size: 20px;
+  margin: 0 0 3px;
+  line-height: 1.3;
+}
+#root .layout .firmware-title p,
+#root .layout .firmware-caption {
+  color: var(--lynx-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+#root .layout .firmware-title button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+#root .layout .firmware-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.75fr) minmax(250px, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+#root .layout .firmware-setup {
+  min-width: 0;
+  border: 1px solid var(--lynx-border);
+  border-radius: 8px;
+  padding: 10px;
+  background: var(--lynx-bg-surface);
+}
+#root .layout .firmware-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px;
+  padding: 3px;
+  border-radius: 7px;
+  background: var(--lynx-bg-app);
+}
+#root .layout .firmware-tabs .firmware-tab {
+  border-color: transparent;
+  background: transparent;
+  min-height: 30px;
+  font-weight: 600;
+}
+#root .layout .firmware-tabs .firmware-tab[aria-selected='true'],
+#root .layout .firmware-page .firmware-start {
+  background: var(--lynx-accent);
+  color: #fff;
+  border-color: var(--lynx-accent);
+}
+#root .layout .firmware-tabs .firmware-tab[aria-selected='true']:hover,
+#root .layout .firmware-page .firmware-start:not(:disabled):hover {
+  background: color-mix(in srgb, var(--lynx-accent) 90%, black);
+}
+#root .layout .firmware-form-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+#root .layout .firmware-card {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid var(--lynx-border);
+  border-radius: 8px;
+  background: var(--lynx-bg-surface);
+}
+#root .layout .firmware-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0 0 9px;
+}
+#root .layout .firmware-card h3 > b {
+  display: grid;
+  place-items: center;
+  background: var(--lynx-bg-app);
+  border-radius: 50%;
+  font-size: 12px;
+  width: 24px;
+  height: 24px;
+}
+#root .layout .firmware-page .firmware-drop {
+  width: 100%;
+  min-height: 76px;
+  padding: 12px;
+  border: 1px dashed var(--color-overlay0, var(--lynx-border));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  background: color-mix(in srgb, var(--lynx-accent) 3%, var(--lynx-bg-surface));
+}
+#root .layout .firmware-drop > svg {
+  flex-shrink: 0;
+  color: var(--lynx-text-secondary);
+}
+#root .layout .firmware-drop > span:first-of-type {
+  min-width: 0;
+  flex: 1;
+}
+#root .layout .firmware-drop strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+}
+#root .layout .firmware-drop small {
+  display: block;
+  color: var(--lynx-text-secondary);
+  font-size: 12px;
+  margin-top: 5px;
+}
+#root .layout .firmware-file-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex-shrink: 0;
+  border: 1px solid var(--lynx-border);
+  border-radius: 5px;
+  background: var(--lynx-bg-surface);
+  padding: 6px 8px;
+  font-size: 12px;
+}
+#root .layout .firmware-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  margin: 8px 0 0;
+  border: 1px solid var(--lynx-border);
+  border-radius: 6px;
+  background: var(--lynx-bg-app);
+}
+#root .layout .firmware-file > svg {
+  flex-shrink: 0;
+  color: var(--lynx-text-secondary);
+}
+#root .layout .firmware-file > div {
+  min-width: 0;
+}
+#root .layout .firmware-file strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#root .layout .firmware-file small {
+  display: block;
+  font-size: 12px;
+  color: var(--lynx-text-secondary);
+  margin-top: 3px;
+}
+#root .layout .firmware-details {
+  font-size: 12px;
+  line-height: 1.6;
+}
+#root .layout .firmware-details dt {
+  color: var(--lynx-text-secondary);
+}
+#root .layout .firmware-details dd {
+  margin: 0 0 6px;
+  overflow-wrap: anywhere;
+}
+#root .layout .firmware-card label:not(.firmware-checkbox) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  min-width: 0;
+}
+#root .layout .firmware-card select {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  padding: 5px 25px 5px 9px;
+  background-color: var(--lynx-bg-surface);
+  cursor: pointer;
+}
+/* The CSS chevron survives the global background-image reset. */
+#root .layout .firmware-card label:has(> select) {
+  position: relative;
+}
+#root .layout .firmware-card label:has(> select)::after {
+  content: '';
+  position: absolute;
+  right: 11px;
+  bottom: 13px;
+  width: 5px;
+  height: 5px;
+  border-right: 1px solid var(--lynx-text-secondary);
+  border-bottom: 1px solid var(--lynx-text-secondary);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+#root .layout .firmware-bindings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+#root .layout .firmware-binding {
+  min-width: 0;
+  padding: 0;
+}
+#root .layout .firmware-binding small {
+  display: block;
+  font-size: 12px;
+  color: var(--lynx-text-secondary);
+  margin-bottom: 4px;
+}
+#root .layout .firmware-binding strong {
+  display: block;
+  border: 1px solid var(--lynx-border);
+  border-radius: 6px;
+  height: 32px;
+  line-height: 30px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--lynx-bg-app);
+}
+#root .layout .firmware-binding span {
+  display: block;
+  font-size: 12px;
+  color: var(--lynx-text-secondary);
+  margin-top: 4px;
+}
+#root .layout .firmware-binding .is-connected {
+  color: var(--color-success, #23864b);
+}
+#root .layout .firmware-option-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 10px 0 8px;
+}
+#root .layout .firmware-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+#root .layout .firmware-checkbox input {
+  appearance: auto;
+  accent-color: var(--lynx-accent);
+  width: 13px;
+  height: 13px;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+#root .layout .firmware-page .firmware-link {
+  padding: 0;
+  min-height: 28px;
+  border: 0;
+  background: transparent;
+  color: var(--lynx-accent);
+  font-size: var(--ui-text-control);
+}
+#root .layout .firmware-options-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid var(--lynx-border);
+  margin-top: 8px;
+  padding-top: 5px;
+}
+#root .layout .firmware-options-footer .firmware-caption {
+  font-size: 12px;
+  margin: 0;
+}
+#root .layout .firmware-error {
+  color: var(--color-error, #c63648);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+#root .layout .firmware-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+#root .layout .firmware-status {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--lynx-text-secondary);
+  margin-left: auto;
+  background: var(--lynx-bg-app);
+  padding: 3px 7px;
+  border-radius: 20px;
+}
+#root .layout .firmware-status.is-ready {
+  color: var(--color-success, #23864b);
+  background: color-mix(in srgb, var(--color-success, #23864b) 12%, var(--lynx-bg-surface));
+}
+#root .layout .firmware-steps {
+  list-style: none;
+  margin: 9px 0;
+  padding: 6px 0;
+  border-top: 1px solid var(--lynx-border);
+  border-bottom: 1px solid var(--lynx-border);
+}
+#root .layout .firmware-steps li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 23px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 35px;
+  font-size: 12px;
+}
+#root .layout .firmware-steps li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 27px;
+  bottom: -8px;
+  left: 10px;
+  border-left: 1px solid var(--lynx-border);
+}
+#root .layout .firmware-steps b {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--lynx-accent) 9%, var(--lynx-bg-surface));
+  color: var(--lynx-accent);
+  font-size: 12px;
+  font-weight: 500;
+}
+#root .layout .firmware-steps small {
+  font-size: 12px;
+  max-width: 100px;
+  color: var(--lynx-text-secondary);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+#root .layout .firmware-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+#root .layout .firmware-progress progress {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  height: 5px;
+  border: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--lynx-bg-app);
+}
+#root .layout .firmware-progress progress::-webkit-progress-bar {
+  background: var(--lynx-bg-app);
+}
+#root .layout .firmware-progress progress::-webkit-progress-value {
+  background: var(--lynx-accent);
+}
+#root .layout .firmware-progress progress::-moz-progress-bar {
+  background: var(--lynx-accent);
+}
+#root .layout .firmware-transfer {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 17px;
+}
+#root .layout .firmware-page .firmware-start {
+  width: 100%;
+  min-height: 38px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 5px;
+}
+#root .layout .firmware-footnote {
+  text-align: center;
+  font-size: 12px;
+  margin-bottom: 0;
+}
+#root .layout .firmware-history {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--lynx-border);
+}
+#root .layout .firmware-history strong {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+#root .layout .firmware-history small {
+  color: var(--lynx-text-secondary);
+  font-size: 12px;
+  text-align: right;
+}
+#root .layout .firmware-message {
+  padding: 8px;
+  font-size: 12px;
+  border: 1px solid var(--lynx-border);
+  overflow-wrap: anywhere;
+}
+#root .layout .firmware-log {
+  padding: 9px 11px;
+}
+#root .layout .firmware-log-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+#root .layout .firmware-log-toolbar h3 {
+  margin: 0 10px 0 0;
+}
+#root .layout .firmware-log-toolbar > label {
+  margin-left: auto;
+}
+#root .layout .firmware-log-toolbar button {
+  min-height: 28px;
+  font-size: var(--ui-text-control);
+  padding: 3px 9px;
+}
+#root .layout .firmware-log-toolbar .firmware-filter {
+  border-radius: 20px;
+}
+#root .layout .firmware-log pre {
+  box-sizing: border-box;
+  height: 88px;
+  min-height: 80px;
+  max-height: 400px;
+  resize: vertical;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #20252d;
+  color: #d0dae6;
+  border-radius: 5px;
+  font:
+    11px/1.65 'JetBrains Mono',
+    monospace;
+  padding: 9px 11px;
+  margin: 8px 0 0;
+}
+#root .layout .board-console-grid.is-flash {
+  display: block;
+  height: auto;
+  min-height: 0;
+}
+#root .layout .linux-serial-node-hint {
+  overflow-wrap: anywhere;
+}
+@container (max-width: 780px) {
+  #root .layout .firmware-layout {
+    grid-template-columns: minmax(0, 1fr) 230px;
+    gap: 8px;
+  }
+  #root .layout .firmware-drop {
+    flex-wrap: wrap;
+  }
+  #root .layout .firmware-file-action {
+    margin-left: auto;
+  }
+}
+@container (max-width: 630px) {
+  #root .layout .firmware-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #root .layout .firmware-sidebar {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+@container (max-width: 430px) {
+  #root .layout .firmware-sidebar,
+  #root .layout .firmware-bindings,
+  #root .layout .firmware-option-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #root .layout .firmware-log-toolbar > label {
+    margin-left: 0;
+  }
+}
+
+#root .layout .firmware-file-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 3px 6px;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--color-success, #23864b);
+  background: color-mix(in srgb, var(--color-success, #23864b) 10%, var(--lynx-bg-surface));
+  border-radius: 12px;
+}
+#root .layout .firmware-file-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--lynx-text-secondary);
+  margin-top: 6px;
+}
+#root .layout .firmware-file-meta strong {
+  color: var(--lynx-text-primary);
+  font-weight: 500;
+  margin-left: 5px;
+}
+#root .layout .firmware-file-meta .firmware-link {
+  margin-left: auto;
+}
+
+#root .layout .firmware-options-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 1fr);
+  column-gap: 12px;
+  align-items: center;
+}
+#root .layout .firmware-options-card > h3 {
+  margin: 0;
+}
+#root .layout .firmware-options-card > :not(h3):not(.firmware-system-select) {
+  grid-column: 1 / -1;
+}
+#root .layout .firmware-system-select > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+#root .layout .firmware-log-toolbar .firmware-filter[aria-pressed='true'] {
+  background-color: var(--lynx-accent) !important;
+  border-color: var(--lynx-accent);
+  color: #fff;
+}
+@container (max-width:430px) {
+  #root .layout .firmware-options-card {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 8px;
+  }
+}
+
+#root .layout .firmware-loader {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--lynx-border);
+}
+#root .layout .firmware-page .firmware-loader-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+#root .layout .firmware-loader-heading > strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+#root .layout .firmware-page .firmware-loader-heading label {
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+}
+#root .layout .firmware-page .firmware-loader-heading select {
+  width: 140px;
+}
+#root .layout .firmware-loader-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid var(--lynx-border);
+  border-radius: 6px;
+  background: var(--lynx-bg-app);
+}
+#root .layout .firmware-loader-file > span {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#root .layout .firmware-loader-file > svg,
+#root .layout .firmware-loader-file > button {
+  flex-shrink: 0;
+}
+
+#root .layout .firmware-page .firmware-loader-heading {
+  align-items: center;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+#root .layout .firmware-page .firmware-loader-heading > strong,
+#root .layout .firmware-page .firmware-loader-heading label > span {
+  white-space: nowrap;
+}
+#root .layout .firmware-page .firmware-loader-heading label {
+  margin-left: auto;
+}
+
+#root .layout .firmware-card label.firmware-spinor-action:not(.firmware-checkbox) {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+#root .layout .firmware-spinor-action select {
+  min-width: 0;
+  max-width: 55%;
+}

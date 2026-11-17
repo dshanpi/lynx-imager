@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$repo_root"
+
+prettier_files=()
+# Keep NUL-delimited paths intact on macOS's system Bash 3.2 as well.
+while IFS= read -r -d '' changed_file; do
+  case "$changed_file" in
+    package.json | src/*.ts | src/*.tsx | src/*.css | src/*.json | src/**/*.ts | src/**/*.tsx | src/**/*.css | src/**/*.json)
+      prettier_files+=("$changed_file")
+      ;;
+  esac
+done < <(
+  {
+    git diff --name-only --diff-filter=ACMR -z
+    git diff --cached --name-only --diff-filter=ACMR -z
+    git ls-files --others --exclude-standard -z
+  }
+)
+if (( ${#prettier_files[@]} > 0 )); then
+  npx prettier --check "${prettier_files[@]}"
+fi
+npm run check:ui-scale
+npm run check:ipc-contracts
+npm run lint -- --quiet
+npm run typecheck
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+cargo test --manifest-path src-tauri/Cargo.toml --lib supervisor::
+git diff --check

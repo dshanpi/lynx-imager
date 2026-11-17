@@ -1,0 +1,33 @@
+{
+  "id": "openix",
+  "name": "Openix",
+  "variants": {
+    "Dark": {
+      "type": "Dark",
+      "config": {
+        "base": "#282a36",
+        "mantle": "#21222c",
+        "crust": "#191a21",
+        "surface0": "#44475a",
+        "surface1": "#4d5166",
+        "surface2": "#5a5e75",
+        "overlay0": "#6272a4",
+        "overlay1": "#7281bf",
+        "overlay2": "#8b9dc3",
+        "text": "#f8f8f2",
+        "subtext0": "#e6e6e6",
+        "subtext1": "#bfbfbf",
+        "accent": "#9bd3ef",
+        "accentHover": "#aee2fc",
+        "accentText": "#000000",
+        "success": "#1cad40",
+        "warning": "#ffb86c",
+        "error": "#ff5555",
+        "border": "#44475a",
+        "interactive": "#44475a",
+        "interactiveHover": "#4d5166",
+        "interactiveActive": "#5a5e75"
+      }
+    }
+  }
+}

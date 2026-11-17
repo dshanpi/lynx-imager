@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "LYNX Imager",
+  "version": "0.1.0",
+  "identifier": "com.dshanpi.lynx",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:3030",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "LYNX Imager｜系统镜像烧录",
+        "visible": true,
+        "width": 1280,
+        "height": 768,
+        "minWidth": 1090,
+        "minHeight": 720,
+        "center": true,
+        "resizable": true,
+        "decorations": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "installerHooks": "../scripts/windows-installer-hooks.nsh"
+      }
+    },
+    "linux": {
+      "deb": {
+        "files": {
+          "/usr/lib/udev/rules.d/70-dshanpi-lynx.rules": "packaging/70-dshanpi-lynx.rules"
+        }
+      },
+      "rpm": {
+        "files": {
+          "/usr/lib/udev/rules.d/70-dshanpi-lynx.rules": "packaging/70-dshanpi-lynx.rules"
+        }
+      }
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": [
+          "lynx"
+        ]
+      }
+    },
+    "fs": {
+      "requireLiteralLeadingDot": false
+    },
+    "updater": {
+      "endpoints": [
+        "https://github.com/dshanpi/lynx-releases/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ2NEFGQjYzQ0JCQUFCMTMKUldRVHE3ckxZL3RLMW5Ha2NSYnp4VmtWS0FoNFVUSU83SnJnUEdvdVdMN0ZIWFdrZEt2VFI0dTgK"
+    }
+  }
+}

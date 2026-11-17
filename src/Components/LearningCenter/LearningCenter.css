@@ -1,0 +1,68 @@
+.learning-center {
+  --learning-blue: #0a8fe7;
+  --learning-blue-hover: #087bc8;
+  --learning-blue-soft: #e9f5ff;
+  --learning-green: #16a45b;
+  --learning-orange: #e88916;
+  --learning-red: #e14848;
+  --learning-purple: #7955b8;
+  --learning-panel-radius: 6px;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  overflow: auto;
+  color: var(--color-text);
+  background: var(--color-base);
+}
+.learning-center * {
+  box-sizing: border-box;
+}
+.learning-center button,
+.learning-center select {
+  font: inherit;
+  min-height: 36px;
+  border-radius: 5px;
+}
+.learning-center button {
+  cursor: pointer;
+  border: 1px solid transparent;
+  padding: 8px 14px;
+  background: var(--learning-blue);
+  color: white;
+  font-weight: 600;
+}
+.learning-center button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+.learning-secondary {
+  border-color: var(--color-border) !important;
+  background: var(--color-mantle) !important;
+  color: var(--color-text) !important;
+}
+.learning-text-button {
+  min-width: 36px;
+  background: transparent !important;
+  color: var(--learning-blue) !important;
+}
+.learning-section-eyebrow {
+  font-size: 12px;
+  color: var(--color-subtext0);
+}
+.learn-document-markdown {
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.learn-document-markdown code {
+  display: block;
+  white-space: pre-wrap;
+  background: var(--color-crust);
+  font: 13px/1.6 monospace;
+  padding: 0 12px;
+}
+.learn-document-markdown h1 {
+  font-size: 24px;
+}
+.learn-document-markdown h2 {
+  font-size: 20px;
+}

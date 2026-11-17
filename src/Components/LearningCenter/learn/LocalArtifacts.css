@@ -1,0 +1,44 @@
+.local-artifacts {
+  margin-top: 12px;
+  max-width: 100%;
+}
+.local-artifact-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--border-color, #dbe4ee);
+  border-radius: 8px;
+}
+.local-artifacts code {
+  display: block;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.local-artifact-preview {
+  margin-top: 12px;
+  min-width: 0;
+}
+.local-artifact-preview pre {
+  max-height: 320px;
+  max-width: 100%;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 12px;
+}
+.local-artifact-preview audio,
+.local-artifact-preview video {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 12px 0;
+}
+.local-artifact-preview a {
+  display: inline-block;
+  margin: 8px 0;
+}
+.local-artifact-preview small {
+  display: block;
+}

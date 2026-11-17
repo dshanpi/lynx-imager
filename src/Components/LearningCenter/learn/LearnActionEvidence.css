@@ -1,0 +1,27 @@
+.learn-action-evidence {
+  margin-block: 16px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  min-width: 0;
+}
+.learn-action-evidence details {
+  margin-block: 10px;
+}
+.learn-action-evidence summary {
+  cursor: pointer;
+}
+.learn-action-evidence textarea {
+  box-sizing: border-box;
+  width: 100%;
+  resize: vertical;
+  font-family: monospace;
+  background: var(--color-base);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 8px;
+}
+.learn-action-evidence :is(code, p) {
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,161 @@
+:root {
+  --lynx-bg-app: var(--color-base);
+  --lynx-bg-surface: var(--color-mantle);
+  --lynx-bg-subtle: var(--color-crust);
+  --lynx-bg-hover: var(--color-interactive-hover);
+  --lynx-bg-selected: var(--color-interactive-active);
+  --lynx-bg-disabled: var(--color-surface0);
+
+  --lynx-border: var(--color-border);
+  --lynx-border-strong: var(--color-surface2);
+  --lynx-divider: var(--color-surface1);
+
+  --lynx-text-primary: var(--color-text);
+  --lynx-text-secondary: var(--color-subtext0);
+  --lynx-text-muted: var(--color-subtext1);
+  --lynx-text-disabled: var(--color-overlay0);
+  --lynx-text-inverse: var(--color-accent-text);
+
+  --lynx-accent: var(--color-accent);
+  --lynx-accent-hover: var(--color-accent-hover);
+  --lynx-accent-active: var(--color-interactive-active);
+  --lynx-accent-subtle: var(--color-accent-subtle);
+
+  --lynx-success: var(--color-success);
+  --lynx-success-bg: var(--color-success-subtle);
+  --lynx-warning: var(--color-warning);
+  --lynx-warning-bg: var(--color-warning-subtle);
+  --lynx-danger: var(--color-error);
+  --lynx-danger-bg: var(--color-error-subtle);
+  --lynx-info: var(--color-accent);
+  --lynx-info-bg: var(--color-accent-subtle);
+
+  --lynx-terminal-bg: #0b1422;
+  --lynx-terminal-text: #d5deea;
+
+  --lynx-font-sans:
+    'Microsoft YaHei UI', 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', system-ui, sans-serif;
+  --lynx-font-mono: 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+
+  --lynx-font-size-page-title: 28px;
+  --lynx-font-size-section-title: 20px;
+  --lynx-font-size-subsection-title: 18px;
+  --lynx-font-size-card-title: 16px;
+  --lynx-font-size-body: 14px;
+  --lynx-font-size-table: 13px;
+  --lynx-font-size-caption: 12px;
+  --lynx-font-weight-section: 650;
+
+  --lynx-space-1: 4px;
+  --lynx-space-2: 8px;
+  --lynx-space-3: 12px;
+  --lynx-space-4: 16px;
+  --lynx-space-5: 20px;
+  --lynx-space-6: 24px;
+  --lynx-space-8: 32px;
+  --lynx-space-10: 40px;
+
+  --lynx-radius-control: 6px;
+  --lynx-radius-card: 8px;
+  --lynx-radius-dialog: 10px;
+  --lynx-border-width: 1px;
+
+  --lynx-control-height-compact: 32px;
+  --lynx-control-height: 36px;
+  --lynx-control-height-primary: 40px;
+  --lynx-table-row-compact: 40px;
+  --lynx-table-row: 48px;
+  --lynx-titlebar-height: 48px;
+  --lynx-toolbar-height: 52px;
+  --lynx-statusbar-height: 28px;
+  --lynx-sidebar-width: 224px;
+  --lynx-sidebar-collapsed-width: 56px;
+  --lynx-properties-width: 320px;
+  --lynx-device-rail-width: 264px;
+  --lynx-device-rail-compact-width: 232px;
+  --lynx-device-header-height: 80px;
+  --lynx-page-padding: 24px;
+  --lynx-section-gap: 16px;
+  --lynx-panel-header-height: 52px;
+
+  --lynx-shadow-flyout: 0 8px 24px rgb(13 24 48 / 10%);
+  --lynx-focus-ring: 0 0 0 3px rgb(8 127 245 / 20%);
+}
+
+[data-theme='lynx-light'] {
+  color-scheme: light;
+
+  --lynx-bg-app: #f5f8fc;
+  --lynx-bg-surface: #ffffff;
+  --lynx-bg-subtle: #f0f5fb;
+  --lynx-bg-hover: #edf4fc;
+  --lynx-bg-selected: #e6f2ff;
+  --lynx-bg-disabled: #f3f5f7;
+
+  --lynx-border: #d9e3ef;
+  --lynx-border-strong: #bfd0e3;
+  --lynx-divider: #e5ebf2;
+
+  --lynx-text-primary: #0d1830;
+  --lynx-text-secondary: #64748b;
+  --lynx-text-muted: #8b9bb0;
+  --lynx-text-disabled: #aab5c3;
+  --lynx-text-inverse: #ffffff;
+
+  --lynx-accent: #087ff5;
+  --lynx-accent-hover: #006dde;
+  --lynx-accent-active: #005fc4;
+  --lynx-accent-subtle: #e6f2ff;
+
+  --lynx-success: #16a34a;
+  --lynx-success-bg: #ecfdf3;
+  --lynx-warning: #d97706;
+  --lynx-warning-bg: #fff7e6;
+  --lynx-danger: #dc2626;
+  --lynx-danger-bg: #fef2f2;
+  --lynx-info: #0ea5e9;
+  --lynx-info-bg: #eff9ff;
+
+  --lynx-terminal-bg: #0b1422;
+  --lynx-terminal-text: #d5deea;
+}
+
+[data-theme='lynx-dark'] {
+  color-scheme: dark;
+
+  --lynx-bg-app: #08090b;
+  --lynx-bg-surface: #111316;
+  --lynx-bg-subtle: #050607;
+  --lynx-bg-hover: #191c20;
+  --lynx-bg-selected: #1b2027;
+  --lynx-bg-disabled: #16181c;
+
+  --lynx-border: #25282d;
+  --lynx-border-strong: #3a3f47;
+  --lynx-divider: #1c1f23;
+
+  --lynx-text-primary: #f0f2f5;
+  --lynx-text-secondary: #a8afb8;
+  --lynx-text-muted: #737b86;
+  --lynx-text-disabled: #4f5660;
+  --lynx-text-inverse: #050607;
+
+  --lynx-accent: #2f8cff;
+  --lynx-accent-hover: #61a8ff;
+  --lynx-accent-active: #1678e8;
+  --lynx-accent-subtle: #111f30;
+
+  --lynx-success: #35c46a;
+  --lynx-success-bg: #10291b;
+  --lynx-warning: #f2ad4b;
+  --lynx-warning-bg: #30230f;
+  --lynx-danger: #ff5f69;
+  --lynx-danger-bg: #321519;
+  --lynx-info: #58b8ff;
+  --lynx-info-bg: #10283b;
+
+  --lynx-terminal-bg: #030405;
+  --lynx-terminal-text: #e2e6eb;
+  --lynx-shadow-flyout: 0 8px 24px rgb(0 0 0 / 42%);
+  --lynx-focus-ring: 0 0 0 3px rgb(47 140 255 / 26%);
+}

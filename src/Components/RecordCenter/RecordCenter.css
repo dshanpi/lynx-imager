@@ -1,0 +1,579 @@
+.record-center {
+  --record-border: color-mix(in srgb, var(--color-border) 88%, transparent);
+  min-width: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+  padding: 20px 24px 28px;
+  color: var(--color-text);
+  background: var(--color-base);
+  font-size: 12px;
+}
+
+.record-center button,
+.record-center input,
+.record-center select,
+.record-center textarea {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 34px;
+  border: 1px solid var(--record-border);
+  border-radius: 7px;
+  color: var(--color-text);
+  background: var(--color-surface0);
+  font: inherit;
+}
+
+.record-center button:not(:disabled) {
+  cursor: pointer;
+}
+.record-center button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.record-center-header {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 14px;
+}
+.record-center-header small,
+.record-panel header small {
+  color: var(--color-accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.record-center-header h1 {
+  margin: 2px 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.record-center-header p {
+  margin: 0;
+  color: var(--color-overlay1);
+  line-height: 1.5;
+}
+.record-center-header > button {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+}
+
+.record-center-tabs {
+  min-width: 0;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--record-border);
+  padding-bottom: 8px;
+}
+.record-center-tabs button {
+  min-width: max-content;
+  border-color: transparent;
+  padding: 6px 11px;
+  color: var(--color-overlay1);
+  background: transparent;
+  font-weight: 500;
+}
+.record-center-tabs button.is-active {
+  color: var(--color-accent);
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--record-border));
+  background: var(--color-accent-subtle);
+}
+
+.record-center-message {
+  margin-top: 10px;
+  border: 1px solid var(--record-border);
+  border-radius: 8px;
+  padding: 9px 11px;
+  color: var(--color-overlay1);
+  background: var(--color-mantle);
+  overflow-wrap: anywhere;
+}
+
+.record-overview,
+.record-split-page,
+.record-feedback-grid,
+.record-event-workspace,
+.record-placeholder {
+  margin-top: 12px;
+}
+
+.record-metrics {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.record-metrics article {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 58px;
+  border: 1px solid var(--record-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--color-mantle);
+}
+.record-metrics span {
+  color: var(--color-overlay1);
+}
+.record-metrics strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.record-metrics article.is-danger {
+  border-color: color-mix(in srgb, var(--color-error) 45%, var(--record-border));
+  color: var(--color-error);
+}
+
+.record-panel,
+.record-filters,
+.record-event-list,
+.record-event-detail,
+.record-placeholder {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--record-border);
+  border-radius: 10px;
+  background: var(--color-mantle);
+}
+.record-panel > header,
+.record-event-list > header {
+  min-width: 0;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--record-border);
+  padding: 8px 12px;
+}
+.record-panel h2,
+.record-event-list h2,
+.record-event-detail h2,
+.record-filters h2,
+.record-placeholder h2 {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.record-panel header span,
+.record-event-list header span {
+  color: var(--color-overlay1);
+}
+.record-panel header button {
+  padding-inline: 11px;
+}
+
+.record-timeline button {
+  width: 100%;
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: 78px 8px minmax(0, 1fr) minmax(80px, auto);
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--record-border);
+  padding: 7px 12px;
+  text-align: left;
+  background: transparent;
+}
+.record-timeline time,
+.record-timeline em {
+  color: var(--color-overlay1);
+  font-style: normal;
+  font-size: 11px;
+}
+.record-timeline span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.record-timeline span b {
+  margin-right: 8px;
+  font-weight: 600;
+}
+.record-timeline i,
+.record-event-list button > i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-overlay0);
+}
+.record-timeline i.is-success,
+.record-event-list i.is-success {
+  background: var(--color-success);
+}
+.record-timeline i.is-failed,
+.record-event-list i.is-failed {
+  background: var(--color-error);
+}
+.record-timeline i.is-denied,
+.record-event-list i.is-denied {
+  background: var(--color-warning);
+}
+
+.record-event-workspace {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 320px;
+  gap: 10px;
+  align-items: start;
+}
+.record-filters,
+.record-event-detail {
+  padding: 12px;
+}
+.record-filters {
+  display: grid;
+  gap: 11px;
+}
+.record-filters label,
+.record-form-grid label {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  color: var(--color-overlay1);
+}
+.record-filters input,
+.record-filters select,
+.record-form-grid input,
+.record-form-grid select,
+.record-form-grid textarea {
+  width: 100%;
+  padding: 6px 9px;
+}
+.record-event-list {
+  max-height: calc(100vh - 210px);
+  overflow-y: auto;
+}
+.record-event-list > button {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 126px 7px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--record-border);
+  padding: 9px 11px;
+  text-align: left;
+  background: transparent;
+}
+.record-event-list > button.is-active {
+  background: var(--color-accent-subtle);
+}
+.record-event-list time,
+.record-event-list small,
+.record-event-list em {
+  color: var(--color-overlay1);
+  font-size: 11px;
+  font-style: normal;
+}
+.record-event-list button > span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.record-event-list strong,
+.record-event-list small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.record-event-detail dl {
+  margin: 10px 0 0;
+}
+.record-event-detail dl > div {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 8px;
+  border-top: 1px solid var(--record-border);
+  padding: 8px 0;
+}
+.record-event-detail dt {
+  color: var(--color-overlay1);
+}
+.record-event-detail dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.record-event-detail pre {
+  max-height: 180px;
+  overflow: auto;
+  margin: 0;
+  font:
+    11px/1.5 'JetBrains Mono',
+    monospace;
+  white-space: pre-wrap;
+}
+
+.record-session-list button,
+.record-backup-list article {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, auto) 150px;
+  gap: 12px;
+  align-items: center;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--record-border);
+  padding: 10px 12px;
+  text-align: left;
+  background: transparent;
+}
+.record-session-list button > span,
+.record-backup-list article > span {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.record-session-list small,
+.record-session-list em,
+.record-session-list time,
+.record-backup-list small,
+.record-backup-list em {
+  color: var(--color-overlay1);
+  font-size: 11px;
+  font-style: normal;
+  overflow-wrap: anywhere;
+}
+.record-session-list time {
+  text-align: right;
+}
+
+.record-placeholder {
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 28px;
+  text-align: center;
+}
+.record-placeholder > svg {
+  color: var(--color-accent);
+  font-size: 22px;
+}
+.record-placeholder p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--color-overlay1);
+  line-height: 1.65;
+}
+.record-placeholder span {
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--color-overlay1);
+  background: var(--color-surface0);
+}
+
+.record-feedback-grid {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.7fr);
+  gap: 10px;
+  align-items: start;
+}
+.record-form-grid {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+}
+.record-form-grid label.is-wide {
+  grid-column: 1 / -1;
+}
+.record-form-grid textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+.record-evidence-note {
+  display: grid;
+  gap: 4px;
+  margin: 0 12px 12px;
+  border: 1px solid var(--record-border);
+  border-radius: 8px;
+  padding: 9px 10px;
+  color: var(--color-overlay1);
+  background: var(--color-base);
+}
+.record-evidence-note strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+.record-feedback-form footer {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--record-border);
+  padding: 10px 12px;
+}
+.record-center .is-primary {
+  border-color: var(--color-accent);
+  color: #fff;
+  background: var(--color-accent);
+}
+.record-draft-list article {
+  display: grid;
+  gap: 4px;
+  border-bottom: 1px solid var(--record-border);
+  padding: 10px 12px;
+}
+.record-draft-list span,
+.record-draft-list small {
+  color: var(--color-overlay1);
+}
+
+.record-backup-scope {
+  display: grid;
+  gap: 5px;
+  border-bottom: 1px solid var(--record-border);
+  padding: 11px 12px;
+  color: var(--color-overlay1);
+}
+.record-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.record-restore-preview {
+  display: grid;
+  gap: 8px;
+  margin: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 38%, var(--record-border));
+  border-radius: 9px;
+  padding: 11px;
+  background: var(--color-accent-subtle);
+}
+.record-restore-preview header,
+.record-restore-preview header > span,
+.record-restore-preview > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.record-restore-preview header {
+  justify-content: space-between;
+  padding: 0;
+}
+.record-restore-preview header > span {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 2px;
+}
+.record-restore-preview > div {
+  flex-wrap: wrap;
+  color: var(--color-overlay1);
+}
+.record-restore-preview > div span {
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: var(--color-base);
+}
+.record-restore-preview > small,
+.record-restore-preview > p {
+  margin: 0;
+  color: var(--color-overlay1);
+  overflow-wrap: anywhere;
+}
+.record-backup-list article {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.8fr);
+}
+.record-backup-list em {
+  text-align: right;
+}
+.record-empty {
+  margin: 0;
+  padding: 18px;
+  color: var(--color-overlay1);
+  text-align: center;
+}
+
+@media (max-width: 1480px) {
+  .record-event-workspace {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+  .record-event-detail {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 1100px) {
+  .record-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .record-feedback-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .record-center {
+    padding: 16px;
+  }
+  .record-event-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .record-event-detail {
+    grid-column: 1;
+  }
+  .record-event-list {
+    max-height: none;
+  }
+  .record-session-list button,
+  .record-backup-list article {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .record-session-list time,
+  .record-backup-list em {
+    text-align: left;
+  }
+}
+
+@media (max-width: 620px) {
+  .record-center-header {
+    align-items: flex-start;
+  }
+  .record-metrics,
+  .record-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .record-form-grid label.is-wide {
+    grid-column: 1;
+  }
+  .record-panel-actions,
+  .record-restore-preview header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .record-timeline button {
+    grid-template-columns: 68px 7px minmax(0, 1fr);
+  }
+  .record-timeline em {
+    display: none;
+  }
+  .record-event-list > button {
+    grid-template-columns: 7px minmax(0, 1fr) auto;
+  }
+  .record-event-list time {
+    display: none;
+  }
+}

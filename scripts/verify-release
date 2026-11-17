@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+  printf '%s\n' 'usage: scripts/verify-release vMAJOR.MINOR.PATCH' >&2
+  exit 64
+fi
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$repo_root"
+
+"$repo_root/scripts/verify-all"
+npm run gate:business-logic-ui
+npm run gate:ssh-terminal-runtime
+npm run gate:ai-supervisor-runtime
+npm run gate:startup-visual
+npm run test:release-assets
+npm run validate:release -- "$1"
+
+printf '%s\n' 'Static, business-logic UI, SSH terminal, AI runtime, and startup visual release checks passed.'
+printf '%s\n' 'NOT VERIFIED by this script: signed target installers, clean-system install/uninstall, updater migration, and applicable HIL.'
+printf '%s\n' 'Complete docs/RELEASE_GATES.md before declaring release readiness.'

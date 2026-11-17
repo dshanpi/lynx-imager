@@ -1,0 +1,851 @@
+/* F101 reference layouts. Data, evidence and permissions remain runtime-owned. */
+#root .layout .fw-lifecycle {
+  position: relative;
+  min-width: 0;
+  color: var(--lynx-text-primary);
+  font-size: 13px;
+}
+#root .layout .fw-page-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 0 18px;
+  padding-right: 170px;
+  min-height: 44px;
+}
+#root .layout .fw-page-title h3 {
+  font-size: 20px;
+  margin: 0 0 6px;
+  line-height: 1.25;
+}
+#root .layout .fw-page-title p {
+  margin: 0;
+  color: var(--lynx-text-secondary);
+}
+#root .layout .fw-page-title > button {
+  display: none;
+}
+#root .layout .fw-task-options {
+  position: absolute;
+  z-index: 4;
+  top: 4px;
+  right: 0;
+  max-width: 90%;
+}
+#root .layout .fw-task-options > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border: 1px solid var(--lynx-border);
+  background: var(--lynx-bg-surface);
+  border-radius: 5px;
+  padding: 8px 10px;
+}
+#root .layout .fw-task-options[open] {
+  width: 460px;
+  padding: 12px;
+  background: var(--lynx-bg-surface);
+  border: 1px solid var(--lynx-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 30px #19305226;
+}
+#root .layout .fw-page-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+#root .layout .fw-two-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.92fr) minmax(220px, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+#root .layout .fw-card {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--lynx-border);
+  border-radius: 7px;
+  background: var(--lynx-bg-surface);
+  margin-bottom: 10px;
+}
+#root .layout .fw-card h4 {
+  font-size: 16px;
+  line-height: 1.3;
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+#root .layout .fw-card h4 small {
+  font-size: 13px;
+  font-weight: 400;
+}
+#root .layout .fw-card p {
+  overflow-wrap: anywhere;
+  margin: 8px 0;
+}
+#root .layout .fw-card dl {
+  display: grid;
+  grid-template-columns: minmax(95px, 0.45fr) minmax(0, 1fr);
+  border: 1px solid var(--lynx-border);
+  border-radius: 6px;
+  margin: 0;
+  overflow: hidden;
+}
+#root .layout .fw-card dt,
+#root .layout .fw-card dd {
+  margin: 0;
+  padding: 8px 10px;
+  min-width: 0;
+  border-bottom: 1px solid var(--lynx-border);
+  overflow-wrap: anywhere;
+}
+#root .layout .fw-card dt:last-of-type,
+#root .layout .fw-card dd:last-of-type {
+  border-bottom: 0;
+}
+#root .layout .fw-card dd {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+#root .layout .fw-card dd small {
+  margin-left: auto;
+  white-space: nowrap;
+  color: var(--lynx-text-secondary);
+}
+#root .layout .fw-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+#root .layout .fw-section-number {
+  border-radius: 5px;
+  padding: 2px 5px;
+  background: #e4f0ff;
+  font-size: 14px;
+}
+#root .layout .fw-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+  min-width: 0;
+}
+#root .layout .fw-row input,
+#root .layout .fw-row select,
+#root .layout .fw-row textarea {
+  min-width: 0;
+  flex: 1;
+  width: 100%;
+}
+#root .layout .fw-row textarea {
+  min-height: 65px;
+}
+#root .layout .fw-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid var(--lynx-accent);
+  background: var(--lynx-accent);
+  color: #fff;
+  border-radius: 5px;
+  font-weight: 600;
+}
+#root .layout .fw-primary:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+#root .layout .fw-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: color-mix(in srgb, #ffce65 17%, var(--lynx-bg-surface));
+  border: 1px solid #efd390;
+  border-radius: 5px;
+  color: var(--lynx-text-primary);
+  font-size: 12px;
+}
+#root .layout .fw-layout-map {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid #afd3fa;
+  border-radius: 5px;
+  background: #cbe8ff;
+  color: #172744;
+}
+#root .layout .fw-layout-map span {
+  text-align: center;
+  flex: 1;
+  padding: 7px 5px;
+  border-right: 1px solid #b7d6fa;
+}
+#root .layout .fw-layout-map span:last-child {
+  flex: 2;
+  border-right: 0;
+  background: linear-gradient(120deg, #c1e0ff, #accbff);
+}
+#root .layout .fw-steps {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 22px;
+}
+#root .layout .fw-steps li {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+}
+#root .layout .fw-steps li > span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#root .layout .fw-step-number {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e3f1ff;
+  color: #087ff5;
+  font-weight: 600;
+}
+#root .layout .fw-steps small {
+  color: var(--lynx-text-secondary);
+  white-space: nowrap;
+}
+#root .layout .fw-target-ports {
+  padding: 10px 0;
+  margin-bottom: 14px;
+  border-top: 1px solid var(--lynx-border);
+}
+#root .layout .fw-target-ports p {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+#root .layout .fw-target-ports span {
+  margin-left: auto;
+  overflow-wrap: anywhere;
+}
+#root .layout .fw-flash-method {
+  display: flex;
+  gap: 18px;
+  margin: 6px 0 14px;
+}
+#root .layout .fw-flash-method label {
+  display: flex;
+  flex: 1;
+  gap: 10px;
+  align-items: center;
+  white-space: nowrap;
+}
+#root .layout .fw-flash-method label > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--lynx-border);
+  border-radius: 5px;
+  flex: 1;
+}
+#root .layout .fw-loader-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#root .layout .fw-loader-row > span {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--lynx-border);
+  background: var(--lynx-bg-app);
+  border-radius: 5px;
+  padding: 6px;
+  overflow-wrap: anywhere;
+}
+#root .layout .fw-file-evidence {
+  margin: 7px 0 0;
+  color: var(--lynx-text-secondary);
+  font-size: 11px;
+}
+#root .layout .fw-file-evidence code {
+  display: block;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+#root .layout details > summary {
+  cursor: pointer;
+}
+#root .layout .fw-profile-disclosure {
+  margin: 0 0 12px;
+  border: 1px solid #efd390;
+  border-radius: 5px;
+  padding: 8px;
+}
+#root .layout .fw-profile-disclosure > summary {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+#root .layout .fw-card label:has(> input[type='checkbox']) {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 10px 0;
+}
+#root .layout .fw-card input[type='checkbox'] {
+  flex: 0 0 auto;
+  margin: 2px 0 0;
+  width: 16px;
+  height: 16px;
+}
+#root .layout .fw-view-verify > .fw-two-columns {
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+}
+#root .layout .fw-verification-title {
+  min-height: 30px;
+}
+#root .layout .fw-verify-timeline {
+  list-style: none;
+  display: flex;
+  padding: 12px 0 18px;
+  margin: 0;
+}
+#root .layout .fw-verify-timeline li {
+  flex: 1;
+  text-align: center;
+  position: relative;
+  min-width: 0;
+}
+#root .layout .fw-verify-timeline li:before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--lynx-border);
+}
+#root .layout .fw-verify-timeline li:first-child:before {
+  left: 50%;
+}
+#root .layout .fw-verify-timeline li:last-child:before {
+  right: 50%;
+}
+#root .layout .fw-verify-timeline li > span {
+  display: grid;
+  place-items: center;
+  position: relative;
+  z-index: 1;
+  margin: 0 auto 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #e6eef9;
+  color: #657893;
+}
+#root .layout .fw-verify-timeline li > span.is-passed {
+  background: #39b763;
+  color: white;
+}
+#root .layout .fw-verify-timeline strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+#root .layout .fw-task-identity {
+  font-size: 11px;
+  margin: 0 0 8px;
+  color: var(--lynx-text-secondary);
+}
+#root .layout .fw-card .fw-verification-facts {
+  grid-template-columns: minmax(120px, 1fr) minmax(0, 1.4fr);
+}
+#root .layout .fw-verification-facts dt,
+#root .layout .fw-verification-facts dd {
+  padding: 9px 10px;
+}
+#root .layout .fw-card pre {
+  background: #171e2b;
+  color: #e5eaf2;
+  border-radius: 5px;
+  padding: 10px;
+  max-height: 260px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  line-height: 1.6;
+}
+#root .layout .fw-view-verify pre {
+  min-height: 74px;
+}
+#root .layout .fw-card code {
+  overflow-wrap: anywhere;
+}
+#root .layout .fw-evidence-note {
+  color: var(--lynx-text-secondary);
+  font-size: 11px;
+}
+#root .layout .fw-acceptance-quick {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+#root .layout .fw-acceptance-evidence {
+  font-size: 12px;
+  margin: 6px 0 10px;
+}
+#root .layout .fw-acceptance-item {
+  margin: 10px 0;
+}
+#root .layout .fw-acceptance-item label {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+#root .layout .fw-acceptance-item input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 5px;
+}
+#root .layout .fw-lifecycle table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+#root .layout .fw-lifecycle th,
+#root .layout .fw-lifecycle td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--lynx-border);
+  overflow-wrap: anywhere;
+}
+#root .layout .fw-lifecycle progress {
+  width: 100%;
+}
+#root .layout .fw-view-publish .fw-two-columns {
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 1fr);
+}
+#root .layout .fw-publication-fields > .fw-row {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 10px;
+  margin: 0 0 8px;
+}
+#root .layout .fw-publication-fields input {
+  box-sizing: border-box;
+  min-height: 28px;
+}
+#root .layout .fw-publication-fields textarea {
+  min-height: 65px;
+}
+#root .layout .fw-publication-fields input[readonly] {
+  background: var(--lynx-bg-app);
+  color: var(--lynx-text-secondary);
+}
+#root .layout .fw-publication-license {
+  font-size: 12px;
+  margin: 8px 0 0;
+}
+#root .layout .fw-publish-source {
+  font-size: 11px;
+  color: var(--lynx-text-secondary);
+}
+#root .layout .fw-view-publish .fw-card dl {
+  border: 0;
+  grid-template-columns: 100px minmax(0, 1fr);
+}
+#root .layout .fw-view-publish .fw-card dl dd {
+  justify-content: flex-end;
+  text-align: right;
+}
+#root .layout .fw-view-publish .fw-card button {
+  margin: 8px 4px 4px 0;
+}
+#root .layout .fw-build-environment {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--lynx-border);
+  border-radius: 5px;
+  padding: 8px 12px;
+  background: linear-gradient(110deg, var(--lynx-bg-surface), var(--lynx-bg-app));
+  margin: 0 0 10px;
+}
+#root .layout .fw-build-environment code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+#root .layout .fw-build-specs {
+  display: grid;
+  grid-template-columns: 0.9fr 1.15fr 1.1fr;
+  gap: 12px;
+}
+#root .layout .fw-build-specs > div {
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+  align-items: flex-start;
+  border: 1px solid var(--lynx-border);
+  border-radius: 5px;
+  padding: 8px 10px;
+}
+#root .layout .fw-build-specs label {
+  min-width: 0;
+}
+#root .layout .fw-build-specs strong {
+  display: block;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#root .layout .fw-build-history {
+  margin: 8px 0;
+  font-size: 11px;
+  color: var(--lynx-text-secondary);
+}
+#root .layout .fw-build-stages {
+  display: flex;
+  gap: 8px;
+  margin: 14px 0 20px;
+}
+#root .layout .fw-build-stages > div {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid var(--lynx-border);
+  border-radius: 5px;
+  padding: 8px 6px;
+  font-size: 12px;
+}
+#root .layout .fw-build-stages small {
+  width: 100%;
+  color: var(--lynx-text-secondary);
+  text-align: center;
+  font-size: 11px;
+}
+#root .layout .fw-build-workspace {
+  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 1fr);
+  gap: 12px;
+}
+#root .layout .fw-build-workspace .fw-build-log {
+  min-height: 220px;
+  max-height: 300px;
+}
+#root .layout .fw-build-workspace h4 > span {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+}
+#root .layout .fw-build-workspace .fw-primary {
+  margin: 12px 0 10px;
+}
+#root .layout .fw-view-build {
+  border: 1px solid var(--lynx-border);
+  border-radius: 7px;
+  padding: 14px 12px;
+  background: var(--lynx-bg-surface);
+}
+#root .layout .fw-view-build .fw-page-title {
+  padding-right: 0;
+}
+#root .layout .fw-view-build .fw-page-title > button {
+  display: block;
+}
+#root .layout .fw-neko-illustration {
+  width: 100%;
+  min-width: 0;
+  padding: 5px;
+  border-radius: 7px;
+  box-sizing: border-box;
+  color: #fff;
+  background: linear-gradient(145deg, #d0d2d3, #9ea7b1);
+}
+#root .layout .fw-neko-display {
+  border: 6px solid #333b4a;
+  border-radius: 6px;
+  padding: 8px;
+  background: linear-gradient(145deg, #172a48, #0c254d 65%, #5667a3);
+  min-height: 118px;
+}
+#root .layout .fw-neko-display > strong {
+  display: block;
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+#root .layout .fw-neko-apps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+#root .layout .fw-neko-apps > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 2px;
+  background: linear-gradient(140deg, #2c8ef5, #1660b5);
+  border-radius: 7px;
+  box-shadow: inset 0 1px 1px #ffffff5c;
+}
+#root .layout .fw-neko-apps > div:nth-child(2) {
+  background: linear-gradient(140deg, #8972d8, #54479c);
+}
+#root .layout .fw-neko-apps small {
+  font-size: 10px;
+}
+#root .layout .fw-neko-illustration > small {
+  display: block;
+  text-align: center;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #253650;
+}
+#root .layout .fw-neko-illustration.is-waiting {
+  background: #f7f9fc;
+  border: 1px solid var(--lynx-border);
+}
+#root .layout .is-waiting .fw-neko-display {
+  border: 0;
+  min-height: 145px;
+  background: linear-gradient(155deg, #8c9cac, #4a627b);
+}
+#root .layout .fw-neko-wait {
+  min-height: 126px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+#root .layout .fw-neko-wait > svg {
+  width: 42px;
+  height: 42px;
+  opacity: 0.85;
+}
+#root .layout .fw-neko-wait > span {
+  font-size: 12px;
+  color: #24344c;
+  background: #f5f7f9;
+  border-radius: 5px;
+  padding: 5px 10px;
+}
+#root .layout .firmware-page:has(.fw-lifecycle) > .firmware-title,
+#root .layout .firmware-setup:has(.fw-lifecycle) > .firmware-tabs {
+  display: none;
+}
+#root .layout .firmware-setup:has(.fw-lifecycle) {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+@media (max-width: 1100px) {
+  #root .layout .fw-two-columns,
+  #root .layout .fw-view-verify > .fw-two-columns,
+  #root .layout .fw-view-publish .fw-two-columns,
+  #root .layout .fw-build-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #root .layout .fw-flash-method {
+    flex-direction: column;
+    gap: 8px;
+  }
+  #root .layout .fw-build-specs {
+    grid-template-columns: 1fr;
+  }
+  #root .layout .fw-build-stages {
+    flex-wrap: wrap;
+  }
+  #root .layout .fw-build-stages > div {
+    flex-basis: 25%;
+  }
+}
+
+#root .layout .fw-card dt,
+#root .layout .fw-card dd {
+  font-size: 12px;
+  line-height: 1.3;
+  padding: 5px 8px;
+}
+#root .layout .fw-postaction {
+  font-size: 11px;
+  margin: 7px 0 0;
+  color: var(--lynx-text-secondary);
+}
+#root .layout .fw-flash-method {
+  gap: 12px;
+  margin: 4px 0 10px;
+  font-size: 12px;
+}
+#root .layout .fw-flash-method label > span {
+  padding: 4px 6px;
+}
+#root .layout .fw-loader-row {
+  font-size: 12px;
+  gap: 8px;
+}
+#root .layout .fw-card .fw-verification-facts dt,
+#root .layout .fw-card .fw-verification-facts dd {
+  padding: 10px 8px;
+}
+#root .layout .fw-neko-illustration {
+  background-color: #a6afb9;
+}
+#root .layout .fw-neko-display {
+  background-color: #15345b;
+  background-image: linear-gradient(145deg, #172a48, #0c254d 65%, #5667a3) !important;
+}
+#root .layout .fw-neko-apps > div {
+  background-color: #237bd2;
+}
+#root .layout .fw-neko-apps > div:nth-child(2) {
+  background-color: #705abc;
+}
+#root .layout .is-waiting .fw-neko-display {
+  background-color: #71879e;
+  background-image: linear-gradient(155deg, #8c9cac, #4a627b) !important;
+}
+#root .layout .fw-page-tabs:has(button[aria-pressed]) {
+  gap: 4px;
+  margin: 0;
+}
+#root .layout .fw-page-tabs button[aria-pressed] {
+  padding: 7px 22px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+#root .layout .fw-page-tabs button[aria-pressed='true'] {
+  background: var(--lynx-accent);
+  border-color: var(--lynx-accent);
+  color: #fff;
+}
+#root .layout .fw-build-stages > div {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 4px;
+  font-size: 11px;
+}
+#root .layout .fw-build-stages small {
+  grid-column: 1/-1;
+}
+#root .layout .fw-build-workspace .fw-build-log {
+  min-height: 190px;
+}
+
+#root .layout .fw-page-title {
+  margin-bottom: 10px;
+  min-height: 40px;
+}
+#root .layout .fw-page-title p,
+#root .layout .fw-card p {
+  font-size: 12px;
+  line-height: 1.45;
+}
+#root .layout .fw-view-confirm .fw-card {
+  padding: 10px;
+}
+#root .layout .fw-view-confirm .fw-card h4 {
+  margin-bottom: 8px;
+}
+#root .layout .fw-view-confirm .fw-two-columns > div > .fw-card:first-child {
+  min-height: 130px;
+  box-sizing: border-box;
+}
+#root .layout .fw-card .fw-warning {
+  font-size: 11px;
+}
+#root .layout .fw-view-verify .fw-two-columns > div > .fw-card:first-child > .fw-warning {
+  margin: 6px 0 0;
+}
+#root .layout .fw-verify-timeline {
+  padding: 8px 0 12px;
+}
+#root .layout .fw-card .fw-verification-facts dt,
+#root .layout .fw-card .fw-verification-facts dd {
+  padding: 8px;
+}
+#root .layout .fw-view-verify .fw-evidence-note {
+  font-size: 10px;
+  line-height: 1.4;
+}
+#root .layout .fw-publication-fields input,
+#root .layout .fw-publication-fields select {
+  min-height: 26px;
+  height: 26px;
+  padding: 3px 8px;
+  font-size: 12px;
+}
+#root .layout .fw-publication-fields > .fw-row {
+  margin-bottom: 8px;
+}
+#root .layout .fw-view-publish .fw-card dt,
+#root .layout .fw-view-publish .fw-card dd {
+  padding: 7px 4px;
+}
+#root .layout .fw-view-publish .fw-card label:has(input[type='checkbox']) {
+  font-size: 12px;
+  margin: 8px 0;
+}
+#root .layout .fw-publish-help {
+  font-size: 11px;
+  margin-top: 8px;
+  color: var(--lynx-text-secondary);
+}
+#root .layout .fw-view-build .fw-page-title {
+  min-height: 30px;
+  margin-bottom: 10px;
+}
+#root .layout .fw-build-specs > div {
+  padding: 7px 9px;
+  font-size: 12px;
+}
+#root .layout .fw-build-history {
+  margin: 6px 0;
+}
+#root .layout .fw-build-stages {
+  margin: 10px 0 14px;
+}
+#root .layout .fw-build-stages > div {
+  padding: 5px;
+}
+#root .layout .fw-build-workspace .fw-build-log {
+  min-height: 170px;
+}
+
+/* Keep verification logs visible; the task menu retains full evidence. */
+#root .layout .fw-view-verify .fw-card > pre {
+  min-height: 80px;
+  height: 80px;
+}
+#root .layout .fw-view-verify .fw-two-columns > div > .fw-card {
+  padding: 12px;
+}
+#root .layout .fw-view-verify .fw-evidence-note {
+  font-size: 10px;
+  margin: 5px 0;
+}
+#root .layout .fw-view-verify .fw-warning {
+  font-size: 11px;
+}

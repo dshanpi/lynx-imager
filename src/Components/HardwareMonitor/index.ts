@@ -1,0 +1,1 @@
+export { HardwareMonitorPage } from './HardwareMonitorPage';

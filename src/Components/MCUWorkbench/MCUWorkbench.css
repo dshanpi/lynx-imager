@@ -1,0 +1,1208 @@
+.mcu-workbench {
+  height: 100%;
+  min-height: 540px;
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 0;
+  color: var(--color-text);
+}
+
+.mcu-workbench button,
+.mcu-workbench select,
+.mcu-workbench input {
+  box-sizing: border-box;
+  min-height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 6px 9px;
+  color: var(--color-text);
+  background: var(--color-surface0);
+}
+
+.mcu-workbench button:not(:disabled) {
+  cursor: pointer;
+}
+.mcu-workbench button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.mcu-board-rail,
+.mcu-panel {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-mantle);
+}
+
+.mcu-board-rail {
+  display: flex;
+  flex-direction: column;
+  border-width: 0 1px 0 0;
+  border-radius: 0;
+  padding: 18px 14px;
+  overflow-y: auto;
+}
+
+.mcu-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mcu-section-heading small,
+.mcu-panel-title small,
+.mcu-pipeline-title small {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--color-accent);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.mcu-section-heading strong,
+.mcu-panel-title strong,
+.mcu-pipeline-title strong {
+  font-size: 0.8125rem;
+}
+
+.mcu-board-rail > p {
+  margin: 10px 0;
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+  line-height: 1.45;
+}
+
+.mcu-board-card {
+  padding: 11px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface0);
+  cursor: pointer;
+}
+.mcu-board-row {
+  display: block;
+  margin-bottom: 8px;
+}
+.mcu-board-row-settings {
+  width: 100%;
+  min-height: 28px !important;
+  margin-top: 8px;
+  padding: 4px 10px !important;
+  border-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 7%, var(--color-base));
+  font-size: 0.6875rem;
+}
+
+.mcu-board-card.is-active {
+  border-color: var(--color-accent);
+  box-shadow: inset 3px 0 var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
+.mcu-board-card > strong {
+  display: block;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mcu-board-card > span {
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+}
+.mcu-board-card ul {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.mcu-board-card li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-overlay1);
+  font:
+    0.57rem 'JetBrains Mono',
+    monospace;
+}
+.mcu-board-card li i,
+.mcu-panel-title > i,
+.mcu-pipeline-title > i {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--color-overlay0);
+}
+
+.mcu-board-card li.is-online i,
+.mcu-panel-title > i.is-online,
+.mcu-pipeline-title > i.is-online {
+  background: var(--color-success);
+  box-shadow: 0 0 0 3px var(--color-success-subtle);
+}
+.mcu-board-settings {
+  width: 100%;
+  margin-top: auto;
+}
+
+.mcu-main {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+  padding: 0 20px 20px;
+  background: var(--color-base);
+}
+
+.mcu-device-header {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.mcu-empty-state {
+  height: 100%;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 28px;
+  border: 1px dashed var(--color-border);
+  border-radius: 9px;
+  color: var(--color-overlay1);
+  background: var(--color-mantle);
+  text-align: center;
+}
+
+.mcu-empty-state small {
+  color: var(--color-accent);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.mcu-empty-state strong {
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.mcu-empty-state p {
+  max-width: 520px;
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.65;
+}
+
+.mcu-empty-state button {
+  margin-top: 4px;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.mcu-console-grid {
+  min-width: 0;
+  min-height: 560px;
+  flex: 1 0 560px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(286px, 0.78fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.mcu-console-grid.is-serial,
+.mcu-console-grid.is-probe {
+  grid-template-columns: minmax(0, 1fr);
+}
+.mcu-console-grid.is-serial .mcu-probe-panel {
+  display: none;
+}
+.mcu-console-grid.is-probe .mcu-serial-panel {
+  display: none;
+}
+.mcu-console-grid.is-probe .mcu-probe-panel {
+  min-height: 560px;
+}
+
+.mcu-firmware-page {
+  min-height: 560px;
+}
+.mcu-firmware-content {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(320px, 1fr);
+  gap: 12px;
+  padding: 14px;
+}
+.mcu-firmware-content > section {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--color-base);
+}
+.mcu-firmware-content h3 {
+  margin: 0 0 12px;
+  font-size: 0.8125rem;
+}
+.mcu-firmware-content dl {
+  margin: 0;
+}
+.mcu-firmware-content dl > div {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 10px;
+  border-top: 1px solid var(--color-surface1);
+  padding: 9px 0;
+}
+.mcu-firmware-content dt {
+  color: var(--color-overlay1);
+}
+.mcu-firmware-content dd {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mcu-firmware-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+.mcu-firmware-content p {
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+  line-height: 1.6;
+}
+.mcu-firmware-run {
+  margin-right: 8px;
+  border-color: var(--color-accent) !important;
+  background: var(--color-accent) !important;
+  color: white !important;
+}
+.mcu-firmware-log {
+  grid-column: 1/-1;
+  min-height: 240px;
+}
+.mcu-firmware-log pre {
+  max-height: 260px;
+  overflow: auto;
+  margin: 0;
+  border-radius: 6px;
+  padding: 12px;
+  background: #10141c;
+  color: #c9d7e6;
+  font: 0.63rem/1.55 monospace;
+  white-space: pre-wrap;
+}
+
+.mcu-panel {
+  display: flex;
+  flex-direction: column;
+}
+.mcu-panel-header {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 11px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mcu-panel-header > span {
+  color: var(--color-success);
+  font:
+    0.58rem 'JetBrains Mono',
+    monospace;
+}
+.mcu-panel-header > span.is-muted {
+  color: var(--color-overlay0);
+}
+.mcu-panel-title,
+.mcu-pipeline-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.mcu-serial-controls {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(116px, 0.8fr) auto auto;
+  align-items: end;
+  gap: 7px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-base);
+}
+
+.mcu-serial-controls label {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+}
+.mcu-serial-controls label > span {
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+.mcu-serial-controls select {
+  width: 100%;
+  min-width: 0;
+  font:
+    0.62rem 'JetBrains Mono',
+    monospace;
+}
+
+.mcu-terminal {
+  min-height: 0;
+  overflow: auto;
+  flex: 1;
+  padding: 14px 16px;
+  color: var(--lynx-terminal-text);
+  background: var(--lynx-terminal-bg);
+  font: 0.8125rem/1.8 var(--lynx-font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.mcu-terminal .is-dim {
+  color: #5e786b;
+}
+.mcu-terminal .is-info {
+  color: #70c9e8;
+}
+.mcu-terminal .is-warn {
+  color: #e8ca78;
+}
+.mcu-terminal .is-ok {
+  color: #7ee2a9;
+}
+.mcu-terminal .is-error {
+  color: #ff8e9f;
+}
+
+.mcu-serial-input {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-base);
+}
+
+.mcu-serial-input input {
+  min-width: 0;
+  font:
+    0.66rem 'JetBrains Mono',
+    monospace;
+}
+
+.mcu-probe-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.mcu-probe-header-actions span {
+  color: var(--color-success);
+  font:
+    0.56rem 'JetBrains Mono',
+    monospace;
+}
+
+.mcu-probe-header-actions span.is-muted {
+  color: var(--color-overlay0);
+}
+
+.mcu-probe-body {
+  min-height: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+.mcu-probe-identity {
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-base);
+}
+.mcu-probe-identity strong {
+  display: block;
+  font-size: 0.8125rem;
+}
+.mcu-probe-identity span {
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+}
+.mcu-probe-identity select {
+  width: 100%;
+  margin-top: 8px;
+  font:
+    0.58rem 'JetBrains Mono',
+    monospace;
+}
+.mcu-probe-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+.mcu-probe-metrics > div {
+  padding: 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-base);
+}
+.mcu-probe-metrics span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+}
+.mcu-probe-metrics strong {
+  font:
+    0.62rem 'JetBrains Mono',
+    monospace;
+}
+.mcu-chip-resources {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-base);
+}
+.mcu-chip-resources > header {
+  grid-column: 1 / -1;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--color-border);
+}
+.mcu-chip-resources > header small {
+  display: block;
+  color: var(--color-accent);
+  font:
+    700 0.52rem 'JetBrains Mono',
+    monospace;
+  letter-spacing: 0.1em;
+}
+.mcu-chip-resources > header strong {
+  font-size: 0.6875rem;
+}
+.mcu-chip-resources > div {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  background: var(--color-mantle);
+}
+.mcu-chip-resources > div span {
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+  line-height: 1.45;
+}
+.mcu-chip-resources > div strong {
+  min-width: 0;
+  font:
+    0.58rem/1.45 'JetBrains Mono',
+    monospace;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.mcu-probe-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: auto;
+}
+
+.mcu-firmware-bar {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto minmax(220px, 1fr) minmax(300px, 1.1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+}
+
+.mcu-pipeline-title {
+  min-width: 160px;
+}
+.mcu-artifact strong,
+.mcu-pipeline-status strong {
+  display: block;
+  margin-bottom: 5px;
+  overflow: hidden;
+  font-size: 0.6875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mcu-artifact span,
+.mcu-pipeline-status span {
+  color: var(--color-overlay1);
+  font:
+    0.56rem 'JetBrains Mono',
+    monospace;
+}
+.mcu-pipeline-status > div {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 3px;
+  margin-top: 8px;
+}
+.mcu-pipeline-status > div i {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--color-surface1);
+}
+.mcu-flash-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.mcu-mcp-channel {
+  min-width: 0;
+  display: grid;
+  grid-template-columns:
+    minmax(150px, auto) minmax(170px, 1fr) minmax(180px, auto) minmax(110px, auto)
+    auto;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-mantle);
+}
+.mcu-mcp-channel header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.mcu-mcp-channel header div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mcu-mcp-channel header small {
+  color: var(--color-accent);
+  font:
+    0.56rem 'JetBrains Mono',
+    monospace;
+}
+.mcu-mcp-channel header strong {
+  font-size: 0.6875rem;
+}
+.mcu-mcp-channel header > i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-overlay0);
+}
+.mcu-mcp-channel header > i.is-online {
+  background: var(--color-success);
+  box-shadow: 0 0 7px var(--color-success);
+}
+.mcu-mcp-channel p {
+  margin: 0;
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+}
+.mcu-mcp-channel label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mcu-mcp-channel label span,
+.mcu-mcp-channel > small {
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+}
+.mcu-mcp-channel select,
+.mcu-mcp-channel code {
+  min-width: 0;
+  font:
+    0.56rem 'JetBrains Mono',
+    monospace;
+}
+.mcu-mcp-channel code {
+  overflow: hidden;
+  padding: 7px;
+  border-radius: 4px;
+  color: var(--color-accent);
+  background: var(--color-base);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mcu-mcp-channel > small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mcu-settings-backdrop {
+  position: fixed;
+  z-index: 1100;
+  inset: 0 0 0 var(--app-sidebar-width);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--color-modal-overlay-dark);
+}
+
+.mcu-settings-dialog {
+  width: min(980px, calc(100vw - var(--app-sidebar-width) - 48px));
+  /* WebKitGTK reports the outer Tauri window for vh while screenshots and
+     pointer hit-testing use the decorated WebView. Keep the dialog inside the
+     smaller interactive viewport at the 880px release-test height. */
+  max-height: calc(100vh - 160px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-base);
+  box-shadow: 0 22px 70px var(--color-shadow-lg);
+}
+
+.mcu-settings-dialog > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 17px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-mantle);
+}
+
+.mcu-settings-dialog > header small {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--color-accent);
+  font:
+    0.58rem 'JetBrains Mono',
+    monospace;
+  letter-spacing: 0.08em;
+}
+
+.mcu-settings-dialog > header strong {
+  display: block;
+  font-size: 0.875rem;
+}
+.mcu-settings-dialog > header span {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+}
+
+.mcu-settings-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 16px 17px 10px;
+  overflow-y: auto;
+}
+
+.mcu-settings-card {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-mantle);
+}
+.mcu-hardware-live {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.mcu-hardware-live > div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-overlay0);
+  border-radius: 7px;
+  background: var(--color-base);
+}
+.mcu-hardware-live > div.is-online {
+  border-left-color: var(--color-success);
+}
+.mcu-hardware-live span,
+.mcu-hardware-live small {
+  display: block;
+  overflow: hidden;
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mcu-hardware-live strong {
+  display: block;
+  margin: 3px 0;
+  font-size: 0.75rem;
+}
+.mcu-hardware-live > div.is-online strong {
+  color: var(--color-success);
+}
+.mcu-hardware-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.mcu-hardware-grid select,
+.mcu-power-grid select {
+  box-sizing: border-box;
+  height: 36px;
+  min-height: 36px;
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 34px;
+  vertical-align: middle;
+}
+.mcu-hardware-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 12px;
+  padding: 9px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-base);
+}
+.mcu-hardware-summary span {
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+}
+.mcu-power-card {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
+  border-radius: 8px;
+  background: var(--color-base);
+}
+.mcu-power-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.mcu-power-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mcu-power-heading small {
+  color: var(--color-accent);
+  font:
+    700 0.54rem 'JetBrains Mono',
+    monospace;
+  letter-spacing: 0.1em;
+}
+.mcu-power-heading strong {
+  font-size: 0.75rem;
+}
+.mcu-power-heading > span {
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+}
+.mcu-power-heading > span.is-online {
+  color: var(--color-success);
+}
+.mcu-power-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.mcu-power-grid label {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.mcu-power-grid label > span {
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+  line-height: 1.35;
+}
+.mcu-power-grid select {
+  width: 100%;
+  min-width: 0;
+}
+.mcu-power-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+}
+.mcu-power-actions output {
+  min-width: 0;
+  overflow: hidden;
+  flex: 1;
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mcu-settings-grid label {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mcu-settings-grid label.is-wide {
+  grid-column: 1 / -1;
+}
+
+.mcu-advanced-toggle {
+  grid-column: 1 / -1;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-mantle);
+}
+.mcu-advanced-toggle > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mcu-advanced-toggle strong {
+  font-size: 0.75rem;
+}
+.mcu-advanced-toggle span {
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+}
+
+.mcu-channel-settings {
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-mantle);
+}
+.mcu-connection-title {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 14px;
+  padding: 12px 0 9px;
+  border-top: 1px solid var(--color-border);
+}
+.mcu-connection-title small {
+  color: var(--color-accent);
+  font:
+    700 0.56rem 'JetBrains Mono',
+    monospace;
+  letter-spacing: 0.1em;
+}
+.mcu-connection-title strong {
+  font-size: 0.8125rem;
+}
+.mcu-channel-topology {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 34%, var(--color-border));
+  border-radius: 8px;
+  background: var(--color-base);
+}
+.mcu-channel-topology > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 11px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-mantle);
+}
+.mcu-channel-topology small {
+  color: var(--color-accent);
+  font:
+    0.56rem 'JetBrains Mono',
+    monospace;
+}
+.mcu-channel-topology strong {
+  font-size: 0.75rem;
+}
+.mcu-channel-topology div span {
+  overflow: hidden;
+  color: var(--color-overlay1);
+  font:
+    0.58rem 'JetBrains Mono',
+    monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mcu-channel-topology > b {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-overlay1);
+  font:
+    700 0.48rem 'JetBrains Mono',
+    monospace;
+  text-align: center;
+}
+.mcu-channel-topology > b i {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-accent),
+    var(--color-success),
+    transparent
+  );
+}
+.mcu-settings-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+.mcu-settings-section-title > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mcu-settings-section-title small {
+  color: var(--color-accent);
+  font:
+    700 0.56rem 'JetBrains Mono',
+    monospace;
+  letter-spacing: 0.1em;
+}
+.mcu-settings-section-title strong {
+  font-size: 0.8125rem;
+}
+.mcu-settings-section-title span {
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+}
+.mcu-channel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.mcu-channel-grid label {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.mcu-channel-grid label.is-wide {
+  grid-column: 1 / -1;
+}
+.mcu-channel-settings input,
+.mcu-channel-settings select {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  min-height: 36px;
+}
+.mcu-channel-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+.mcu-channel-actions span {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mcu-channel-actions button {
+  flex: 0 0 auto;
+}
+.mcu-ai-connect {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+.mcu-mcp-endpoint,
+.mcu-ai-command {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-base);
+}
+.mcu-mcp-endpoint span,
+.mcu-ai-command strong {
+  flex: 0 0 118px;
+  color: var(--color-subtext0);
+  font-size: 0.6875rem;
+}
+.mcu-mcp-endpoint code,
+.mcu-ai-command code {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-accent);
+  font:
+    0.59rem 'JetBrains Mono',
+    monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mcu-ai-command > div {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+.mcu-ai-command button {
+  flex: 0 0 auto;
+}
+.mcu-ai-connect > small {
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+}
+
+.mcu-settings-grid label > span {
+  color: var(--color-overlay1);
+  font-size: 0.6875rem;
+}
+
+.mcu-settings-grid label > div {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px;
+}
+
+.mcu-settings-grid input {
+  width: 100%;
+  min-width: 0;
+  font:
+    0.65rem 'JetBrains Mono',
+    monospace;
+}
+
+.mcu-settings-dialog > p {
+  margin: 2px 17px 14px;
+  padding: 9px 11px;
+  border: 1px solid var(--color-warning-border);
+  border-radius: 7px;
+  color: var(--color-warning);
+  background: var(--color-warning-subtle);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+}
+
+.mcu-settings-dialog > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 17px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-mantle);
+}
+
+@media (max-width: 1260px) {
+  .mcu-workbench {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+  .mcu-board-card > strong {
+    font-size: 0.6875rem;
+    letter-spacing: -0.02em;
+  }
+  .mcu-console-grid {
+    grid-template-columns: minmax(0, 1.45fr) minmax(270px, 0.75fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .mcu-mcp-channel {
+    grid-template-columns: minmax(130px, auto) minmax(150px, 1fr) minmax(150px, auto) auto;
+  }
+  .mcu-mcp-channel > small {
+    display: none;
+  }
+  .mcu-firmware-bar {
+    grid-template-columns: minmax(138px, 0.65fr) minmax(0, 1.35fr) auto;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 6px 12px;
+  }
+  .mcu-pipeline-title {
+    grid-row: 1 / 3;
+    min-width: 0;
+  }
+  .mcu-artifact {
+    grid-column: 2;
+    align-self: end;
+  }
+  .mcu-pipeline-status {
+    grid-column: 2;
+    align-self: start;
+  }
+  .mcu-pipeline-status > div {
+    margin-top: 5px;
+  }
+  .mcu-flash-actions {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    flex-direction: column;
+  }
+  .mcu-flash-actions button {
+    min-width: 88px;
+  }
+}
+
+@media (max-width: 980px) {
+  .mcu-workbench {
+    height: auto;
+    min-height: 0;
+    grid-template-columns: 1fr;
+  }
+  .mcu-board-rail {
+    max-height: 240px;
+  }
+  .mcu-main {
+    min-height: 720px;
+  }
+  .mcu-mcp-channel {
+    grid-template-columns: minmax(150px, 1fr) minmax(180px, 1fr) auto;
+  }
+  .mcu-mcp-channel p,
+  .mcu-mcp-channel > small {
+    display: none;
+  }
+}

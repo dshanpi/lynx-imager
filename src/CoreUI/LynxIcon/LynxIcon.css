@@ -1,0 +1,16 @@
+.lynx-icon {
+  display: block;
+  flex: 0 0 auto;
+  color: currentColor;
+  fill: currentColor;
+}
+
+.lynx-icon--spin {
+  animation: lynx-icon-spin 0.9s linear infinite;
+}
+
+@keyframes lynx-icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

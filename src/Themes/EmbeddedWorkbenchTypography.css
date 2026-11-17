@@ -1,0 +1,117 @@
+/* REQ-UI-009: deterministic type hierarchy for Linux and MCU engineering workbenches. */
+#root :is(.board-workbench, .mcu-workbench) {
+  --workbench-weight-label: var(--ui-weight-regular);
+  --workbench-weight-value: var(--ui-weight-medium);
+  --workbench-weight-heading: var(--ui-weight-semibold);
+  --workbench-weight-kicker: var(--ui-weight-bold);
+}
+
+#root :is(.board-workbench, .mcu-workbench) .device-workbench-kicker,
+#root :is(.board-workbench, .mcu-workbench) .engineering-panel > header small {
+  font-weight: var(--workbench-weight-kicker);
+}
+
+#root :is(.board-workbench, .mcu-workbench) .device-workbench-header h2 {
+  font-size: 18px;
+  font-weight: var(--workbench-weight-heading);
+}
+
+#root :is(.board-workbench, .mcu-workbench) .device-workbench-header p {
+  font-size: var(--ui-text-caption);
+  font-weight: var(--workbench-weight-label);
+}
+
+#root :is(.board-workbench, .mcu-workbench) .device-workbench-header > span,
+#root :is(.board-workbench, .mcu-workbench) .device-workbench-header > button,
+#root :is(.board-workbench, .mcu-workbench) .device-workbench-tabs button {
+  font-weight: var(--workbench-weight-heading);
+}
+
+#root :is(.board-workbench, .mcu-workbench) .device-board-name-row > strong {
+  font-weight: var(--workbench-weight-heading);
+}
+
+#root :is(.board-workbench, .mcu-workbench) .device-board-copy > small,
+#root :is(.board-workbench, .mcu-workbench) .device-board-specs :is(b, em) {
+  font-weight: var(--workbench-weight-label);
+}
+
+#root :is(.board-workbench, .mcu-workbench) .board-live-row {
+  font-weight: var(--workbench-weight-medium);
+}
+
+#root :is(.board-workbench, .mcu-workbench) .engineering-panel > header h3 {
+  font-size: var(--ui-text-body);
+  font-weight: var(--workbench-weight-heading);
+}
+
+#root :is(.board-workbench, .mcu-workbench) .engineering-panel > header > span {
+  font-size: var(--ui-text-caption);
+  font-weight: var(--workbench-weight-medium);
+}
+
+#root :is(.board-workbench, .mcu-workbench) .engineering-panel dt {
+  font-size: var(--ui-text-caption);
+  font-weight: var(--workbench-weight-label);
+}
+
+#root :is(.board-workbench, .mcu-workbench) .engineering-panel dd {
+  font-size: var(--ui-text-caption);
+  font-weight: var(--workbench-weight-value);
+}
+
+#root .mcu-workbench .mcu-debug-source > header button,
+#root .mcu-workbench .mcu-debug-source-tabs {
+  font-weight: var(--workbench-weight-medium);
+}
+
+#root .mcu-workbench .mcu-debug-source-tabs span {
+  font-weight: var(--workbench-weight-label);
+}
+
+#root .mcu-workbench .mcu-debug-source-tabs span.is-active,
+#root .mcu-workbench .mcu-debug-source-empty strong {
+  font-weight: var(--workbench-weight-heading);
+}
+
+#root .mcu-workbench .mcu-debug-source-empty span,
+#root .mcu-workbench .mcu-debug-empty-row {
+  font-weight: var(--workbench-weight-label);
+}
+
+#root .mcu-workbench .mcu-memory-table > span {
+  font-size: var(--ui-text-caption);
+  font-weight: var(--workbench-weight-label);
+}
+
+#root .mcu-workbench .mcu-memory-table > span.is-heading :is(b, strong) {
+  color: #6f7e91;
+  font-weight: var(--workbench-weight-heading);
+}
+
+#root .mcu-workbench .mcu-memory-table > span:not(.is-heading) strong {
+  font-weight: var(--workbench-weight-value);
+}
+
+#root .mcu-workbench .mcu-memory-table > span:not(.is-heading) :is(b, small) {
+  font-weight: var(--workbench-weight-label);
+}
+
+#root .mcu-workbench .mcu-debug-registers > div > span {
+  font-size: var(--ui-text-caption);
+  font-weight: var(--workbench-weight-label);
+}
+
+#root .mcu-workbench .mcu-debug-registers b {
+  font-weight: var(--workbench-weight-value);
+}
+
+#root .mcu-workbench .mcu-debug-registers code,
+#root .mcu-workbench .mcu-debug-console code,
+#root .mcu-workbench .mcu-debug-recent :is(small, p) {
+  font-weight: var(--workbench-weight-label);
+}
+
+#root .mcu-workbench .mcu-debug-console > header > span {
+  font-weight: var(--workbench-weight-medium);
+}

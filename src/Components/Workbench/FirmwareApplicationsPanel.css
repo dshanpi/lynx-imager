@@ -1,0 +1,677 @@
+#root .layout .firmware-layout.is-applications {
+  grid-template-columns: minmax(0, 1fr);
+}
+#root .layout .firmware-layout.is-applications .firmware-setup {
+  padding: 16px;
+}
+#root .layout .firmware-tabs {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+#root .layout .firmware-applications {
+  min-width: 0;
+  padding-top: 16px;
+}
+#root .layout .firmware-applications h3 {
+  font-size: 20px;
+  line-height: 1.4;
+  margin: 0 0 14px;
+}
+#root .layout .firmware-app-filters {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) minmax(125px, 0.8fr) minmax(220px, 1.6fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+#root .layout .firmware-app-filters select {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+}
+#root .layout .firmware-app-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--lynx-border);
+  border-radius: 6px;
+  padding: 0 10px;
+  min-width: 0;
+  background: var(--lynx-bg-surface);
+}
+#root .layout .firmware-app-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--lynx-text-primary);
+  min-height: 36px;
+  font: inherit;
+}
+#root .layout .firmware-app-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+#root .layout .firmware-application-card {
+  border: 1px solid var(--lynx-border);
+  border-radius: 8px;
+  padding: 16px 14px 10px;
+  min-width: 0;
+  background: var(--lynx-bg-surface);
+}
+#root .layout .firmware-application-card.app-nekobox {
+  border-color: var(--lynx-accent);
+  background: color-mix(in srgb, var(--lynx-accent) 5%, var(--lynx-bg-surface));
+}
+#root .layout .firmware-app-card-head {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  min-width: 0;
+}
+#root .layout .firmware-app-icon {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: #5474b8;
+}
+#root .layout .app-nekobox .firmware-app-icon {
+  background: #8056dc;
+}
+#root .layout .app-usb-display .firmware-app-icon {
+  background: #159de4;
+}
+#root .layout .app-micropython .firmware-app-icon {
+  background: #3476a4;
+}
+#root .layout .app-lvgl .firmware-app-icon {
+  background: #e75b74;
+}
+#root .layout .app-hello-world .firmware-app-icon {
+  background: #50904c;
+}
+#root .layout .app-shell .firmware-app-icon {
+  background: #4c5567;
+}
+#root .layout .firmware-app-card-name {
+  flex: 1;
+  min-width: 0;
+}
+#root .layout .firmware-app-card-name h4 {
+  font-size: 15px;
+  margin: 0 0 4px;
+  overflow-wrap: anywhere;
+}
+#root .layout .firmware-app-card-name p {
+  font-size: 12px;
+  color: var(--lynx-text-secondary);
+  margin: 0 0 6px;
+}
+#root .layout .firmware-app-card-head button {
+  font-size: 12px;
+  padding: 3px 6px;
+  flex-shrink: 0;
+  min-height: 29px;
+}
+#root .layout .firmware-app-route {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--lynx-accent);
+  background: color-mix(in srgb, var(--lynx-accent) 11%, transparent);
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+#root .layout .firmware-app-card-status {
+  border-top: 1px solid var(--lynx-border);
+  color: var(--lynx-text-secondary);
+  font-size: 12px;
+  margin: 13px 0 0;
+  padding-top: 9px;
+}
+#root .layout .firmware-app-info,
+#root .layout .firmware-app-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+#root .layout .firmware-app-info {
+  margin: 24px 0 0;
+  color: var(--lynx-text-secondary);
+  background: var(--lynx-bg-app);
+}
+#root .layout .firmware-app-warning {
+  color: var(--lynx-text-primary);
+  background: color-mix(in srgb, #e6a227 12%, var(--lynx-bg-surface));
+  border: 1px solid color-mix(in srgb, #e6a227 45%, var(--lynx-border));
+  margin: 12px 0;
+}
+#root .layout .firmware-app-info svg,
+#root .layout .firmware-app-warning svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+#root .layout .firmware-app-state {
+  padding: 30px 14px;
+  color: var(--lynx-text-secondary);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+#root .layout .firmware-app-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+#root .layout .firmware-app-breadcrumb button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--lynx-text-secondary);
+}
+#root .layout .firmware-app-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.1fr) minmax(220px, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+#root .layout .firmware-app-detail-card,
+#root .layout .firmware-app-install-card {
+  padding: 16px;
+  min-width: 0;
+  border: 1px solid var(--lynx-border);
+  border-radius: 8px;
+  background: var(--lynx-bg-surface);
+}
+#root .layout .firmware-app-introduction {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.65fr) minmax(0, 1.5fr);
+  gap: 16px;
+  align-items: start;
+}
+#root .layout .firmware-app-art {
+  min-height: 185px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  color: var(--lynx-accent);
+  background: var(--lynx-bg-app);
+}
+#root .layout .firmware-app-art small {
+  font-size: 11px;
+  color: var(--lynx-text-secondary);
+}
+#root .layout .firmware-app-description {
+  min-width: 0;
+}
+#root .layout .firmware-app-description h3 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+#root .layout .firmware-app-description p {
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--lynx-text-secondary);
+}
+#root .layout .firmware-app-specs {
+  border: 1px solid var(--lynx-border);
+  border-radius: 6px;
+  margin: 12px 0 0;
+  font-size: 12px;
+}
+#root .layout .firmware-app-specs > div {
+  display: grid;
+  grid-template-columns: 85px minmax(0, 1fr);
+  gap: 5px;
+  padding: 7px;
+}
+#root .layout .firmware-app-specs > div + div {
+  border-top: 1px solid var(--lynx-border);
+}
+#root .layout .firmware-app-specs dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+#root .layout .firmware-app-version {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0;
+}
+#root .layout .firmware-app-version :is(select, code) {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+#root .layout .firmware-app-version code {
+  background: var(--lynx-bg-app);
+  border: 1px solid var(--lynx-border);
+  border-radius: 6px;
+  padding: 9px;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+#root .layout .firmware-app-install-card > p {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+#root .layout .firmware-app-install-card svg {
+  flex-shrink: 0;
+}
+#root .layout .firmware-app-fact {
+  border-radius: 5px;
+  background: var(--lynx-bg-app);
+  padding: 9px;
+  margin: 9px 0;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+#root .layout .firmware-app-install-card > button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 38px;
+  margin-top: 10px;
+}
+#root .layout .firmware-app-install-card .firmware-app-download {
+  margin-top: 24px;
+  background: var(--lynx-accent);
+  color: white;
+}
+#root .layout .firmware-app-muted {
+  color: var(--lynx-text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+}
+#root .layout .firmware-candidate-open {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+#root .layout .firmware-candidate-results {
+  border: 1px solid var(--lynx-border);
+  border-radius: 6px;
+  padding: 10px;
+}
+#root .layout .firmware-candidate-results > p {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+#root .layout .firmware-candidate-results dl {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 8px;
+  font-size: 12px;
+}
+#root .layout .firmware-candidate-results dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+@container (max-width: 820px) {
+  #root .layout .firmware-app-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #root .layout .firmware-app-filters {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  #root .layout .firmware-app-search {
+    grid-column: 1 / -1;
+  }
+  #root .layout .firmware-app-detail-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container (max-width: 480px) {
+  #root .layout .firmware-app-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #root .layout .firmware-app-introduction {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #root .layout .firmware-app-art {
+    min-height: 110px;
+  }
+}
+
+#root .layout .firmware-release-source {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--lynx-border);
+  border-radius: 8px;
+}
+#root .layout .firmware-release-source > div {
+  min-width: 0;
+}
+#root .layout .firmware-release-source strong,
+#root .layout .firmware-release-source span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+#root .layout .firmware-release-source p {
+  margin: 6px 0;
+}
+#root .layout .firmware-release-source small {
+  color: var(--lynx-text-secondary);
+}
+#root .layout .firmware-release-source button {
+  flex-shrink: 0;
+}
+@media (max-width: 800px) {
+  #root .layout .firmware-release-source {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+/* Preserve the reference card geometry; configuration remains in the disclosure below. */
+#root .layout .firmware-layout.is-applications .firmware-setup {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+#root .layout .firmware-applications {
+  padding-top: 16px;
+}
+#root .layout .firmware-app-grid {
+  gap: 12px;
+}
+#root .layout .firmware-application-card {
+  padding: 14px 12px 10px;
+  border-radius: 7px;
+  min-height: 116px;
+  box-sizing: border-box;
+}
+#root .layout .firmware-app-icon {
+  width: 42px;
+  height: 42px;
+  flex-basis: 42px;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 2px #ffffff80;
+}
+#root .layout .firmware-app-icon > svg {
+  width: 32px;
+  height: 32px;
+}
+#root .layout .app-nekobox .firmware-app-icon {
+  background: linear-gradient(135deg, #ad86fd, #7945d9);
+}
+#root .layout .app-usb-display .firmware-app-icon {
+  background: linear-gradient(135deg, #73caff, #0b91e9);
+}
+#root .layout .app-lvgl .firmware-app-icon {
+  background: linear-gradient(135deg, #ff9b9e, #e65165);
+}
+#root .layout .app-hello-world .firmware-app-icon {
+  background: linear-gradient(135deg, #7cbb66, #3b823b);
+}
+#root .layout .app-shell .firmware-app-icon {
+  background: linear-gradient(135deg, #66718a, #343c4a);
+}
+#root .layout .firmware-app-card-name h4 {
+  font-size: 14px;
+}
+#root .layout .firmware-app-card-head {
+  gap: 9px;
+}
+#root .layout .firmware-app-card-head button {
+  padding: 4px 5px;
+  font-size: 11px;
+  min-height: 26px;
+}
+#root .layout .firmware-app-card-status {
+  margin: 12px 0 0;
+  padding-top: 8px;
+  font-size: 12px;
+}
+#root .layout .firmware-app-filters {
+  grid-template-columns: 1.05fr 0.9fr 1.7fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+#root .layout .firmware-app-info {
+  margin-top: 24px;
+  padding: 7px 10px;
+}
+#root .layout .firmware-catalog-options {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--lynx-text-secondary);
+}
+#root .layout .firmware-catalog-options > summary {
+  cursor: pointer;
+}
+#root .layout .firmware-catalog-options .firmware-release-source {
+  margin: 12px 0;
+  background: var(--lynx-bg-surface);
+}
+#root .layout .firmware-app-detail-layout {
+  grid-template-columns: minmax(0, 2.2fr) minmax(205px, 1fr);
+  gap: 10px;
+}
+#root .layout .firmware-app-detail-card,
+#root .layout .firmware-app-install-card {
+  padding: 14px;
+}
+#root .layout .firmware-app-introduction {
+  grid-template-columns: 144px minmax(0, 1fr);
+  gap: 16px;
+}
+#root .layout .firmware-app-art {
+  min-height: 150px;
+  background: transparent;
+}
+#root .layout .firmware-app-description h3 {
+  font-size: 18px;
+  line-height: 1.3;
+  margin: 0 0 8px;
+}
+#root .layout .firmware-app-description p {
+  margin: 6px 0;
+}
+#root .layout .firmware-app-specs {
+  margin: 10px 0 0;
+}
+#root .layout .firmware-app-specs > div {
+  grid-template-columns: 78px minmax(0, 1fr);
+  padding: 5px 8px;
+}
+#root .layout .firmware-app-features {
+  color: var(--lynx-text-primary);
+}
+#root .layout .firmware-app-features small {
+  color: var(--lynx-text-secondary);
+  font-size: 11px;
+}
+#root .layout .firmware-app-install-card {
+  min-height: 340px;
+  display: flex;
+  flex-direction: column;
+}
+#root .layout .firmware-app-install-card h3 {
+  font-size: 18px;
+}
+#root .layout .firmware-app-install-card .firmware-app-download {
+  margin-top: 20px;
+}
+#root .layout .firmware-app-install-card .firmware-app-muted:last-child {
+  margin-top: auto;
+  padding-top: 14px;
+}
+#root .layout .firmware-app-version {
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+  margin: 12px 0;
+}
+#root .layout .firmware-app-warning {
+  margin: 10px 0;
+  padding: 7px 10px;
+}
+@container (max-width:650px) {
+  #root .layout .firmware-app-detail-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #root .layout .firmware-app-introduction {
+    grid-template-columns: 130px minmax(0, 1fr);
+  }
+  #root .layout .firmware-app-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  #root .layout .firmware-app-search {
+    grid-column: 1/-1;
+  }
+  #root .layout .firmware-app-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container (min-width:651px) {
+  #root .layout .firmware-app-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  #root .layout .firmware-app-search {
+    grid-column: auto;
+  }
+}
+@container (max-width:420px) {
+  #root .layout .firmware-app-grid,
+  #root .layout .firmware-app-introduction {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+#root .layout .app-nekobox .firmware-app-icon {
+  background-color: #8957df;
+  background-image: linear-gradient(135deg, #ad86fd, #7945d9) !important;
+}
+#root .layout .app-usb-display .firmware-app-icon {
+  background-color: #169dea;
+  background-image: linear-gradient(135deg, #73caff, #0b91e9) !important;
+}
+#root .layout .app-lvgl .firmware-app-icon {
+  background-color: #ef6376;
+  background-image: linear-gradient(135deg, #ff9b9e, #e65165) !important;
+}
+#root .layout .app-hello-world .firmware-app-icon {
+  background-color: #5c9e48;
+  background-image: linear-gradient(135deg, #7cbb66, #3b823b) !important;
+}
+#root .layout .app-shell .firmware-app-icon {
+  background-color: #4a566a;
+  background-image: linear-gradient(135deg, #66718a, #343c4a) !important;
+}
+#root .layout .firmware-app-card-head {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+}
+#root .layout .firmware-app-route {
+  white-space: nowrap;
+  font-size: 11px;
+}
+#root .layout .firmware-app-card-name h4 {
+  white-space: nowrap;
+  font-size: 13px;
+}
+#root .layout .firmware-app-card-head button {
+  font-size: 10px;
+}
+
+#root .layout:has([data-active-workbench='true'] :is(.firmware-applications, .fw-lifecycle)) {
+  --lynx-sidebar-width: 222px;
+  --lynx-device-rail-width: 260px;
+}
+#root .layout .firmware-app-filters select,
+#root .layout .firmware-app-search input {
+  min-height: 32px;
+  height: 32px;
+}
+#root .layout .firmware-application-card {
+  min-height: 118px;
+  padding: 12px 12px 8px;
+}
+#root .layout .firmware-app-card-name h4 {
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+#root .layout .firmware-app-card-name p {
+  margin-bottom: 2px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+#root .layout .firmware-app-card-status {
+  margin-top: 8px;
+  padding-top: 8px;
+}
+#root .layout .firmware-catalog-options {
+  margin: 22px 0 0;
+}
+#root .layout .firmware-catalog-options > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--lynx-bg-app);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+#root .layout .firmware-catalog-options > summary > span {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--lynx-accent);
+}
+#root .layout .firmware-app-breadcrumb {
+  margin-bottom: 8px;
+}
+#root .layout .firmware-app-introduction {
+  grid-template-columns: 144px minmax(0, 1fr);
+  gap: 14px;
+}
+#root .layout .firmware-app-description h3 {
+  font-size: 16px;
+}
+#root .layout .firmware-app-description p {
+  font-size: 12px;
+  line-height: 1.4;
+}
+#root .layout .firmware-app-features {
+  margin: 4px 0;
+}
+#root .layout .firmware-app-features small {
+  font-size: 10px;
+}
+#root .layout .firmware-app-specs dt,
+#root .layout .firmware-app-specs dd {
+  font-size: 12px;
+  line-height: 1.3;
+}
+#root .layout .firmware-app-specs > div {
+  grid-template-columns: 65px minmax(0, 1fr);
+  padding: 5px 8px;
+}
+#root .layout .firmware-app-version select {
+  height: 30px;
+  min-height: 30px;
+}
+#root .layout .firmware-app-install-card > p {
+  font-size: 12px;
+}
+#root .layout .fw-neko-apps small {
+  color: white;
+}

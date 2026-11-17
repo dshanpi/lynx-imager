@@ -1,0 +1,84 @@
+[
+  {
+    "id": "nekobox",
+    "name": "NekoBox",
+    "description": "媒体与游戏盒",
+    "boardModel": "yuzukineko",
+    "system": "zephyr",
+    "routes": [
+      "xip"
+    ],
+    "documentationUrl": "https://zephyr.100ask.net/docs/yuzukineko/dev/zephyr/apps/nekobox",
+    "documentationScope": "应用说明；具体配置以配方为准"
+  },
+  {
+    "id": "usb-display",
+    "name": "USB 副屏",
+    "description": "电脑扩展显示",
+    "boardModel": "yuzukineko",
+    "system": "zephyr",
+    "routes": [
+      "ram",
+      "nor",
+      "uf2"
+    ],
+    "documentationUrl": "https://zephyr.100ask.net/docs/yuzukineko/dev/zephyr/apps/usb-display",
+    "documentationScope": "应用说明；具体配置以配方为准"
+  },
+  {
+    "id": "micropython",
+    "name": "MicroPython",
+    "description": "Python 脚本",
+    "boardModel": "yuzukineko",
+    "system": "zephyr",
+    "routes": [
+      "ram",
+      "nor",
+      "uf2"
+    ],
+    "documentationUrl": "https://zephyr.100ask.net/docs/yuzukineko/dev/zephyr/apps/micropython",
+    "documentationScope": "应用说明；具体配置以配方为准"
+  },
+  {
+    "id": "lvgl",
+    "name": "LVGL 示例",
+    "description": "图形与触摸",
+    "boardModel": "yuzukineko",
+    "system": "zephyr",
+    "routes": [
+      "ram",
+      "nor",
+      "uf2"
+    ],
+    "documentationUrl": "https://zephyr.100ask.net/docs/yuzukineko/dev/zephyr/apps/lvgl",
+    "documentationScope": "应用说明；具体配置以配方为准"
+  },
+  {
+    "id": "hello-world",
+    "name": "Hello World",
+    "description": "串口输出",
+    "boardModel": "yuzukineko",
+    "system": "zephyr",
+    "routes": [
+      "ram",
+      "nor",
+      "uf2"
+    ],
+    "documentationUrl": "https://zephyr.100ask.net/docs/yuzukineko/dev/zephyr/zephyr-build-run",
+    "documentationScope": "通用构建与运行指南，非应用专属文档"
+  },
+  {
+    "id": "shell",
+    "name": "Shell 示例",
+    "description": "交互调试",
+    "boardModel": "yuzukineko",
+    "system": "zephyr",
+    "routes": [
+      "ram",
+      "nor",
+      "uf2"
+    ],
+    "documentationUrl": "https://zephyr.100ask.net/docs/yuzukineko/dev/zephyr/zephyr-build-run",
+    "documentationScope": "通用构建与运行指南，非应用专属文档"
+  }
+]

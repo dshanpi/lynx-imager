@@ -1,0 +1,723 @@
+.adb-file-transfer {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #dce5ef;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 14px rgb(24 48 78 / 5%);
+}
+
+.adb-transfer-heading {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-bottom: 1px solid #e5ebf2;
+  padding: 13px 16px;
+  background:
+    radial-gradient(circle at 82% 0%, rgb(64 132 224 / 8%), transparent 34%),
+    linear-gradient(180deg, #fbfdff 0%, #f8fafc 100%);
+}
+
+.adb-transfer-title {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.adb-transfer-title-icon {
+  width: 38px;
+  height: 38px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #cfe0f5;
+  border-radius: 10px;
+  background: #edf5ff;
+  color: #2273cf;
+}
+
+.adb-transfer-title > div,
+.adb-transfer-binding,
+.adb-transfer-action header > div,
+.adb-transfer-task-heading > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.adb-transfer-title small,
+.adb-transfer-history header small {
+  color: #7b8da3;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.adb-transfer-title strong {
+  color: #26364c;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.adb-transfer-title p {
+  margin: 2px 0 0;
+  color: #77869a;
+  font-size: 10px;
+}
+
+.adb-transfer-binding {
+  max-width: 280px;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.adb-transfer-binding > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #7b899c;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.adb-transfer-binding > span i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #a7b2c1;
+}
+
+.adb-transfer-binding > span.is-online,
+.adb-transfer-tasks article.is-success .adb-transfer-task-heading > em {
+  color: #16845e;
+}
+
+.adb-transfer-binding > span.is-online i {
+  background: #1aa574;
+  box-shadow: 0 0 0 3px #e5f7f0;
+}
+
+.adb-transfer-binding > strong {
+  max-width: 100%;
+  overflow: hidden;
+  color: #40516a;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adb-transfer-layout {
+  display: grid;
+  grid-template-columns: minmax(500px, 1.5fr) minmax(300px, 0.9fr);
+  min-height: 324px;
+}
+
+.adb-transfer-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-content: start;
+  border-right: 1px solid #e5ebf2;
+  padding: 12px;
+  background: #fbfcfe;
+}
+
+.adb-transfer-action {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid #dfe6ee;
+  border-radius: 10px;
+  padding: 13px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(29 51 78 / 3%);
+}
+
+.adb-transfer-action > header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #edf1f5;
+}
+
+.adb-transfer-action > header > span {
+  width: 31px;
+  height: 31px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  background: #eaf3ff;
+  color: #2476d2;
+}
+
+.adb-transfer-action.is-download > header > span {
+  background: #eaf8f2;
+  color: #16845e;
+}
+
+.adb-transfer-action header strong {
+  color: #2d3d52;
+  font-size: 12px;
+}
+
+.adb-transfer-action header small {
+  overflow: hidden;
+  margin-top: 2px;
+  color: #8492a5;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adb-transfer-action > label {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.adb-transfer-action > label > span {
+  color: #66768b;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.adb-transfer-action input {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  box-sizing: border-box;
+  border: 1px solid #d8e1ec;
+  border-radius: 7px;
+  padding: 0 10px;
+  background: #f9fbfd;
+  color: #314158;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 10px;
+  outline: none;
+}
+
+.adb-transfer-action input:focus {
+  border-color: #7fb2ec;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(45 127 219 / 10%);
+}
+
+.adb-transfer-file-picker {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  border: 1px dashed #b9c9db;
+  border-radius: 7px;
+  padding: 0 9px;
+  background: #f8fbff;
+  color: #55708e;
+  text-align: left;
+}
+
+.adb-transfer-file-picker:hover:not(:disabled) {
+  border-color: #6ca5e6;
+  background: #f0f7ff;
+}
+
+.adb-transfer-file-picker b {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adb-transfer-file-picker em {
+  color: #2375cf;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.adb-transfer-primary {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: auto;
+  border: 0;
+  border-radius: 7px;
+  background: #2478d3;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgb(36 120 211 / 18%);
+}
+
+.is-download .adb-transfer-primary {
+  background: #16845e;
+  box-shadow: 0 4px 10px rgb(22 132 94 / 18%);
+}
+
+.adb-transfer-primary:disabled,
+.adb-transfer-file-picker:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.adb-transfer-download-hint {
+  min-height: 50px;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  border-radius: 7px;
+  padding: 9px;
+  background: #f4f8fb;
+  color: #718096;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.adb-transfer-download-hint svg {
+  flex: 0 0 auto;
+  color: #55708e;
+}
+
+.adb-transfer-overwrite {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #e1e7ee;
+  border-radius: 8px;
+  padding: 8px 11px;
+  background: #fff;
+}
+
+.adb-transfer-overwrite > input {
+  width: 14px;
+  height: 14px;
+  accent-color: #2478d3;
+}
+
+.adb-transfer-overwrite > span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.adb-transfer-overwrite strong {
+  color: #40516a;
+  font-size: 10px;
+}
+
+.adb-transfer-overwrite small {
+  color: #8290a3;
+  font-size: 10px;
+}
+
+.adb-transfer-history {
+  min-width: 0;
+  padding: 12px;
+  background: #fff;
+}
+
+.adb-transfer-history > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+
+.adb-transfer-history > header > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.adb-transfer-history > header strong {
+  color: #304057;
+  font-size: 12px;
+}
+
+.adb-transfer-history > header > span {
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: #eef4fb;
+  color: #54708f;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.adb-transfer-tasks {
+  display: flex;
+  max-height: 286px;
+  flex-direction: column;
+  gap: 7px;
+  overflow: auto;
+}
+
+.adb-transfer-tasks > article {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 9px;
+  background: #fbfcfe;
+}
+
+.adb-transfer-tasks > article.is-running,
+.adb-transfer-tasks > article.is-queued {
+  border-color: #c9dcf3;
+  background: #f8fbff;
+}
+
+.adb-transfer-tasks > article.is-failed {
+  border-color: #f0ccc8;
+  background: #fff9f8;
+}
+
+.adb-transfer-task-heading {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+}
+
+.adb-transfer-task-icon {
+  width: 26px;
+  height: 26px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 7px;
+  background: #eaf3ff;
+  color: #2879d4;
+}
+
+.adb-transfer-task-heading strong {
+  overflow: hidden;
+  color: #34445a;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.adb-transfer-task-heading small {
+  color: #8794a6;
+  font-size: 10px;
+}
+
+.adb-transfer-task-heading > em {
+  color: #52708f;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.adb-transfer-tasks article.is-failed .adb-transfer-task-heading > em,
+.adb-transfer-error,
+.adb-transfer-tasks article > p {
+  color: #b42318;
+}
+
+.adb-transfer-progress-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+}
+
+.adb-transfer-progress-row progress {
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: #e5ebf2;
+  appearance: none;
+}
+
+.adb-transfer-progress-row progress::-webkit-progress-bar {
+  border-radius: 999px;
+  background: #e5ebf2;
+}
+
+.adb-transfer-progress-row progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2580df, #55a1ef);
+}
+
+.adb-transfer-progress-row b {
+  color: #52677f;
+  font-size: 10px;
+  text-align: right;
+}
+
+.adb-transfer-task-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.adb-transfer-task-meta small {
+  color: #7c8b9e;
+  font-size: 10px;
+}
+
+.adb-transfer-task-meta button {
+  border: 1px solid #e0b4af;
+  border-radius: 5px;
+  padding: 2px 7px;
+  background: #fff;
+  color: #b42318;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.adb-transfer-tasks article > p,
+.adb-transfer-error {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.adb-transfer-error {
+  margin-bottom: 8px;
+  border: 1px solid #f0ccc8;
+  border-radius: 7px;
+  padding: 7px 9px;
+  background: #fff6f5;
+}
+
+.adb-transfer-empty,
+.adb-transfer-unbound {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  color: #8a98aa;
+  text-align: center;
+}
+
+.adb-transfer-empty {
+  min-height: 190px;
+  border: 1px dashed #d8e1eb;
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+
+.adb-transfer-empty strong,
+.adb-transfer-unbound strong {
+  color: #52647b;
+  font-size: 10px;
+}
+
+.adb-transfer-empty span,
+.adb-transfer-unbound span {
+  max-width: 270px;
+  color: #8794a6;
+  font-size: 10px;
+}
+
+.adb-transfer-unbound {
+  min-height: 180px;
+  padding: 24px;
+}
+
+[data-theme='lynx-dark'] .adb-file-transfer {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+[data-theme='lynx-dark'] .adb-transfer-heading {
+  border-bottom-color: var(--lynx-divider);
+  background: var(--lynx-bg-subtle);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-title-icon,
+[data-theme='lynx-dark'] .adb-transfer-action > header > span,
+[data-theme='lynx-dark'] .adb-transfer-task-icon {
+  border-color: var(--lynx-border-strong);
+  background: var(--lynx-accent-subtle);
+  color: var(--lynx-accent);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-action.is-download > header > span {
+  background: var(--lynx-success-bg);
+  color: var(--lynx-success);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-title small,
+[data-theme='lynx-dark'] .adb-transfer-history header small,
+[data-theme='lynx-dark'] .adb-transfer-title p,
+[data-theme='lynx-dark'] .adb-transfer-binding > span,
+[data-theme='lynx-dark'] .adb-transfer-action header small,
+[data-theme='lynx-dark'] .adb-transfer-overwrite small,
+[data-theme='lynx-dark'] .adb-transfer-task-heading small,
+[data-theme='lynx-dark'] .adb-transfer-task-meta small,
+[data-theme='lynx-dark'] .adb-transfer-empty,
+[data-theme='lynx-dark'] .adb-transfer-unbound,
+[data-theme='lynx-dark'] .adb-transfer-empty span,
+[data-theme='lynx-dark'] .adb-transfer-unbound span {
+  color: var(--lynx-text-muted);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-title strong,
+[data-theme='lynx-dark'] .adb-transfer-binding > strong,
+[data-theme='lynx-dark'] .adb-transfer-action header strong,
+[data-theme='lynx-dark'] .adb-transfer-overwrite strong,
+[data-theme='lynx-dark'] .adb-transfer-history > header strong,
+[data-theme='lynx-dark'] .adb-transfer-task-heading strong,
+[data-theme='lynx-dark'] .adb-transfer-empty strong,
+[data-theme='lynx-dark'] .adb-transfer-unbound strong {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-actions {
+  border-color: var(--lynx-divider);
+  background: var(--lynx-bg-subtle);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-action,
+[data-theme='lynx-dark'] .adb-transfer-overwrite,
+[data-theme='lynx-dark'] .adb-transfer-history {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+[data-theme='lynx-dark'] .adb-transfer-action > header {
+  border-bottom-color: var(--lynx-divider);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-action > label > span,
+[data-theme='lynx-dark'] .adb-transfer-file-picker,
+[data-theme='lynx-dark'] .adb-transfer-download-hint,
+[data-theme='lynx-dark'] .adb-transfer-task-heading > em,
+[data-theme='lynx-dark'] .adb-transfer-progress-row b {
+  color: var(--lynx-text-secondary);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-action input,
+[data-theme='lynx-dark'] .adb-transfer-file-picker,
+[data-theme='lynx-dark'] .adb-transfer-download-hint,
+[data-theme='lynx-dark'] .adb-transfer-empty,
+[data-theme='lynx-dark'] .adb-transfer-tasks > article {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-subtle);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-action input {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-action input:focus,
+[data-theme='lynx-dark'] .adb-transfer-file-picker:hover:not(:disabled) {
+  border-color: var(--lynx-accent);
+  background: var(--lynx-bg-hover);
+  box-shadow: var(--lynx-focus-ring);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-history > header > span {
+  background: var(--lynx-accent-subtle);
+  color: var(--lynx-accent);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-tasks > article.is-running,
+[data-theme='lynx-dark'] .adb-transfer-tasks > article.is-queued {
+  border-color: var(--lynx-border-strong);
+  background: var(--lynx-bg-selected);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-tasks > article.is-failed,
+[data-theme='lynx-dark'] .adb-transfer-error {
+  border-color: var(--lynx-danger);
+  background: var(--lynx-danger-bg);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-tasks article.is-failed .adb-transfer-task-heading > em,
+[data-theme='lynx-dark'] .adb-transfer-error,
+[data-theme='lynx-dark'] .adb-transfer-tasks article > p {
+  color: var(--lynx-danger);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-progress-row progress,
+[data-theme='lynx-dark'] .adb-transfer-progress-row progress::-webkit-progress-bar {
+  background: var(--lynx-divider);
+}
+
+[data-theme='lynx-dark'] .adb-transfer-task-meta button {
+  border-color: var(--lynx-danger);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-danger);
+}
+
+.adb-file-transfer.is-compact {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.adb-file-transfer.is-compact .adb-transfer-heading {
+  min-height: 54px;
+}
+
+.adb-file-transfer.is-compact .adb-transfer-title p,
+.adb-file-transfer.is-compact .adb-transfer-binding strong,
+.adb-file-transfer.is-compact .adb-transfer-overwrite {
+  display: none;
+}
+
+.adb-file-transfer.is-compact .adb-transfer-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.adb-file-transfer.is-compact .adb-transfer-actions {
+  grid-template-columns: 1fr;
+  border-right: 0;
+  border-bottom: 1px solid #e5ebf2;
+}
+
+@media (max-width: 1180px) {
+  .adb-transfer-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .adb-transfer-actions {
+    border-right: 0;
+    border-bottom: 1px solid #e5ebf2;
+  }
+}
+
+@media (max-width: 760px) {
+  .adb-transfer-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .adb-transfer-binding {
+    max-width: 100%;
+    align-items: flex-start;
+  }
+
+  .adb-transfer-actions {
+    grid-template-columns: 1fr;
+  }
+}

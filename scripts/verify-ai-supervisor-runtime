@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$repo_root"
+
+if [[ "$(uname -s)" == "Linux" && -z "${LYNX_AI_RUNTIME_XVFB_ACTIVE:-}" ]]; then
+  exec env LYNX_AI_RUNTIME_XVFB_ACTIVE=1 xvfb-run -a "$0"
+fi
+
+for executable in tauri-driver WebKitWebDriver socat; do
+  command -v "$executable" >/dev/null 2>&1 || {
+    printf 'AI supervisor runtime gate failed: %s is required.\n' "$executable" >&2
+    exit 1
+  }
+done
+
+if [[ "${LYNX_AI_RUNTIME_SKIP_BUILD:-0}" != "1" ]]; then
+  VITE_LYNX_AI_RUNTIME_GATE=1 npm run tauri build -- --debug --no-bundle
+fi
+
+node scripts/verify-ai-supervisor-runtime.mjs

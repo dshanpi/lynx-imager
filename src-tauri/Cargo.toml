@@ -1,0 +1,120 @@
+[package]
+name = "lynx-app"
+version = "0.1.0"
+description = "DshanPI LYNX embedded development and production tool."
+authors = ["DshanPI"]
+edition = "2021"
+
+[lib]
+name = "lynx_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+libefex-sys = { path = "libs/libefex/rust/libefex-sys" }
+fontdue = "0.9"
+
+[dependencies]
+chrono = { version = "=0.4.45", features = ["serde"] }
+tauri = { version = "2", features = ["devtools"] }
+tauri-plugin-opener = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
+tauri-plugin-log = "2"
+tauri-plugin-shell = "2"
+tauri-plugin-deep-link = "2"
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+tokio = { version = "1.51.1", features = ["full"] }
+anyhow = "1"
+thiserror = "2"
+lazy_static = "1.4"
+libefex = { path = "libs/libefex/rust/libefex" }
+capstone = "0.14"
+adb_client = { path = "libs/adb_client/adb_client" }
+mbrman = "0.6"
+gptman = "3.0.0"
+crc32fast = "1.4"
+flate2 = "1"
+xz2 = { version = "0.1.7", features = ["static"] }
+fs2 = "0.4"
+rusb = "0.9"
+libusb1-sys = { version = "0.7", features = ["vendored"] }
+serialport = { version = "4", features = ["usbportinfo-interface"] }
+fdt = "0.1"
+android-sparse = "0.6"
+# axum is shared by the OAuth callback, diagnostics test server and AI gateways.
+axum = "0.8"
+hex = "0.4"
+rmcp = { version = "3.0.0", features = [
+  "client",
+  "transport-streamable-http-client-reqwest",
+  "transport-streamable-http-server",
+] }
+tokio-util = "0.7"
+# AI 聊天代理（ai 模块）：reqwest 调用大模型 OpenAI 兼容接口并流式回传，
+# futures-util 处理 SSE 流。default-features=false 关掉默认特性（用 rustls 不依赖 OpenSSL）。
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
+futures-util = "0.3"
+# 100ask.net OAuth2 登录（auth 模块）：rand 生成 OAuth state 与 PKCE code_verifier，
+# url 构造授权地址，sha2+base64 计算 PKCE code_challenge（S256）。
+rand = "0.8"
+url = "2"
+sha2 = "0.10"
+hmac = "0.12"
+base64 = "0.22"
+image = { version = "0.25", default-features = false, features = ["jpeg"] }
+ed25519-dalek = "2"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+ssh2 = { version = "0.9", features = ["vendored-openssl"] }
+# Parse approved local-course argv without interpreting shell expressions.
+shlex = "=2.0.1"
+# Keep the native transport bundle exact; [patch.crates-io] below routes it to
+# the audited local copy with the Windows integrated-MAC boundary fix.
+libssh2-sys = "=0.3.3"
+regex = "1"
+goblin = "0.10"
+keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+nokhwa = { version = "0.10.11", features = ["input-v4l"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+nokhwa = { version = "0.10.11", features = ["input-avfoundation"] }
+
+[target.'cfg(windows)'.dependencies]
+nokhwa = { version = "0.10.11", features = ["input-msmf"] }
+winreg = "0.56"
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_System_Com",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_LibraryLoader",
+    "Win32_Devices_DeviceAndDriverInstallation",
+    "Win32_Devices_Usb",
+    "Win32_Graphics_Gdi",
+    "Win32_Security",
+    "Win32_System_JobObjects",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_IO",
+    "Win32_System_Threading",
+] }
+raw-window-handle = "0.6"
+
+[target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+
+[dev-dependencies]
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
+
+[patch.crates-io]
+libssh2-sys = { path = "vendor/libssh2-sys" }

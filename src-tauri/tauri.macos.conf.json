@@ -1,0 +1,19 @@
+{
+  "bundle": {
+    "resources": {
+      "resources/runtime/darwin-aarch64/pyembed": "pyembed",
+      "resources/runtime/darwin-aarch64/openocd": "openocd",
+      "resources/binaries/openixcli": "bin/openixcli",
+      "resources/binaries/openrockcli": "bin/openrockcli",
+      "resources/binaries/openrockcli-LICENSE": "bin/openrockcli-LICENSE",
+      "resources/binaries/uuu": "bin/uuu",
+      "resources/binaries/dfu-util": "bin/dfu-util",
+      "resources/binaries/dfu-util-COPYING": "bin/dfu-util-COPYING",
+      "resources/binaries/libusb-1.0.dylib": "bin/libusb-1.0.dylib",
+      "resources/binaries/libssl.3.dylib": "bin/libssl.3.dylib",
+      "resources/binaries/libcrypto.3.dylib": "bin/libcrypto.3.dylib",
+      "resources/binaries/libzstd.1.dylib": "bin/libzstd.1.dylib",
+      "resources/binaries/libtinyxml2.11.dylib": "bin/libtinyxml2.11.dylib"
+    }
+  }
+}

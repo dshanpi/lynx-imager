@@ -1,0 +1,113 @@
+.learn-hub-section {
+  padding: 22px;
+  margin: 18px 0;
+}
+.learn-hub-section h2 {
+  margin: 0 0 18px;
+  font-size: 20px;
+}
+.learn-session-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  padding: 16px !important;
+  margin: 8px 0;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+.learn-session-row > span:first-child {
+  flex: 1;
+}
+.learn-session-row small {
+  display: block;
+  color: var(--color-subtext0);
+  margin-top: 5px;
+}
+.learn-cloud-grid {
+  display: grid;
+  grid-template-columns: 175px minmax(300px, 1fr) 270px;
+  gap: 18px;
+  align-items: start;
+  margin-top: 18px;
+}
+.learn-cloud-content,
+.learn-cloud-agent,
+.learn-cloud-steps {
+  padding: 20px;
+  min-width: 0;
+}
+.learn-cloud-steps button {
+  display: flex;
+  width: 100%;
+  margin: 12px 0;
+  gap: 10px;
+  text-align: left;
+}
+.learn-cloud-content h1 {
+  font-size: 24px;
+}
+.learn-cloud-content dd {
+  margin: 6px 0 18px;
+  overflow-wrap: anywhere;
+}
+.learn-cloud-agent textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 10px;
+  margin: 14px 0;
+  background: var(--color-base);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font: inherit;
+}
+.learn-cloud-agent button {
+  width: 100%;
+}
+.learn-cloud-agent h2 {
+  font-size: 20px;
+}
+.learn-cloud-grid p {
+  line-height: 1.7;
+}
+.learn-agent-answer {
+  white-space: pre-wrap;
+}
+.learn-hub-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+.learn-preparation-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.learn-preparation-grid label {
+  display: block;
+  margin: 14px 0;
+}
+.learn-preparation-grid select {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+}
+@media (max-width: 1120px) {
+  .learn-cloud-grid {
+    grid-template-columns: 160px minmax(280px, 1fr);
+  }
+  .learn-cloud-agent {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 760px) {
+  .learn-cloud-grid,
+  .learn-preparation-grid {
+    grid-template-columns: 1fr;
+  }
+  .learn-session-row {
+    flex-wrap: wrap;
+  }
+}

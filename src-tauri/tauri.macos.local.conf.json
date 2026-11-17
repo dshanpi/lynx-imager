@@ -1,0 +1,12 @@
+{
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "resources": {
+      "resources/binaries/dfu-util": "bin/dfu-util",
+      "resources/binaries/dfu-util-COPYING": "bin/dfu-util-COPYING"
+    },
+    "macOS": {
+      "signingIdentity": "-"
+    }
+  }
+}

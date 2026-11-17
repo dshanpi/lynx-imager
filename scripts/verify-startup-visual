@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+cd "$repo_root"
+
+if [[ "$(uname -s)" == "Linux" && -z "${DISPLAY:-}" && -z "${LYNX_VISUAL_XVFB_ACTIVE:-}" ]]; then
+  if ! command -v xvfb-run >/dev/null 2>&1; then
+    printf '%s\n' 'Startup visual gate failed: xvfb-run is required when DISPLAY is unavailable.' >&2
+    exit 1
+  fi
+  exec env LYNX_VISUAL_XVFB_ACTIVE=1 xvfb-run -a "$0"
+fi
+
+if ! command -v tauri-driver >/dev/null 2>&1; then
+  printf '%s\n' 'Startup visual gate failed: tauri-driver is required (cargo install tauri-driver --locked).' >&2
+  exit 1
+fi
+
+if [[ "$(uname -s)" == "Linux" ]] && ! command -v WebKitWebDriver >/dev/null 2>&1; then
+  printf '%s\n' 'Startup visual gate failed: WebKitWebDriver is required (install webkit2gtk-driver).' >&2
+  exit 1
+fi
+
+if [[ "${LYNX_VISUAL_SKIP_BUILD:-0}" != "1" ]]; then
+  npm run tauri build -- --debug --no-bundle
+fi
+
+node scripts/verify-startup-visual.mjs

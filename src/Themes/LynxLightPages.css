@@ -1,0 +1,1426 @@
+/*
+ * LYNX light/dark page layer.
+ *
+ * This file intentionally owns only visual rules. Page structure, state machines,
+ * routes, IPC calls and hardware actions remain in their existing components.
+ */
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .device-workbench-page,
+    .mcu-workbench,
+    .learning-center,
+    .ais-root,
+    .record-center,
+    .sdk-terminal-page
+  ) {
+  color: var(--lynx-text-primary);
+  background: var(--lynx-bg-app);
+  font-family: var(--lynx-font-sans);
+  font-size: var(--lynx-font-size-body);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .device-workbench-page,
+    .mcu-workbench,
+    .learning-center,
+    .ais-root,
+    .record-center,
+    .settings-panel,
+    .user-profile-card,
+    .popup
+  )
+  :is(button, input, select, textarea) {
+  font-family: inherit;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .device-workbench-page,
+    .mcu-workbench,
+    .learning-center,
+    .ais-root,
+    .record-center,
+    .settings-panel,
+    .user-profile-card,
+    .popup
+  )
+  :is(button, input, select, textarea, summary):focus-visible {
+  outline: none;
+  box-shadow: var(--lynx-focus-ring);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.device-workbench-page, .mcu-workbench, .learning-center, .ais-root, .record-center)
+  :is(small, dt, label, .is-muted) {
+  font-size: var(--lynx-font-size-caption);
+}
+
+/* Linux and MCU workbenches */
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) :is(.board-workbench, .mcu-workbench) {
+  grid-template-columns: var(--lynx-device-rail-width) minmax(0, 1fr);
+  color: var(--lynx-text-primary);
+  background: var(--lynx-bg-app);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) :is(.board-list, .mcu-board-rail) {
+  border-color: var(--lynx-border);
+  padding: var(--lynx-space-5) var(--lynx-space-4);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-board-rail-heading b {
+  background: var(--lynx-bg-disabled);
+  color: var(--lynx-text-secondary);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.board-list, .mcu-board-rail)
+  .device-board-rail-heading
+  > button {
+  background: transparent;
+  color: var(--lynx-accent);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.board-list, .mcu-board-rail)
+  .device-board-rail-heading
+  > button:hover {
+  color: var(--lynx-accent-hover);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) :is(.board-main, .mcu-main) {
+  gap: var(--lynx-space-3);
+  padding: var(--lynx-space-5) var(--lynx-page-padding) var(--lynx-page-padding);
+  background: var(--lynx-bg-app);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.device-workbench-header, .device-workbench-header.workbench-card, .mcu-device-header) {
+  min-height: var(--lynx-device-header-height);
+  border: var(--lynx-border-width) solid var(--lynx-border);
+  border-radius: var(--lynx-radius-card);
+  padding: var(--lynx-space-3) var(--lynx-space-4);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.device-workbench-header h2, .mcu-device-header h2) {
+  color: var(--lynx-text-primary);
+  font-size: var(--lynx-font-size-section-title);
+  font-weight: var(--lynx-font-weight-section);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.device-workbench-header p, .mcu-device-header p, .board-section-title p) {
+  color: var(--lynx-text-secondary);
+  font-size: var(--lynx-font-size-table);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.device-workbench-kicker, .mcu-pipeline-title small) {
+  color: var(--lynx-accent);
+  font-size: var(--lynx-font-size-caption);
+  letter-spacing: 0.08em;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-header-icon {
+  border: var(--lynx-border-width) solid var(--lynx-border);
+  border-radius: var(--lynx-radius-card);
+  background: var(--lynx-accent-subtle);
+  box-shadow: none;
+  color: var(--lynx-accent);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.device-workbench-header > span, .mcu-pipeline-status, .mcu-panel-header > span) {
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-control);
+  background: var(--lynx-bg-subtle);
+  color: var(--lynx-text-secondary);
+  font-size: var(--lynx-font-size-caption);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.device-workbench-header > span.is-online, .mcu-pipeline-status.is-online) {
+  border-color: color-mix(in srgb, var(--lynx-success) 35%, var(--lynx-border));
+  background: var(--lynx-success-bg);
+  color: var(--lynx-success);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.device-board-search, .board-workbench input, .mcu-workbench input) {
+  min-height: var(--lynx-control-height);
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-control);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-text-primary);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) :is(.board-item, .mcu-board-card) {
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-card);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.board-item:hover, .mcu-board-card:hover) {
+  border-color: var(--lynx-border-strong);
+  background: var(--lynx-bg-hover);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.board-item.is-active, .mcu-board-card.is-active) {
+  border-color: color-mix(in srgb, var(--lynx-accent) 40%, var(--lynx-border));
+  background: var(--lynx-bg-selected);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.board-item strong, .mcu-board-card > strong) {
+  color: var(--lynx-text-primary);
+  font-size: var(--lynx-font-size-body);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.board-item small, .board-item span, .mcu-board-card > span) {
+  color: var(--lynx-text-secondary);
+  font-size: var(--lynx-font-size-caption);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-workbench-tabs {
+  min-height: var(--lynx-toolbar-height);
+  border: var(--lynx-border-width) solid var(--lynx-border);
+  border-radius: var(--lynx-radius-card);
+  padding: var(--lynx-space-1);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-workbench-tabs button {
+  min-height: var(--lynx-control-height-primary);
+  border: 0;
+  border-radius: var(--lynx-radius-control);
+  background: transparent;
+  color: var(--lynx-text-secondary);
+  font-size: var(--lynx-font-size-table);
+  font-weight: 500;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-workbench-tabs button:hover {
+  background: var(--lynx-bg-hover);
+  color: var(--lynx-accent-hover);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-workbench-tabs button.is-active {
+  background: var(--lynx-bg-selected);
+  color: var(--lynx-accent);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .workbench-card,
+    .engineering-panel,
+    .mcu-panel,
+    .mcu-settings-card,
+    .mcu-chip-resources,
+    .mcu-mcp-channel,
+    .relay-power-card,
+    .mcu-power-card
+  ) {
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-card);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.engineering-panel > header, .mcu-panel-header, .mcu-chip-resources > header) {
+  min-height: var(--lynx-panel-header-height);
+  border-color: var(--lynx-divider);
+  padding: var(--lynx-space-2) var(--lynx-space-3);
+  background: var(--lynx-bg-subtle);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.engineering-panel > header h3, .mcu-panel-header h3, .mcu-chip-resources strong) {
+  color: var(--lynx-text-primary);
+  font-size: var(--lynx-font-size-body);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .linux-telemetry-identity,
+    .linux-telemetry-identity > div,
+    .linux-telemetry-identity dl > div,
+    .linux-overview-signals > div,
+    .mcu-probe-metrics > div,
+    .mcu-chip-resources > div,
+    .mcu-hardware-live > div,
+    .mcu-hardware-summary,
+    .mcu-channel-topology > div
+  ) {
+  border-color: var(--lynx-divider);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .linux-telemetry-identity strong,
+    .linux-telemetry-metrics strong,
+    .linux-overview-signals strong,
+    .mcu-probe-identity strong,
+    .mcu-probe-metrics strong,
+    .mcu-chip-resources strong,
+    .mcu-hardware-live strong
+  ) {
+  color: var(--lynx-text-primary);
+  font-size: var(--lynx-font-size-body);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .linux-telemetry-identity small,
+    .linux-overview-signals small,
+    .mcu-probe-identity span,
+    .mcu-probe-metrics span,
+    .mcu-chip-resources span,
+    .mcu-hardware-live small
+  ) {
+  color: var(--lynx-text-secondary);
+  font-size: var(--lynx-font-size-caption);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.linux-telemetry-ring, .linux-telemetry-metrics article, .linux-overview-signals > div) {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.workbench-settings-backdrop, .mcu-settings-backdrop, .settings-overlay) {
+  background: color-mix(in srgb, var(--lynx-text-primary) 28%, transparent);
+  backdrop-filter: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.workbench-settings-dialog, .mcu-settings-dialog) {
+  border: var(--lynx-border-width) solid var(--lynx-border);
+  border-radius: var(--lynx-radius-dialog);
+  background: var(--lynx-bg-surface);
+  box-shadow: var(--lynx-shadow-flyout);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.workbench-settings-header, .mcu-settings-dialog > header, .mcu-settings-dialog > footer) {
+  border-color: var(--lynx-divider);
+  background: var(--lynx-bg-surface);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .board-workbench button,
+    .mcu-workbench button,
+    .workbench-settings-dialog button,
+    .mcu-settings-dialog button
+  ) {
+  min-height: var(--lynx-control-height);
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-control);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-text-primary);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .board-workbench button:hover:not(:disabled),
+    .mcu-workbench button:hover:not(:disabled),
+    .workbench-settings-dialog button:hover:not(:disabled),
+    .mcu-settings-dialog button:hover:not(:disabled)
+  ) {
+  border-color: var(--lynx-border-strong);
+  background: var(--lynx-bg-hover);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.board-primary, .mcu-settings-dialog > footer button:last-child, .mcu-firmware-run button) {
+  min-height: var(--lynx-control-height-primary);
+  border-color: var(--lynx-accent);
+  background: var(--lynx-accent);
+  color: var(--lynx-text-inverse);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.board-danger-zone, .workbench-error, .mcu-terminal .is-error) {
+  border-color: color-mix(in srgb, var(--lynx-danger) 35%, var(--lynx-border));
+  background: var(--lynx-danger-bg);
+  color: var(--lynx-danger);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .board-console-panel pre,
+    .ssh-terminal-surface,
+    .sdk-terminal-stage,
+    .sdk-terminal-xterm,
+    .mcu-terminal,
+    .mcu-firmware-log pre
+  ) {
+  background: var(--lynx-terminal-bg);
+  color: var(--lynx-terminal-text);
+  font-family: var(--lynx-font-mono);
+  font-size: var(--lynx-font-size-table);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  .sdk-terminal-page:not(.is-workspace)
+  :is(.sdk-terminal-shell, .sdk-terminal-stage, .sdk-terminal-xterm, .sdk-terminal-empty) {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-subtle);
+  color: #52657c;
+}
+
+/* Fixed-board AI channel shared by Linux and MCU workbenches */
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-ai-channel {
+  gap: var(--lynx-space-3);
+  color: var(--lynx-text-primary);
+  font-family: var(--lynx-font-sans);
+  font-size: var(--lynx-font-size-body);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .device-ai-channel-intro,
+    .device-ai-channel-summary > div,
+    .device-ai-channel-chain,
+    .device-ai-channel-config,
+    .device-ai-call-list,
+    .device-ai-call-detail
+  ) {
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-card);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-ai-channel-intro {
+  padding: var(--lynx-space-3) var(--lynx-space-4);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .device-ai-channel-intro small,
+    .device-ai-channel-summary small,
+    .device-ai-channel-chain article small,
+    .device-ai-channel-config span,
+    .device-ai-call-list > header span,
+    .device-ai-call-detail > header span,
+    .device-ai-call-table time,
+    .device-ai-call-table span,
+    .device-ai-call-detail dt
+  ) {
+  color: var(--lynx-text-secondary);
+  font-size: var(--lynx-font-size-caption);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-ai-channel-intro h3 {
+  color: var(--lynx-text-primary);
+  font-size: var(--lynx-font-size-card-title);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.device-ai-channel-intro > span, .device-ai-channel-chain > header > span) {
+  border-color: color-mix(in srgb, var(--lynx-warning) 35%, var(--lynx-border));
+  border-radius: var(--lynx-radius-control);
+  background: var(--lynx-warning-bg);
+  color: var(--lynx-warning);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.device-ai-channel-intro > span.is-ready, .device-ai-channel-chain > header > span) {
+  border-color: color-mix(in srgb, var(--lynx-success) 35%, var(--lynx-border));
+  background: var(--lynx-success-bg);
+  color: var(--lynx-success);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-ai-channel-summary > div::after {
+  background: var(--lynx-warning);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  .device-ai-channel-summary
+  > div.is-ready::after {
+  background: var(--lynx-success);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-ai-channel-summary > div > span {
+  border-radius: var(--lynx-radius-control);
+  background: var(--lynx-warning-bg);
+  color: var(--lynx-warning);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  .device-ai-channel-summary
+  > div.is-ready
+  > span {
+  background: var(--lynx-success-bg);
+  color: var(--lynx-success);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .device-ai-channel-chain > header,
+    .device-ai-call-list > header,
+    .device-ai-call-detail > header
+  ) {
+  border-color: var(--lynx-divider);
+  background: var(--lynx-bg-subtle);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  .device-ai-channel-chain
+  > header
+  > div
+  > svg {
+  border-radius: var(--lynx-radius-control);
+  background: var(--lynx-accent-subtle);
+  color: var(--lynx-accent);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-ai-channel-chain article {
+  border-color: var(--lynx-divider);
+  border-radius: var(--lynx-radius-control);
+  background: var(--lynx-bg-subtle);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-ai-channel-config {
+  border-left-color: var(--lynx-accent);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-ai-channel-config button {
+  min-height: var(--lynx-control-height);
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-control);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-accent);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-ai-call-table > button {
+  min-height: var(--lynx-table-row);
+  border-color: var(--lynx-divider);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-text-primary);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.device-ai-call-table > button:hover, .device-ai-call-table > button.is-selected) {
+  background: var(--lynx-bg-selected);
+  box-shadow: inset var(--lynx-border-width) 0 var(--lynx-accent);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-ai-call-table em {
+  color: var(--lynx-success);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .device-ai-channel-error {
+  border-color: color-mix(in srgb, var(--lynx-danger) 35%, var(--lynx-border));
+  border-radius: var(--lynx-radius-card);
+  background: var(--lynx-danger-bg);
+  color: var(--lynx-danger);
+}
+
+/* Learning center */
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .learning-center {
+  --learning-blue: var(--lynx-accent);
+  --learning-blue-hover: var(--lynx-accent-hover);
+  --learning-blue-soft: var(--lynx-accent-subtle);
+  --learning-green: var(--lynx-success);
+  --learning-orange: var(--lynx-warning);
+  --learning-red: var(--lynx-danger);
+  --learning-purple: var(--lynx-info);
+  --learning-panel-radius: var(--lynx-radius-card);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .learning-page {
+  padding: var(--lynx-page-padding);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.learning-page-header h1, .learning-course-hero h1) {
+  color: var(--lynx-text-primary);
+  font-size: var(--lynx-font-size-page-title);
+  font-weight: 700;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.learning-page-header p, .learning-course-hero p) {
+  color: var(--lynx-text-secondary);
+  font-size: var(--lynx-font-size-body);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .learning-environment-strip,
+    .learning-target-strip,
+    .learning-downloads-card,
+    .learning-side-card,
+    .learning-detail-card,
+    .learning-catalog-panel,
+    .learning-check-panel,
+    .learning-precheck-aside > section,
+    .learning-step-panel,
+    .learning-workspace-center,
+    .learning-workspace-aside > section,
+    .learning-continue-card,
+    .learning-course-card,
+    .learning-course-hero
+  ) {
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-card);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .learning-cover-placeholder {
+  border-radius: var(--lynx-radius-control);
+  background: var(--lynx-terminal-bg);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.learning-table-header, .learning-stage-track, .learning-workspace-center nav) {
+  border-color: var(--lynx-divider);
+  background: var(--lynx-bg-subtle);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.learning-table-row, .learning-recent-item, .learning-check-rows > div, .learning-fact-row) {
+  min-height: var(--lynx-table-row-compact);
+  border-color: var(--lynx-divider);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .learning-center button {
+  min-height: var(--lynx-control-height);
+  border-radius: var(--lynx-radius-control);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.learning-secondary, .learning-user-chip, .learning-text-button) {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-text-primary);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.learning-side-card > button.active, .learning-workspace-center nav button.active) {
+  background: var(--lynx-bg-selected);
+  color: var(--lynx-accent);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.learning-inline-warning, .learning-warn, .learning-check-rows .status-needs-config) {
+  border-color: color-mix(in srgb, var(--lynx-warning) 35%, var(--lynx-border));
+  background: var(--lynx-warning-bg);
+  color: var(--lynx-warning);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.learning-inline-error, .learning-danger, .learning-check-rows .status-blocked) {
+  border-color: color-mix(in srgb, var(--lynx-danger) 35%, var(--lynx-border));
+  background: var(--lynx-danger-bg);
+  color: var(--lynx-danger);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.learning-ok, .learning-check-rows .status-pass) {
+  color: var(--lynx-success);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .learning-terminal-empty {
+  border-color: var(--lynx-divider);
+  background: var(--lynx-terminal-bg);
+  color: var(--lynx-terminal-text);
+}
+
+/* AI channel and supervisor */
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .ais-root {
+  --ais-accent: var(--lynx-accent);
+  --ais-accent-soft: var(--lynx-accent-subtle);
+  --ais-border: var(--lynx-border);
+  --ais-muted: var(--lynx-text-secondary);
+  --ais-text: var(--lynx-text-primary);
+  --ais-success: var(--lynx-success);
+  --ais-warning: var(--lynx-warning);
+  --ais-danger: var(--lynx-danger);
+  padding: var(--lynx-page-padding);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .ais-header h2 {
+  font-size: var(--lynx-font-size-page-title);
+  font-weight: 700;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .ais-card {
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-card);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .ais-metric,
+    .ais-list > button,
+    .ais-compact-table > div,
+    .ais-readiness-item,
+    .ais-audit-table > button,
+    .ais-flow-tasks > button,
+    .ais-palette-node,
+    .ais-sequence-step,
+    .ais-run-calls article
+  ) {
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-control);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .ais-list > button:hover,
+    .ais-audit-table > button:hover,
+    .ais-flow-tasks > button:hover,
+    .ais-palette-node:hover,
+    .ais-sequence-step:hover
+  ) {
+  background: var(--lynx-bg-hover);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .ais-list > button.selected,
+    .ais-audit-table > button.selected,
+    .ais-flow-tasks > button.selected,
+    .ais-sequence-step.selected,
+    .ais-flow-mode-switch button.active,
+    .ais-section-tabs button.active,
+    .ais-context-tabs button.active
+  ) {
+  border-color: color-mix(in srgb, var(--lynx-accent) 40%, var(--lynx-border));
+  background: var(--lynx-bg-selected);
+  color: var(--lynx-accent);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.ais-card button, .ais-refresh, .ais-root input, .ais-root select, .ais-root textarea) {
+  min-height: var(--lynx-control-height);
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-control);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-text-primary);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.ais-card button.primary, .ais-root button.primary) {
+  min-height: var(--lynx-control-height-primary);
+  border-color: var(--lynx-accent);
+  background: var(--lynx-accent);
+  color: var(--lynx-text-inverse);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .ais-status {
+  border-radius: var(--lynx-radius-control);
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-subtle);
+  color: var(--lynx-text-secondary);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) :is(.ais-status--info, .ais-message) {
+  border-color: color-mix(in srgb, var(--lynx-info) 35%, var(--lynx-border));
+  background: var(--lynx-info-bg);
+  color: var(--lynx-info);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.ais-status--success, .ais-health.ready) {
+  border-color: color-mix(in srgb, var(--lynx-success) 35%, var(--lynx-border));
+  background: var(--lynx-success-bg);
+  color: var(--lynx-success);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.ais-status--warning, .ais-health, .ais-attention.has-item) {
+  border-color: color-mix(in srgb, var(--lynx-warning) 35%, var(--lynx-border));
+  background: var(--lynx-warning-bg);
+  color: var(--lynx-warning);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.ais-status--danger, .ais-message--error) {
+  border-color: color-mix(in srgb, var(--lynx-danger) 35%, var(--lynx-border));
+  background: var(--lynx-danger-bg);
+  color: var(--lynx-danger);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.ais-table-head, .ais-flow-toolbar, .ais-flow-palette-title) {
+  border-color: var(--lynx-divider);
+  background: var(--lynx-bg-subtle);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.ais-evidence--fact, .ais-evidence--inference, .ais-evidence--policy, .ais-evidence--result) {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .ais-evidence--fact {
+  border-left-color: var(--lynx-info);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .ais-evidence--inference {
+  border-left-color: var(--lynx-warning);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .ais-evidence--policy {
+  border-left-color: var(--lynx-accent);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .ais-evidence--result {
+  border-left-color: var(--lynx-text-secondary);
+}
+
+/* Record center */
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .record-center {
+  --record-border: var(--lynx-border);
+  padding: var(--lynx-page-padding);
+  font-size: var(--lynx-font-size-body);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .record-center-header h1 {
+  font-size: var(--lynx-font-size-page-title);
+  font-weight: 700;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .record-center-header p {
+  color: var(--lynx-text-secondary);
+  font-size: var(--lynx-font-size-body);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .record-panel,
+    .record-filters,
+    .record-event-list,
+    .record-event-detail,
+    .record-placeholder,
+    .record-metrics article,
+    .record-backup-list article,
+    .record-draft-list article
+  ) {
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-card);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.record-panel > header, .record-event-list > header) {
+  min-height: var(--lynx-panel-header-height);
+  border-color: var(--lynx-divider);
+  background: var(--lynx-bg-subtle);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .record-center-tabs {
+  border-color: var(--lynx-divider);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .record-center-tabs button {
+  min-height: var(--lynx-control-height);
+  border-radius: var(--lynx-radius-control);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .record-center-tabs button.is-active {
+  border-color: color-mix(in srgb, var(--lynx-accent) 35%, var(--lynx-border));
+  background: var(--lynx-bg-selected);
+  color: var(--lynx-accent);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.record-center button, .record-center input, .record-center select, .record-center textarea) {
+  min-height: var(--lynx-control-height);
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-control);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-text-primary);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .record-center .is-primary {
+  min-height: var(--lynx-control-height-primary);
+  border-color: var(--lynx-accent);
+  background: var(--lynx-accent);
+  color: var(--lynx-text-inverse);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.record-event-list > button:hover, .record-timeline button:hover) {
+  background: var(--lynx-bg-hover);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.record-event-list > button.is-active, .record-timeline button.is-active) {
+  background: var(--lynx-bg-selected);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.record-event-detail pre, .record-placeholder code) {
+  background: var(--lynx-terminal-bg);
+  color: var(--lynx-terminal-text);
+  font-family: var(--lynx-font-mono);
+}
+
+/* Settings, user profile and shared popup */
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.settings-panel, .user-profile-card, .popup) {
+  border: var(--lynx-border-width) solid var(--lynx-border);
+  border-radius: var(--lynx-radius-dialog);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-text-primary);
+  box-shadow: var(--lynx-shadow-flyout);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .settings-header,
+    .settings-footer,
+    .user-profile-header,
+    .user-profile-footer,
+    .popup-header
+  ) {
+  border-color: var(--lynx-divider);
+  background: var(--lynx-bg-surface);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.settings-section, .settings-item, .user-profile-field) {
+  border-color: var(--lynx-divider);
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .settings-panel button,
+    .settings-panel input,
+    .settings-panel select,
+    .user-profile-card button
+  ) {
+  min-height: var(--lynx-control-height);
+  border-color: var(--lynx-border);
+  border-radius: var(--lynx-radius-control);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-text-primary);
+  box-shadow: none;
+}
+
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.settings-btn-primary, .popup-btn-confirm) {
+  min-height: var(--lynx-control-height-primary);
+  border-color: var(--lynx-accent);
+  background: var(--lynx-accent);
+  color: var(--lynx-text-inverse);
+}
+
+/* Dark-only cleanup for legacy workbench surfaces that still declare light literals. */
+[data-theme='lynx-dark']
+  :is(
+    .linux-telemetry-identity dt,
+    .linux-overview-system dt,
+    .linux-overview-connection dt,
+    .linux-overview-signals span,
+    .linux-overview-signals small,
+    .linux-overview-topology small
+  ) {
+  color: var(--lynx-text-secondary);
+}
+
+[data-theme='lynx-dark']
+  :is(
+    .linux-telemetry-identity dd,
+    .linux-overview-system dd,
+    .linux-overview-connection dd,
+    .linux-overview-signals strong,
+    .linux-overview-topology strong
+  ) {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] .linux-telemetry-metrics article {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+}
+
+[data-theme='lynx-dark'] .linux-telemetry-ring {
+  background: conic-gradient(var(--lynx-accent) var(--metric-percent), var(--lynx-divider) 0);
+}
+
+[data-theme='lynx-dark'] .linux-telemetry-metrics article:nth-child(2) .linux-telemetry-ring {
+  background: conic-gradient(var(--lynx-success) var(--metric-percent), var(--lynx-divider) 0);
+}
+
+[data-theme='lynx-dark'] .linux-telemetry-metrics article:nth-child(3) .linux-telemetry-ring {
+  background: conic-gradient(#8b8ff4 var(--metric-percent), var(--lynx-divider) 0);
+}
+
+[data-theme='lynx-dark'] .linux-telemetry-metrics article.is-temperature .linux-telemetry-ring {
+  background: conic-gradient(var(--lynx-warning) var(--metric-percent), var(--lynx-divider) 0);
+}
+
+[data-theme='lynx-dark'] .linux-telemetry-metrics article.is-empty .linux-telemetry-ring {
+  background: var(--lynx-divider);
+}
+
+[data-theme='lynx-dark'] .linux-telemetry-ring::after {
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+[data-theme='lynx-dark'] .linux-telemetry-error {
+  border-color: color-mix(in srgb, var(--lynx-warning) 35%, var(--lynx-border));
+  background: var(--lynx-warning-bg);
+  color: var(--lynx-warning);
+}
+
+[data-theme='lynx-dark'] :is(.linux-overview-signals > div, .linux-overview-topology > div > span) {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-subtle);
+}
+
+[data-theme='lynx-dark']
+  :is(.linux-overview-signals > div.is-online, .linux-overview-topology > div > span.is-online) {
+  border-color: color-mix(in srgb, var(--lynx-success) 35%, var(--lynx-border));
+  background: var(--lynx-success-bg);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-page {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-hero {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-hero-icon {
+  border-color: var(--lynx-border-strong);
+  background: var(--lynx-accent-subtle);
+  color: var(--lynx-accent);
+}
+
+[data-theme='lynx-dark']
+  :is(.sdk-terminal-identity h3, .sdk-terminal-target dd, .sdk-terminal-visibility strong) {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark']
+  :is(
+    .sdk-terminal-identity small,
+    .sdk-terminal-identity p,
+    .sdk-terminal-target dt,
+    .sdk-terminal-signals,
+    .sdk-terminal-visibility,
+    .sdk-terminal-tabs > span
+  ) {
+  color: var(--lynx-text-secondary);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-target dl > div {
+  border-color: var(--lynx-divider);
+}
+
+[data-theme='lynx-dark']
+  :is(.sdk-terminal-settings, .sdk-terminal-actions button, .sdk-terminal-footer) {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-visibility {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-subtle);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-mcp-scope {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-subtle);
+  color: var(--lynx-text-secondary);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-mcp-scope strong {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] :is(.sdk-terminal-mcp-scope > svg, .sdk-terminal-mcp-scope code) {
+  color: var(--lynx-accent);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-shell {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-tabs {
+  border-color: var(--lynx-divider);
+  background: var(--lynx-bg-subtle);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-tabs button.is-active {
+  border-bottom-color: var(--lynx-accent);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-accent);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-page:not(.is-workspace) .sdk-terminal-stage {
+  background: var(--lynx-terminal-bg);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-empty {
+  color: var(--lynx-text-secondary);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-empty svg {
+  color: var(--lynx-accent);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-empty strong {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-footer strong {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] .sdk-terminal-footer p {
+  color: var(--lynx-text-secondary);
+}
+
+[data-theme='lynx-dark'] .board-console-grid.is-flash .board-console-flash.is-idle header {
+  border-color: var(--lynx-divider);
+  background: var(--lynx-bg-surface);
+}
+
+[data-theme='lynx-dark'] .board-console-grid.is-flash .board-flash-idle {
+  background: var(--lynx-bg-app);
+}
+
+[data-theme='lynx-dark'] :is(.board-flash-preflight, .board-flash-launch) {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+[data-theme='lynx-dark'] .board-flash-target-grid article {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-subtle);
+}
+
+[data-theme='lynx-dark'] .board-flash-image {
+  border-color: var(--lynx-border-strong);
+  background: var(--lynx-bg-subtle);
+}
+
+[data-theme='lynx-dark'] .board-flash-image.has-image {
+  border-color: var(--lynx-accent);
+  background: var(--lynx-accent-subtle);
+}
+
+[data-theme='lynx-dark'] .board-flash-image > span {
+  background: var(--lynx-accent-subtle);
+  color: var(--lynx-accent);
+}
+
+[data-theme='lynx-dark'] .board-flash-image button {
+  border-color: var(--lynx-border-strong);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-accent);
+}
+
+[data-theme='lynx-dark'] .board-flash-safety-note {
+  background: var(--lynx-bg-subtle);
+  color: var(--lynx-text-secondary);
+}
+
+[data-theme='lynx-dark'] .board-flash-driver-help {
+  border-color: color-mix(in srgb, var(--lynx-warning) 45%, var(--lynx-border));
+  background: var(--lynx-warning-bg);
+  color: var(--lynx-warning);
+}
+
+[data-theme='lynx-dark'] .board-flash-driver-help strong {
+  color: var(--lynx-warning);
+}
+
+/* AIWorkspace carries a high-specificity light visual layer; Dark must win at the same scope. */
+[data-theme='lynx-dark'] #root .layout .sidebar-item.active {
+  border-color: var(--lynx-border-strong);
+  background: var(--lynx-bg-selected) !important;
+  color: var(--lynx-accent);
+  box-shadow: inset 3px 0 0 var(--lynx-accent) !important;
+}
+
+[data-theme='lynx-dark'] #root .layout .sidebar-group-toggle.has-active-child:not(.active) {
+  border-color: transparent;
+  background: transparent;
+  color: var(--lynx-text-secondary);
+}
+
+[data-theme='lynx-dark'] #root .layout .sidebar-group-toggle.has-active-child:not(.active):hover {
+  background: var(--lynx-bg-hover);
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] #root .ais-root {
+  --ai-ui-accent: var(--lynx-accent);
+  --ai-ui-accent-soft: var(--lynx-accent-subtle);
+  --ai-ui-border: var(--lynx-border);
+  --ai-ui-muted: var(--lynx-text-secondary);
+  --ai-ui-text: var(--lynx-text-primary);
+  background: var(--lynx-bg-app);
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] #root .ais-header {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+}
+
+[data-theme='lynx-dark'] #root .ais-header h2 {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] #root .ais-header p {
+  color: var(--lynx-text-secondary);
+}
+
+[data-theme='lynx-dark'] #root :is(.ais-card, .ais-metric) {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] #root .ais-metric strong {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] #root :is(.ais-section-tabs, .ais-run-filters, .ais-context-tabs) {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+}
+
+[data-theme='lynx-dark'] #root :is(.ais-section-tabs, .ais-run-filters, .ais-context-tabs) button {
+  color: var(--lynx-text-secondary);
+}
+
+[data-theme='lynx-dark']
+  #root
+  :is(.ais-section-tabs, .ais-run-filters, .ais-context-tabs)
+  button.active {
+  background: var(--lynx-bg-selected);
+  color: var(--lynx-accent);
+}
+
+[data-theme='lynx-dark'] #root .ais-empty-state {
+  border-color: var(--lynx-border-strong);
+  background: var(--lynx-bg-subtle);
+  color: var(--lynx-text-secondary);
+}
+
+[data-theme='lynx-dark'] #root .ais-empty-state strong {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] #root .ais-empty-state > svg {
+  color: var(--lynx-accent);
+}
+
+[data-theme='lynx-dark'] #root .ais-flow-sequence {
+  background: var(--lynx-bg-subtle);
+}
+
+[data-theme='lynx-dark'] #root .ais-flow-onboarding {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+  box-shadow: none;
+}
+
+[data-theme='lynx-dark'] #root .ais-flow-onboarding > select {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-subtle);
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] #root .ais-policy-savebar {
+  border-color: var(--lynx-border);
+  background: color-mix(in srgb, var(--lynx-bg-surface) 96%, transparent);
+  color: var(--lynx-text-secondary);
+  box-shadow: none;
+}
+
+[data-theme='lynx-dark'] #root .ais-policy-board-scope > label {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-subtle);
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] #root .ais-provider-fields--identity > label > :is(input, select) {
+  border-color: var(--lynx-border);
+  background-color: var(--lynx-bg-subtle);
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] #root .ais-provider-fields--identity > label > select option {
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] #root .ais-provider-editor .ais-secret {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-subtle);
+}
+
+[data-theme='lynx-dark'] #root .ais-provider-advanced {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-subtle);
+}
+
+[data-theme='lynx-dark'] #root .ais-provider-advanced[open] summary {
+  border-color: var(--lynx-divider);
+  background: var(--lynx-bg-surface);
+}
+
+[data-theme='lynx-dark'] #root .ais-provider-advanced-icon {
+  background: var(--lynx-accent-subtle);
+  color: var(--lynx-accent);
+}
+
+[data-theme='lynx-dark'] #root .ais-provider-advanced summary strong {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark']
+  #root
+  :is(.ais-provider-advanced summary small, .ais-provider-advanced summary em) {
+  color: var(--lynx-text-secondary);
+}
+
+[data-theme='lynx-dark'] #root .ais-provider-switches > label {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-subtle);
+}
+
+[data-theme='lynx-dark'] #root .ais-provider-switches strong {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark'] #root .ais-provider-switches small {
+  color: var(--lynx-text-secondary);
+}
+
+[data-theme='lynx-dark'] #root .ais-boundary.good {
+  border-color: color-mix(in srgb, var(--lynx-success) 48%, var(--lynx-border));
+  background: var(--lynx-success-bg);
+  color: var(--lynx-success);
+}
+
+[data-theme='lynx-dark'] #root .ais-boundary.bad {
+  border-color: color-mix(in srgb, var(--lynx-danger) 48%, var(--lynx-border));
+  background: var(--lynx-danger-bg);
+  color: var(--lynx-danger);
+}
+
+[data-theme='lynx-dark'] #root .ais-provider-actions {
+  border-color: var(--lynx-divider);
+  background: var(--lynx-bg-surface);
+}
+
+[data-theme='lynx-dark'] #root :is(.ais-run-identity, .ais-run-queue-items > article) {
+  border-color: var(--lynx-border);
+  background: var(--lynx-bg-surface);
+}
+
+[data-theme='lynx-dark'] #root .ais-run-identity-heading h3 {
+  color: var(--lynx-text-primary);
+}
+
+[data-theme='lynx-dark']
+  #root
+  :is(
+    .ais-permission-head,
+    .ais-audit-table > div.header,
+    .ais-test-message,
+    .ais-advanced,
+    .ais-resolution,
+    .ais-judgement-block
+  ) {
+  border-color: var(--lynx-divider);
+  background: var(--lynx-bg-subtle);
+  color: var(--lynx-text-secondary);
+}
+
+@media (max-width: 1180px) {
+  :is([data-theme='lynx-light'], [data-theme='lynx-dark']) :is(.board-workbench, .mcu-workbench) {
+    grid-template-columns: var(--lynx-device-rail-compact-width) minmax(0, 1fr);
+  }
+
+  :is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+    :is(.board-main, .mcu-main, .learning-page, .ais-root, .record-center) {
+    padding: var(--lynx-space-4);
+  }
+}
+
+@media (max-width: 900px) {
+  :is([data-theme='lynx-light'], [data-theme='lynx-dark']) :is(.board-workbench, .mcu-workbench) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  :is([data-theme='lynx-light'], [data-theme='lynx-dark']) :is(.board-list, .mcu-board-rail) {
+    display: none;
+  }
+}
+
+/* Populated flow content shares the same surfaces as its surrounding editor. */
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(
+    .ais-flow-branch-note,
+    .ais-flow-credential,
+    .ais-flow-canvas,
+    .ais-flow-overview-hint,
+    .ais-flow-canvas-shell > footer
+  ) {
+  background-color: var(--lynx-bg-subtle);
+  color: var(--lynx-text-secondary);
+  border-color: var(--lynx-border);
+}
+:is([data-theme='lynx-light'], [data-theme='lynx-dark']) .ais-flow-node {
+  background: var(--lynx-bg-surface);
+  color: var(--lynx-text-primary);
+  border-color: color-mix(in srgb, var(--node-color, var(--lynx-accent)) 55%, var(--lynx-border));
+}
+:is([data-theme='lynx-light'], [data-theme='lynx-dark'])
+  :is(.ais-flow-node header span, .ais-flow-node small) {
+  color: var(--lynx-text-secondary);
+}

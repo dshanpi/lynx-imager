@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf '%s\n' 'NOT VERIFIED: no repository-wide, board-bound HIL harness is configured.' >&2
+printf '%s\n' 'Use a requirement-specific test with an explicit board_id and authorization; never run flash, reset, or power writes from this generic entry.' >&2
+exit 2

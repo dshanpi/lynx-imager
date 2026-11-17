@@ -1,0 +1,635 @@
+.proto-tool {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-base);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Roboto, sans-serif;
+  overflow: hidden;
+}
+
+/* ─── Top bar: device (left) + tabs (right) ─────────── */
+
+.proto-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  margin: 8px 14px 0;
+  background: var(--color-mantle);
+  border-radius: 16px;
+  border: 1px solid var(--color-surface0);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.proto-device-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.proto-device-select {
+  padding: 5px 10px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  width: 250px;
+  min-width: 250px;
+}
+
+.proto-device-select:focus {
+  border-color: var(--color-accent);
+}
+
+.proto-tab-bar {
+  display: flex;
+  gap: 4px;
+}
+
+.proto-tab-btn {
+  padding: 6px 14px;
+  border-radius: 18px;
+  font-weight: 600;
+  font-size: 11px;
+  background: transparent;
+  border: 1px solid var(--color-surface0);
+  color: var(--color-overlay1);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.proto-tab-btn:hover {
+  background: var(--color-surface0);
+  color: var(--color-text);
+}
+
+.proto-tab-btn.active {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+  border-color: var(--color-accent);
+}
+
+/* ─── Content area ─────────────────────────────────── */
+
+.proto-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Log card ─────────────────────────────────────── */
+
+.proto-log-card {
+  flex-shrink: 0;
+  margin: 6px 14px 8px;
+  background: var(--color-mantle);
+  border-radius: 16px;
+  border: 1px solid var(--color-surface0);
+  overflow: hidden;
+}
+
+.proto-log-body {
+  padding: 8px 12px;
+  background: var(--color-base);
+  overflow: hidden;
+}
+
+.proto-log-body .i2c-log-list {
+  max-height: 140px;
+}
+
+/* ─── Log interaction (selection, context menu) ────────── */
+
+.proto-log-interactive {
+  user-select: text;
+  cursor: text;
+  position: relative;
+}
+
+.proto-log-interactive ::selection {
+  background: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+/* ─── SPI Master layout ─────────────────────────────── */
+
+.spi-master-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 8px;
+  margin: 12px 16px;
+}
+
+.spi-master-middle {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 12px;
+}
+
+.spi-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+/* ─── Workflow panel ────────────────────────────────── */
+
+.spi-workflow-panel {
+  width: 460px;
+  min-width: 380px;
+  flex-shrink: 0;
+  background: var(--color-crust);
+  border-radius: 12px;
+  border: 1px solid var(--color-surface0);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.spi-step-list {
+  flex: 1;
+  min-height: 120px;
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--color-base);
+  border-radius: 8px;
+  border: 1px solid var(--color-surface0);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spi-step-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: var(--color-crust);
+  transition: border-color 0.15s;
+}
+
+.spi-step-row:hover {
+  border-color: var(--color-surface0);
+}
+.spi-step-row.selected {
+  border-color: var(--color-accent);
+  background: var(--color-surface0);
+}
+.spi-step-row.active {
+  border-color: var(--color-success);
+  background: var(--color-success-subtle);
+}
+
+.spi-step-idx {
+  font-size: 10px;
+  color: var(--color-overlay0);
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  min-width: 22px;
+  text-align: center;
+}
+
+.spi-step-type {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  min-width: 60px;
+  text-align: center;
+}
+
+.spi-step-type.cs_low {
+  background: var(--color-warning-subtle);
+  color: var(--color-warning);
+}
+.spi-step-type.cs_high {
+  background: var(--color-success-subtle);
+  color: var(--color-success);
+}
+.spi-step-type.send {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+.spi-step-type.duplex {
+  background: #7c3aed20;
+  color: #7c3aed;
+}
+.spi-step-type.delay {
+  background: var(--color-surface0);
+  color: var(--color-overlay1);
+}
+
+.spi-step-input {
+  padding: 3px 6px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  outline: none;
+  flex: 1;
+  min-width: 60px;
+}
+
+.spi-step-input:focus {
+  border-color: var(--color-accent);
+}
+
+.spi-step-empty {
+  text-align: center;
+  padding: 20px;
+  font-size: 11px;
+  color: var(--color-overlay0);
+  font-style: italic;
+}
+
+/* ─── Workflow as table — 仿 SPIDisplayTool 初始化命令表布局 ─────────────────
+   勾选 + 顺序号 + 类型下拉 + 数据输入 + 删除按钮，每行平齐成列。
+   保留 .spi-step-row.selected / .active 的高亮颜色。 */
+
+.spi-step-table {
+  flex: 1;
+  min-height: 120px;
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--color-base);
+  border-radius: 8px;
+  border: 1px solid var(--color-surface0);
+}
+
+.spi-step-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-family: inherit;
+}
+
+.spi-step-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-mantle);
+  color: var(--color-overlay1);
+  font-weight: 600;
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--color-surface0);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 1;
+}
+
+.spi-step-table tbody tr {
+  border-bottom: 1px solid var(--color-crust);
+  transition: background 0.12s;
+}
+.spi-step-table tbody tr:hover {
+  background: var(--color-surface0);
+}
+.spi-step-table tbody tr.selected {
+  background: var(--color-accent-subtle);
+}
+.spi-step-table tbody tr.active {
+  background: var(--color-success-subtle);
+}
+
+.spi-step-table td {
+  padding: 4px 6px;
+  vertical-align: middle;
+}
+
+.spi-step-table .col-check {
+  width: 24px;
+  text-align: center;
+}
+.spi-step-table .col-num {
+  width: 30px;
+  text-align: center;
+  color: var(--color-overlay0);
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+}
+.spi-step-table .col-type {
+  width: 110px;
+}
+.spi-step-table .col-actions {
+  width: 56px;
+  text-align: center;
+}
+
+.spi-step-table select,
+.spi-step-table input.spi-step-input {
+  width: 100%;
+  padding: 3px 6px;
+  background: var(--color-base);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  outline: none;
+  box-sizing: border-box;
+}
+.spi-step-table select:hover,
+.spi-step-table input.spi-step-input:hover {
+  border-color: var(--color-surface0);
+}
+.spi-step-table select:focus,
+.spi-step-table input.spi-step-input:focus {
+  border-color: var(--color-accent);
+  background: var(--color-mantle);
+}
+
+.spi-step-table .spi-step-del {
+  background: transparent;
+  border: none;
+  color: var(--color-overlay0);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: inherit;
+}
+.spi-step-table .spi-step-del:hover:not(:disabled) {
+  background: var(--color-error-subtle, rgba(248, 81, 73, 0.15));
+  color: var(--color-error, #f85149);
+}
+.spi-step-table .spi-step-del:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.spi-step-table .spi-step-data-with-unit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.spi-step-table .spi-step-unit {
+  font-size: 10px;
+  color: var(--color-overlay0);
+  flex-shrink: 0;
+}
+
+.spi-step-table .spi-step-noop {
+  font-size: 10px;
+  color: var(--color-overlay0);
+  font-style: italic;
+  padding: 3px 6px;
+}
+
+/* ─── Single-shot param row ─────────────────────────── */
+
+.spi-param-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+/* ─── 自定义输入弹窗（替代浏览器 prompt / confirm，避免显示 "localhost:3030" 标题） ─── */
+
+.spi-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-modal-overlay, rgba(0, 0, 0, 0.5));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  animation: fadeIn 0.1s ease-out;
+}
+
+.spi-modal {
+  background: var(--color-base);
+  border-radius: 10px;
+  border: 1px solid var(--color-surface0);
+  box-shadow: 0 8px 32px var(--color-shadow-md, rgba(0, 0, 0, 0.3));
+  min-width: 320px;
+  max-width: 440px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: slideIn 0.12s ease-out;
+}
+
+.spi-modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.spi-modal-message {
+  font-size: 12px;
+  color: var(--color-subtext1);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.spi-modal-input {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--color-mantle);
+  border: 1px solid var(--color-surface0);
+  border-radius: 5px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+.spi-modal-input:focus {
+  border-color: var(--color-accent);
+}
+
+.spi-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.spi-modal-btn {
+  padding: 6px 16px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--color-surface1);
+  background: var(--color-surface0);
+  color: var(--color-text);
+  transition: background 0.12s;
+}
+.spi-modal-btn:hover {
+  background: var(--color-surface1);
+}
+.spi-modal-btn.primary {
+  background: var(--color-accent);
+  color: var(--color-accent-text, #fff);
+  border-color: transparent;
+}
+.spi-modal-btn.primary:hover {
+  filter: brightness(1.1);
+}
+.spi-modal-btn.danger {
+  background: var(--color-error, #f85149);
+  color: #fff;
+  border-color: transparent;
+}
+.spi-modal-btn.danger:hover {
+  filter: brightness(1.1);
+}
+
+/* ─── 预设栏 —— 选择 + Load + 另存为 + 删除，等高对齐 ─── */
+
+.spi-preset-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  background: var(--color-mantle);
+  border: 1px solid var(--color-surface0);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.spi-preset-label {
+  font-size: 11px;
+  color: var(--color-overlay1);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.spi-preset-select {
+  flex: 1;
+  min-width: 180px;
+  padding: 5px 8px;
+  background: var(--color-base);
+  border: 1px solid var(--color-surface0);
+  border-radius: 5px;
+  color: var(--color-text);
+  font-size: 11px;
+  font-family: inherit;
+  outline: none;
+}
+.spi-preset-select:focus {
+  border-color: var(--color-accent);
+}
+
+.spi-preset-btn {
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  background: var(--color-surface0);
+  color: var(--color-text);
+  border: 1px solid var(--color-surface1);
+  transition:
+    background 0.12s,
+    opacity 0.12s;
+  white-space: nowrap;
+}
+.spi-preset-btn:hover:not(:disabled) {
+  background: var(--color-surface1);
+}
+.spi-preset-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.spi-preset-btn.primary {
+  background: var(--color-accent);
+  color: var(--color-accent-text, #fff);
+  border-color: transparent;
+}
+.spi-preset-btn.primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.spi-preset-btn.danger {
+  background: transparent;
+  color: var(--color-error, #f85149);
+  border-color: var(--color-error, #f85149);
+}
+.spi-preset-btn.danger:hover:not(:disabled) {
+  background: var(--color-error-subtle, rgba(248, 81, 73, 0.12));
+}
+
+/* ─── 添加步骤工具栏 —— 按类别分组，组间用细线分隔 ─── */
+
+.spi-step-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  background: var(--color-crust);
+  border: 1px solid var(--color-surface0);
+  border-radius: 6px;
+  flex-wrap: wrap;
+}
+
+.spi-step-toolbar-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-overlay0);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.spi-btn-group {
+  display: inline-flex;
+  gap: 4px;
+  padding-right: 10px;
+  border-right: 1px solid var(--color-surface0);
+  flex-wrap: wrap;
+}
+.spi-btn-group:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+
+/* 让组内的按钮长得整齐：固定最小宽度 + 等高 */
+.spi-btn-group .modbus-reg-btn,
+.spi-btn-group .i2c-btn {
+  min-width: 64px;
+  height: 26px;
+  padding: 0 10px;
+  font-size: 11px;
+  white-space: nowrap;
+  margin: 0;
+}
+
+/* 显示屏预设按钮单独一行，按钮稍微宽一些容纳长名字 */
+.spi-step-toolbar .spi-btn-group .i2c-btn {
+  min-width: 110px;
+}

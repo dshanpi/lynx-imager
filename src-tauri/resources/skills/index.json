@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "skills": [
+    {
+      "name": "allwinner-fes-flashing",
+      "version": "1.0.0",
+      "domain": "linux",
+      "systems": [
+        "linux",
+        "allwinner",
+        "fes"
+      ],
+      "category": "firmware/allwinner",
+      "chipVendors": [
+        "allwinner"
+      ],
+      "requiredTools": [
+        "lynx_workbench_status",
+        "lynx_flash_capabilities",
+        "lynx_allwinner_enter_fel",
+        "lynx_scan_flash_devices",
+        "lynx_start_flash",
+        "lynx_workbench_task_status"
+      ],
+      "description": "Use a RAM-only loader and FES NAND component semantics while keeping the installed system mainline.",
+      "entryFile": "SKILL.md",
+      "sha256": "41d55386eb08f7a2a46b9fc2a242038b602693cd81cc1acbf4823ec337599890",
+      "files": {
+        "SKILL.md": "41d55386eb08f7a2a46b9fc2a242038b602693cd81cc1acbf4823ec337599890",
+        "references/nand-boundary.md": "6e6366dfd509890f4a545c8b0704248c58f4877837c83f08a7a0fab4744718c8"
+      }
+    },
+    {
+      "name": "linux-incident-triage",
+      "version": "1.0.0",
+      "domain": "linux",
+      "systems": [
+        "common",
+        "linux"
+      ],
+      "category": "diagnostics/incidents",
+      "chipVendors": [],
+      "requiredTools": [
+        "lynx_workbench_status"
+      ],
+      "description": "Triage a sanitized LYNX Linux-channel failure before proposing any retry, device action or code change.",
+      "entryFile": "SKILL.md",
+      "sha256": "834e207f658168822c2e4a4bf1bccec915bc2e5f733743591f3734fed3eef8f7",
+      "files": {
+        "SKILL.md": "834e207f658168822c2e4a4bf1bccec915bc2e5f733743591f3734fed3eef8f7",
+        "agents/openai.yaml": "fc10efbeb45b258ccdb88552fa3ad9e969ad9212d8aca333cc64e7e128413eda"
+      }
+    },
+    {
+      "name": "serial-diagnostics",
+      "version": "1.0.0",
+      "domain": "linux",
+      "systems": [
+        "common",
+        "linux"
+      ],
+      "category": "diagnostics/serial",
+      "chipVendors": [],
+      "requiredTools": [
+        "lynx_workbench_status",
+        "lynx_serial_open",
+        "lynx_serial_read",
+        "lynx_serial_close"
+      ],
+      "description": "Safely inspect a channel-bound Linux board UART without mixing it into flash protocol logs.",
+      "entryFile": "SKILL.md",
+      "sha256": "912af77a2c3d63faf05b5fedb425b5a1501eaa668982d58d745e3fa15e29f88c",
+      "files": {
+        "SKILL.md": "912af77a2c3d63faf05b5fedb425b5a1501eaa668982d58d745e3fa15e29f88c"
+      }
+    },
+    {
+      "name": "t113s3-mainline-nand",
+      "version": "1.0.0",
+      "domain": "linux",
+      "systems": [
+        "linux",
+        "buildroot",
+        "uboot"
+      ],
+      "category": "boards/t113s3",
+      "chipVendors": [
+        "allwinner"
+      ],
+      "requiredTools": [
+        "lynx_workbench_status",
+        "lynx_allwinner_enter_fel",
+        "lynx_flash_capabilities",
+        "lynx_start_flash",
+        "lynx_workbench_task_status",
+        "lynx_serial_open",
+        "lynx_serial_read"
+      ],
+      "description": "Build, flash and verify the DshanPi T113S3 Pro pure-mainline system on SPI-NAND.",
+      "entryFile": "SKILL.md",
+      "sha256": "598d89151fd93ffb75d09f84a56401864a943fce035a0748607281e175b3e31d",
+      "files": {
+        "SKILL.md": "598d89151fd93ffb75d09f84a56401864a943fce035a0748607281e175b3e31d"
+      }
+    },
+    {
+      "name": "t527-sdk-emmc",
+      "version": "1.0.0",
+      "domain": "linux",
+      "systems": [
+        "linux",
+        "buildroot",
+        "tina"
+      ],
+      "category": "boards/t527",
+      "chipVendors": [
+        "allwinner"
+      ],
+      "requiredTools": [
+        "lynx_workbench_status"
+      ],
+      "description": "Work inside the fixed Avaota A1 T527 SDK channel and keep eMMC assumptions separate from T113 NAND.",
+      "entryFile": "SKILL.md",
+      "sha256": "0c0378688792277eab144cc934df98aa991475d30bbfd95feefd1d76b7fba76c",
+      "files": {
+        "SKILL.md": "0c0378688792277eab144cc934df98aa991475d30bbfd95feefd1d76b7fba76c"
+      }
+    },
+    {
+      "name": "freertos-cherryusb",
+      "version": "1.0.0",
+      "domain": "mcu",
+      "systems": [
+        "freertos"
+      ],
+      "category": "rtos/packages/usb",
+      "chipVendors": [],
+      "requiredTools": [
+        "lynx_mcu_capabilities",
+        "lynx_mcu_board_info",
+        "lynx_mcu_uart_open",
+        "lynx_mcu_uart_read",
+        "lynx_mcu_uart_close"
+      ],
+      "description": "Diagnose CherryUSB CDC stalls on a fixed MCU board using bounded UART observation and no implicit reset or flash.",
+      "entryFile": "SKILL.md",
+      "sha256": "7cff6c39bed9e78df38707efb2a95242bda7f3a961ebf75215841d039a823c86",
+      "files": {
+        "SKILL.md": "7cff6c39bed9e78df38707efb2a95242bda7f3a961ebf75215841d039a823c86"
+      }
+    },
+    {
+      "name": "mcu-incident-triage",
+      "version": "1.0.0",
+      "domain": "mcu",
+      "systems": [
+        "common",
+        "baremetal",
+        "freertos"
+      ],
+      "category": "diagnostics/incidents",
+      "chipVendors": [],
+      "requiredTools": [
+        "lynx_mcu_capabilities",
+        "lynx_mcu_board_info"
+      ],
+      "description": "Triage a sanitized LYNX MCU-channel failure without inheriting Linux, ADB, shell or generic flashing capabilities.",
+      "entryFile": "SKILL.md",
+      "sha256": "98699ba02706d0f15bc34dce2dac995e90adc5391ef1ca125498b8e26e2c942d",
+      "files": {
+        "SKILL.md": "98699ba02706d0f15bc34dce2dac995e90adc5391ef1ca125498b8e26e2c942d",
+        "agents/openai.yaml": "75f93805f9b7659748506fae2b37b113d9b4c26ec0c6c23de9b42207f36d3b5b"
+      }
+    }
+  ]
+}

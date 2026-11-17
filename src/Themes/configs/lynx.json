@@ -1,0 +1,60 @@
+{
+  "id": "lynx",
+  "name": "LYNX",
+  "variants": {
+    "Dark": {
+      "type": "Dark",
+      "config": {
+        "base": "#08090b",
+        "mantle": "#111316",
+        "crust": "#050607",
+        "surface0": "#16181c",
+        "surface1": "#1c1f23",
+        "surface2": "#30343a",
+        "overlay0": "#4f5660",
+        "overlay1": "#737b86",
+        "overlay2": "#b9bec6",
+        "text": "#f0f2f5",
+        "subtext0": "#a8afb8",
+        "subtext1": "#737b86",
+        "accent": "#2f8cff",
+        "accentHover": "#61a8ff",
+        "accentText": "#050607",
+        "success": "#35c46a",
+        "warning": "#f2ad4b",
+        "error": "#ff5f69",
+        "border": "#25282d",
+        "interactive": "#14161a",
+        "interactiveHover": "#191c20",
+        "interactiveActive": "#1b2027"
+      }
+    },
+    "Light": {
+      "type": "Light",
+      "config": {
+        "base": "#f5f8fc",
+        "mantle": "#ffffff",
+        "crust": "#f0f5fb",
+        "surface0": "#f3f5f7",
+        "surface1": "#e5ebf2",
+        "surface2": "#bfd0e3",
+        "overlay0": "#8b9bb0",
+        "overlay1": "#64748b",
+        "overlay2": "#0d1830",
+        "text": "#0d1830",
+        "subtext0": "#64748b",
+        "subtext1": "#8b9bb0",
+        "accent": "#087ff5",
+        "accentHover": "#006dde",
+        "accentText": "#ffffff",
+        "success": "#16a34a",
+        "warning": "#d97706",
+        "error": "#dc2626",
+        "border": "#d9e3ef",
+        "interactive": "#ffffff",
+        "interactiveHover": "#edf4fc",
+        "interactiveActive": "#e6f2ff"
+      }
+    }
+  }
+}
