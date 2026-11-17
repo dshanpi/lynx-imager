@@ -1,0 +1,241 @@
+[
+
+  {
+
+    "file": "B01-基础-选择板子.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1580775,
+
+    "sha256": "8c5237fb8071d9be2bc15456e6f00ef19049a98d94c9fb554b9c5e2067838f91"
+
+  },
+
+  {
+
+    "file": "B02-基础-板型系统.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1601885,
+
+    "sha256": "cd87728929309c04a757139404133131a33fe6cf5a2b0265327f3ed2a764df16"
+
+  },
+
+  {
+
+    "file": "B03-基础-本地镜像.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1603034,
+
+    "sha256": "7cafc74596e2df3d04e677bf9ee54d963d9bee2b5962fafc7754a1e7df5052e4"
+
+  },
+
+  {
+
+    "file": "B04-基础-接口就绪.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1592732,
+
+    "sha256": "7b3d5fc9d28da2b7546a9f530f321cb824059157bd3343ae535e53a5c4dc437c"
+
+  },
+
+  {
+
+    "file": "B05-基础-RK缺少Loader.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1599217,
+
+    "sha256": "5a00beaffcdaf2093eba078f9ce1d250015c54199c76965279f9cae081da7964"
+
+  },
+
+  {
+
+    "file": "B06-基础-烧录确认.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1600635,
+
+    "sha256": "13c53b99a9cd1552a07553c3736a31a571d898d1659092d23ab5f91f29d7b0c4"
+
+  },
+
+  {
+
+    "file": "B07-基础-写入进度.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1573360,
+
+    "sha256": "2882132c278410c1b0c29fffd8dcbad7086f4915ba06118f534745d558c33c99"
+
+  },
+
+  {
+
+    "file": "B08-基础-完成结果.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1594828,
+
+    "sha256": "a2da876b466c990e792c5bc8a0306aee825fdcf8bd20ec3ae649c08b30e459c3"
+
+  },
+
+  {
+
+    "file": "B09-基础-失败恢复.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1597081,
+
+    "sha256": "c540f5189ccb9d60b56bc4ea8644f7382f2fd188a24ccf0f0df2a4640d4a583b"
+
+  },
+
+  {
+
+    "file": "A01-高级-SPI-NOR工作台.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1543311,
+
+    "sha256": "df994ff783ed2d9503da1dc762e397df4e6cdf3d7b7741ecb2d64b1de69053a8"
+
+  },
+
+  {
+
+    "file": "A02-高级-RK工作台.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1538201,
+
+    "sha256": "aa99515bd3dc2c64026312a323eca0d3861312f3125ef88ea473ba200964ff33"
+
+  },
+
+  {
+
+    "file": "A03-高级-预检问题.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1589421,
+
+    "sha256": "37b401bf99ce859d6576c3398689cfe87ac2ba1b5363c46d424a1f9766c046d7"
+
+  },
+
+  {
+
+    "file": "C01-AI-本机通道.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1565193,
+
+    "sha256": "a036908e6832328a3692558634d871baccc2628cee68226a31791b2a08555b25"
+
+  },
+
+  {
+
+    "file": "C02-AI-远端通道.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1562583,
+
+    "sha256": "34e01b7a93b496dfc345c9c4dd4629a600b69dbbc64ce86388d28ba88418159a"
+
+  },
+
+  {
+
+    "file": "C03-AI-请求确认.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1571378,
+
+    "sha256": "13bfc2971a9000fd2faec43fc26887ff105bd2208dee260cd18363e4c60c5a17"
+
+  },
+
+  {
+
+    "file": "S01-共享-任务记录.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1600028,
+
+    "sha256": "b0123a7a04da5313ce8cb1c2383c2ed67ae15aa8b3aec83ab8d9bc9c648d7578"
+
+  },
+
+  {
+
+    "file": "S02-共享-设置.png",
+
+    "width": 1536,
+
+    "height": 1024,
+
+    "bytes": 1531253,
+
+    "sha256": "ee10aaca360aebe22aad8917bd30a855bcd6518802c5f495eeb368e199b32a50"
+
+  }
+
+]
