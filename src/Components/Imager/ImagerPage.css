@@ -16,7 +16,7 @@
 .imager-kicker {
   color: var(--indigo, #5364d8);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.16em;
 }
 .imager-header h1 {
@@ -70,7 +70,7 @@
 }
 .imager-stepper-title {
   font-size: 18px;
-  font-weight: 750;
+  font-weight: 700;
 }
 .imager-stepper-subtitle {
   margin-top: 4px;
@@ -129,7 +129,7 @@
   border: 1px solid #bbc1cf;
   border-radius: 50%;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
 }
 .is-active .imager-step-number,
 .is-complete .imager-step-number {
@@ -161,7 +161,7 @@
 .imager-safe-note span {
   color: var(--indigo, #5364d8);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
 }
 .imager-safe-note p {
   margin: 6px 0 0;
@@ -183,12 +183,12 @@
 .imager-page-heading > span {
   color: var(--indigo, #5364d8);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.08em;
 }
 .imager-page-heading h2 {
   margin: 7px 0 6px;
-  font-size: 25px;
+  font-size: 24px;
   letter-spacing: -0.02em;
 }
 .imager-board-grid {
@@ -235,7 +235,7 @@
   background: #eef0f6;
   color: #4b556b;
   font-size: 12px;
-  font-weight: 850;
+  font-weight: 700;
   letter-spacing: 0.04em;
 }
 .imager-board-card.is-selected .imager-board-mark {
@@ -244,7 +244,7 @@
 }
 .imager-board-name {
   font-size: 16px;
-  font-weight: 750;
+  font-weight: 700;
 }
 .imager-board-meta {
   margin-top: 5px;
@@ -257,7 +257,7 @@
   right: 16px;
   color: var(--indigo, #5364d8);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
 }
 .imager-info-card {
   display: flex;
@@ -295,7 +295,7 @@
   display: block;
   margin-bottom: 8px;
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 700;
 }
 .imager-input-row {
   display: flex;
@@ -391,7 +391,7 @@
 .imager-device-row > span:last-child {
   color: var(--indigo, #5364d8);
   font-size: 12px;
-  font-weight: 750;
+  font-weight: 700;
 }
 .imager-device-dot {
   width: 8px;
