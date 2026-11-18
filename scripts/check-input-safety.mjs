@@ -46,6 +46,10 @@ const reviewedFocusCounts = new Map([
   // Explicit Tab at a modal boundary and an explicit clipboard copy fallback.
   ['src/CoreUI/dialogKeys.ts', 1],
   ['src/Components/Imager/imagerAIControls.tsx', 1],
+  // Closing the confirmation drawer with Back or Escape restores keyboard focus.
+  ['src/Components/Imager/V2Write.tsx', 1],
+  // Explicit Ctrl+K on the visible board picker focuses its search box.
+  ['src/Components/Imager/V2Catalog.tsx', 1],
 ]);
 
 const violations = [];

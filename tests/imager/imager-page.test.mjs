@@ -7,23 +7,23 @@ import ts from 'typescript';
 const root = process.cwd();
 const read = (relative) => fs.readFile(path.join(root, relative), 'utf8');
 
-test('LYNX Imager exposes five visible steps and all three workspaces', async () => {
+test('LYNX Imager exposes four visible steps and all three workspaces', async () => {
   const source = await read('src/Components/Imager/ImagerPage.tsx');
   const shell = await read('src/main.tsx');
   assert.match(source, /基础烧录/);
   assert.match(shell, /高级烧录/);
   assert.match(shell, /连接 AI/);
-  assert.match(source, /\['选择开发板', '选择镜像', '配置接口', '确认烧录', '写入与校验'\]/);
+  assert.match(source, /\['选择板子', '选择系统', '配置接口', '烧写系统'\]/);
   assert.match(source, /aria-current=.*'step'/);
   assert.match(source, /aria-label="烧录步骤"/);
-  assert.match(source, /搜索板型、芯片或厂商/);
-  assert.match(source, /imager-board-picker/);
-  assert.match(source, /已选板型/);
+  assert.match(source.replace(/\s/g, ''), /\[boardId,setBoardId\]=useState<string\|null>\(null\)/);
+  assert.match(source.replace(/\s/g, ''), /step===4&&board&&target&&[<(]/);
 });
 
 test('basic flow calls existing typed IPC boundaries', async () => {
   const source = await read('src/Components/Imager/ImagerPage.tsx');
   const observation = await read('src/Components/Imager/BasicTask.tsx');
+  const result = await read('src/Components/Imager/V2Write.tsx');
   const catalog = await read('src/Components/Imager/BasicCatalog.tsx');
   assert.match(source, /workbench_list_devices/);
   assert.match(source, /workbench_start_flash/);
@@ -31,17 +31,17 @@ test('basic flow calls existing typed IPC boundaries', async () => {
   assert.match(source, /workbench_scan_flasher_devices/);
   assert.match(source, /workbench_firmware_prepare/);
   assert.match(source, /workbench_firmware_start/);
-  assert.match(source, /!confirmed \|\| !files/);
-  assert.match(source, /fresh\.usb\.key !== target\.usb\.key/);
-  assert.match(source, /current\.image\.sha256 !== files\.image\.sha256/);
+  assert.match(source, /!confirmed/);
+  assert.match(source, /sameUsb\(fresh\.usb,\s*target\.usb\)/);
+  assert.match(source, /files\.image\.sha256\s*!==\s*target\.files\.image\.sha256/);
   assert.match(catalog, /workbench_firmware_catalog/);
   assert.match(catalog, /workbench_firmware_download/);
   assert.match(observation, /workbench-task-event/);
   assert.match(observation, /workbench-flash-telemetry/);
   assert.match(observation, /workbench_list_tasks/);
   assert.match(observation, /taskId !== id/);
-  assert.match(observation, /physicalVerifyState/);
-  assert.match(observation, /bootVerifyState/);
+  assert.match(result, /physicalVerifyState/);
+  assert.match(result, /bootVerifyState/);
   assert.doesNotMatch(source, /setInterval\(/);
 });
 

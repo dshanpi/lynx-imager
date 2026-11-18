@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { invokeCommand, subscribeEvent, type WorkbenchTaskHistory } from '../../Platform/IPC';
 import { formatErrorMessage } from '../../Utils';
-import { formatLinuxBytes } from '../Workbench/linuxWorkbenchModel';
 
 type Details = NonNullable<WorkbenchTaskHistory['details']>;
 type View = {
@@ -10,6 +9,7 @@ type View = {
   phase: string;
   details: Details;
   logs: string[];
+  logVersion: number;
   error: string;
   startedAt: number | null;
   finishedAt: number | null;
@@ -21,6 +21,7 @@ const initial = (id: string): View => ({
   phase: '',
   details: {},
   logs: [],
+  logVersion: 0,
   error: '',
   startedAt: null,
   finishedAt: null,
@@ -90,6 +91,7 @@ export function useBasicTask(id: string) {
           phase: event.phase || old.phase,
           error: event.status === 'failed' ? event.message : old.error,
           logs: event.message ? [...old.logs.slice(-79), event.message] : old.logs,
+          logVersion: old.logVersion + (event.message ? 1 : 0),
           details: progress == null ? old.details : { ...old.details, progressPct: progress },
         };
       });
@@ -122,6 +124,19 @@ export function useBasicTask(id: string) {
               ...task.details,
               progressPct: task.details?.progressPct ?? task.progressPct,
             };
+            const tail = task.details?.outputTail;
+            const logs =
+              (persistedEnd || !old.logs.length) && tail?.length ? tail.slice(-80) : old.logs;
+            let overlap = Math.min(old.logs.length, logs.length);
+            while (
+              logs !== old.logs &&
+              overlap > 0 &&
+              !logs
+                .slice(0, overlap)
+                .every((line, index) => line === old.logs[old.logs.length - overlap + index])
+            ) {
+              overlap--;
+            }
             return {
               ...old,
               status: useRecord ? task.status : old.status,
@@ -133,10 +148,8 @@ export function useBasicTask(id: string) {
               details: useRecord
                 ? { ...old.details, ...recordDetails }
                 : { ...recordDetails, ...old.details },
-              logs:
-                (persistedEnd || !old.logs.length) && task.details?.outputTail?.length
-                  ? task.details.outputTail.slice(-80)
-                  : old.logs,
+              logs,
+              logVersion: old.logVersion + logs.length - overlap,
             };
           });
         }
@@ -156,94 +169,4 @@ export function useBasicTask(id: string) {
     };
   }, [id]);
   return view.id === id ? view : initial(id);
-}
-
-export function BasicTask({
-  task,
-  target,
-  usb,
-  path,
-}: {
-  task: View;
-  target: string;
-  usb: string;
-  path: string;
-}) {
-  const d = task.details;
-  const pct = d.progressPct;
-  const signals = [
-    ['写入', d.writeState],
-    ['协议校验', d.verifyState],
-    ['物理回读校验', d.physicalVerifyState],
-    ['结束动作', d.postFlashState],
-    ['系统启动', d.bootVerifyState],
-  ];
-  return (
-    <>
-      <section className="basic-section">
-        <h3>
-          {stateName(task.status)}
-          {task.phase && ' · ' + stateName(task.phase)}
-        </h3>
-        {pct != null && <div className="basic-percent">{Math.round(pct)}%</div>}
-        <progress
-          aria-label="后端报告的烧录进度"
-          max={100}
-          value={pct ?? undefined}
-          hidden={pct == null && ended(task.status)}
-        />
-        <p className="basic-note">
-          任务 <code>{task.id}</code>
-          {d.transferredBytes != null && '　已传输 ' + formatLinuxBytes(d.transferredBytes)}
-          {d.totalBytes != null && ' / ' + formatLinuxBytes(d.totalBytes)}
-          {d.bytesPerSecond != null && '　' + formatLinuxBytes(d.bytesPerSecond) + '/s'}
-          {d.currentPartition && '　分区 ' + d.currentPartition}
-        </p>
-        <div className="basic-task-identity">
-          <span>
-            目标 <strong>{target}</strong>
-          </span>
-          <span>
-            接口 <code>{usb}</code>
-          </span>
-          <span>
-            镜像 <code>{path}</code>
-          </span>
-          {task.startedAt && (
-            <span>开始 {new Date(task.startedAt * 1000).toLocaleTimeString()}</span>
-          )}
-          {task.finishedAt && (
-            <span>结束 {new Date(task.finishedAt * 1000).toLocaleTimeString()}</span>
-          )}
-        </div>
-        {task.error && (
-          <p role="alert" className="basic-warning">
-            {task.error}
-          </p>
-        )}
-        {task.observationError && (
-          <p role="status">读取任务状态遇到问题，正在重新读取。{task.observationError}</p>
-        )}
-      </section>
-      <div className="basic-columns">
-        <section>
-          <h3>执行结果</h3>
-          <dl className="basic-props">
-            {signals.map(([name, val]) => (
-              <div key={name}>
-                <dt>{name}</dt>
-                <dd>{stateName(val)}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-        <section>
-          <h3>任务日志</h3>
-          <pre className="basic-log" tabIndex={0} aria-label="当前任务日志">
-            {task.logs.join('\n') || '等待后端日志…'}
-          </pre>
-        </section>
-      </div>
-    </>
-  );
 }
