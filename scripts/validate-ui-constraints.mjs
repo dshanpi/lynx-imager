@@ -44,6 +44,17 @@ for (const name of skillNames) {
 const tokenDir = 'design-system/lynx-imager';
 const tokens = JSON.parse(await read(`${tokenDir}/tokens.json`));
 const stylesheet = (await read(`${tokenDir}/tokens.css`)).replace(/\/\*[\s\S]*?\*\//g, '');
+const lynx = JSON.parse(await read('src/Themes/configs/lynx.json'));
+assert.equal(lynx.id, 'lynx', 'Expected the original LYNX theme');
+const sourceCss = (await read('src/Themes/tokens.css')).replace(/\/\*[\s\S]*?\*\//g, '');
+const sourceRules = new Map();
+for (const [, selector, body] of sourceCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+  const declarations = new Map();
+  for (const [, key, value] of body.matchAll(/(--lynx-[\w-]+)\s*:\s*([^;]+);/g)) {
+    declarations.set(key, value.trim());
+  }
+  sourceRules.set(selector.trim(), declarations);
+}
 const names = ['light', 'dark'];
 const css = { light: new Map(), dark: new Map() };
 // This declaration-only token file uses three simple scopes; evaluate their
@@ -74,6 +85,7 @@ function luminance(hex) {
 }
 
 let checkedPairs = 0;
+let sourceMatches = 0;
 assert.deepEqual(Object.keys(tokens.color).sort(), Object.keys(tokens.dark.color).sort(),
   'Light and dark themes must expose the same roles');
 for (const mode of names) {
@@ -83,6 +95,42 @@ for (const mode of names) {
     for (const [role, token] of Object.entries(roles)) expected.set(`--${group}-${role}`, token.$value);
   }
   assert.deepEqual(css[mode], expected, `${mode}: CSS declarations must match tokens.json`);
+  const light = mode === 'light';
+  const original = lynx.variants[light ? 'Light' : 'Dark'].config;
+  const sourceRule = sourceRules.get(`[data-theme='lynx-${mode}']`);
+  assert(sourceRule, `${mode}: missing original LYNX CSS theme`);
+  function matchesSource(role, value) {
+    assert.match(value, /^#[\da-f]{6}$/i, `${mode}: missing original color for ${role}`);
+    assert.equal(color[role]?.$value.toLowerCase(), value.toLowerCase(),
+      `${mode} ${role} must match the original LYNX theme: ${value}`);
+    sourceMatches++;
+  }
+  const originalRoles = {
+    background: 'base', sidebar: 'mantle', surface: 'mantle', subtle: 'crust',
+    text: 'text', selected: 'interactiveActive', border: 'border', divider: 'surface1',
+    brand: 'accent', 'selection-line': 'accent', focus: 'accent', 'chart-cpu': 'accent',
+    'chart-memory': 'subtext0', 'success-mark': 'success', 'warning-mark': 'warning',
+    'error-mark': 'error', primary: light ? 'accentHover' : 'accent', 'on-primary': 'accentText',
+  };
+  if (!light) Object.assign(originalRoles, {
+    muted: 'subtext0', connected: 'success', warning: 'warning', error: 'error', 'control-border': 'overlay1',
+  });
+  for (const [role, field] of Object.entries(originalRoles)) matchesSource(role, original[field]);
+  matchesSource('console', sourceRule.get('--lynx-terminal-bg'));
+  matchesSource('console-text', sourceRule.get('--lynx-terminal-text'));
+
+  // The translucent LYNX focus halo is specified relative to the surface.
+  // The opaque outline has its own 3:1 check below on every interactive surface.
+  const ring = sourceRule.get('--lynx-focus-ring') ?? sourceRules.get(':root')?.get('--lynx-focus-ring');
+  const rgba = /rgb\((\d+) (\d+) (\d+) \/ (\d+)%\)/.exec(ring ?? '');
+  assert(rgba, `${mode}: original LYNX focus ring is missing its RGBA color`);
+  const opacity = Number(rgba[4]) / 100;
+  const channels = original.mantle.slice(1).match(/../g);
+  const blended = channels.map((hex, index) => {
+    const value = Number(rgba[index + 1]) * opacity + parseInt(hex, 16) * (1 - opacity);
+    return Math.round(value).toString(16).padStart(2, '0');
+  });
+  matchesSource('halo', '#' + blended.join(''));
   function checkContrast(foreground, background, minimum) {
     assert(color[foreground] && color[background], `${mode}: missing role in ${foreground}/${background}`);
     const a = luminance(color[foreground].$value);
@@ -92,7 +140,7 @@ for (const mode of names) {
       `${mode} ${foreground}/${background}: ${ratio.toFixed(2)}:1, requires ${minimum}:1`);
     checkedPairs++;
   }
-  for (const bg of ['background', 'sidebar', 'surface', 'selected']) {
+  for (const bg of ['background', 'sidebar', 'surface', 'subtle', 'selected']) {
     for (const fg of ['text', 'muted', 'connected', 'warning', 'error']) checkContrast(fg, bg, 4.5);
     for (const fg of ['focus', 'control-border']) checkContrast(fg, bg, 3);
   }
@@ -101,6 +149,7 @@ for (const mode of names) {
   checkContrast('selection-line', 'selected', 3);
   checkContrast('chart-cpu', 'surface', 3);
   checkContrast('chart-memory', 'surface', 3);
+  for (const mark of ['success-mark', 'warning-mark', 'error-mark']) checkContrast(mark, 'surface', 3);
 }
 
 // Preserve the shell, supported routes and basic-flow regressions from the previous gate.
@@ -121,5 +170,5 @@ for (const vendor of ['allwinner', 'rockchip', 'nxp', 'st', 'kendryte']) {
 for (const name of ['imager-app-header', 'imager-app-tabs', 'imager-app-main', 'imager-app-status']) {
   assert(shellStyles.includes(name), `Missing desktop shell region ${name}`);
 }
-console.log(`Verified ${skillNames.length} vendored skills, theme token parity and ${checkedPairs} contrast pairs plus desktop shell contracts.`);
+console.log(`Verified ${skillNames.length} vendored skills, ${sourceMatches} original LYNX color matches, theme token parity and ${checkedPairs} contrast pairs plus desktop shell contracts.`);
 console.log('Screenshot alignment, keyboard operation and hardware behavior require separate review.');

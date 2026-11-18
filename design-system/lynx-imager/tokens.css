@@ -1,48 +1,62 @@
-/* See tokens.json for the corresponding semantic values. */
+/* Source palette: src/Themes/configs/lynx.json and src/Themes/tokens.css. */
 :root, [data-theme="light"] {
   color-scheme: light;
-  --color-background: #FFFFFF;
-  --color-sidebar: #F4F5F6;
+  --color-brand: #087FF5;
+  --color-background: #F5F8FC;
+  --color-sidebar: #FFFFFF;
   --color-surface: #FFFFFF;
-  --color-text: #202427;
-  --color-muted: #505960;
-  --color-selected: #E5E8EB;
-  --color-selection-line: #343B42;
-  --color-primary: #2056A3;
+  --color-subtle: #F0F5FB;
+  --color-text: #0D1830;
+  --color-selected: #E6F2FF;
+  --color-selection-line: #087FF5;
+  --color-focus: #087FF5;
+  --color-primary: #006DDE;
   --color-on-primary: #FFFFFF;
-  --color-connected: #186545;
-  --color-warning: #865900;
-  --color-error: #B42318;
-  --color-focus: #005FCC;
-  --color-border: #D3D7DA;
-  --color-control-border: #717980;
-  --color-chart-cpu: #276474;
-  --color-chart-memory: #795682;
-  --color-console: #20272B;
-  --color-console-text: #EBEFF1;
+  --color-border: #D9E3EF;
+  --color-divider: #E5EBF2;
+  --color-success-mark: #16A34A;
+  --color-warning-mark: #D97706;
+  --color-error-mark: #DC2626;
+  --color-chart-cpu: #087FF5;
+  --color-chart-memory: #64748B;
+  --color-console: #0B1422;
+  --color-console-text: #D5DEEA;
+  --color-halo: #CEE5FD;
+  --color-muted: #5B6B82;
+  --color-connected: #137942;
+  --color-warning: #9C5B13;
+  --color-error: #D22527;
+  --color-control-border: #78879D;
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --color-background: #161B22;
-  --color-sidebar: #0D1117;
-  --color-surface: #21262D;
-  --color-text: #E6EDF3;
-  --color-muted: #A6B0BA;
-  --color-selected: #2C333B;
-  --color-selection-line: #CED5DD;
-  --color-primary: #79ACF4;
-  --color-on-primary: #101B29;
-  --color-connected: #71C99C;
-  --color-warning: #F2BE69;
-  --color-error: #FF9B91;
-  --color-focus: #9EC8FF;
-  --color-border: #37414C;
-  --color-control-border: #85919C;
-  --color-chart-cpu: #73C4D4;
-  --color-chart-memory: #D2A3D9;
-  --color-console: #0D1117;
-  --color-console-text: #E6EDF3;
+  --color-brand: #2F8CFF;
+  --color-background: #08090B;
+  --color-sidebar: #111316;
+  --color-surface: #111316;
+  --color-subtle: #050607;
+  --color-text: #F0F2F5;
+  --color-selected: #1B2027;
+  --color-selection-line: #2F8CFF;
+  --color-focus: #2F8CFF;
+  --color-primary: #2F8CFF;
+  --color-on-primary: #050607;
+  --color-border: #25282D;
+  --color-divider: #1C1F23;
+  --color-success-mark: #35C46A;
+  --color-warning-mark: #F2AD4B;
+  --color-error-mark: #FF5F69;
+  --color-chart-cpu: #2F8CFF;
+  --color-chart-memory: #A8AFB8;
+  --color-console: #030405;
+  --color-console-text: #E2E6EB;
+  --color-halo: #193253;
+  --color-muted: #A8AFB8;
+  --color-connected: #35C46A;
+  --color-warning: #F2AD4B;
+  --color-error: #FF5F69;
+  --color-control-border: #737B86;
 }
 
 :root {

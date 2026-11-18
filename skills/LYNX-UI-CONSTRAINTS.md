@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | [UI/UX Pro Max](ui-ux-pro-max/SKILL.md) | 按设备与工程任务确定信息层级、密度、控件与键盘路径 | 页面流程与布局规格。[源仓库](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) |
 | [Frontend Design](frontend-design/SKILL.md) | 把规格落实为桌面布局、对齐、文案、控件及状态样张 | 每个页面的可检查设计图与之后的界面实现。[源仓库](https://github.com/anthropics/skills/tree/main/skills/frontend-design) |
-| [Color System](color-system/SKILL.md) | 以 Graphite 为参考，维护浅深两套同角色色值、状态、焦点与图表 | 配色令牌、对比度检查与多重编码样例。[源仓库](https://github.com/AntJanus/skillbox/tree/main/skills/color-system) |
+| [Color System](color-system/SKILL.md) | 在原 LYNX - Light 和 LYNX - Dark 中分配颜色角色，校验状态、焦点与图表对比度 | 配色令牌、对比度检查与多重编码样例。[源仓库](https://github.com/AntJanus/skillbox/tree/main/skills/color-system) |
 | [Web Design Guidelines](web-design-guidelines/SKILL.md) | 在评审时获取上游规则，核对可访问名称、表单语义、焦点、交互反馈与溢出 | 对改动文件记录检查结果及可定位的问题。[源仓库](https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines) |
 
 ## Product structure · 产品结构
@@ -29,6 +29,8 @@
 ## Visual and content contract · 颜色与反馈
 
 - 设计样张引用 `design-system/lynx-imager/tokens.css`，其浅／深模式逐个角色对应同目录的 `tokens.json`。主操作、选中、焦点、在线、警告与错误各有独立角色。
+- 两种模式共用原版 LYNX 的背景、侧栏、表面、正文、选中底纹、品牌蓝和状态标记。终端使用原主题独立的前景、背景。每次运行门禁都从[原版色表](../src/Themes/configs/lynx.json)和[原版语义 CSS](../src/Themes/tokens.css)读取相应值。
+- 浅色品牌蓝为 `#087FF5`，用于品牌、选中指示线、焦点和 CPU 曲线。主按钮的白字配原主题的 `accentHover`（`#006DDE`）。状态小标记放在 `surface` 上，旁边同时显示有独立颜色的状态文字。浅色次文字与状态文字允许按对比度加深，分别在工作区、侧栏、表面、弱底色和选中底色上核对。
 - 次文字、状态字与主按钮标签至少 4.5∶1；关键控件边界、焦点环、选中指示线及数据曲线至少 3∶1。装饰分隔线和决定输入框位置的控件边界分别取值。
 - 同一上下文只显示一次同一状态。连接状态在邻近对象处给出名称；选中设备有底纹和实线指示；图表的 CPU 使用实线、内存使用虚线，同时标示名称、数值与单位。
 - 请求期间禁用相互冲突的操作并显示进度。阻塞、失败与断连显示具体原因、目标及已有恢复动作。写入、校验、重启和启动验证分别记录证据。
