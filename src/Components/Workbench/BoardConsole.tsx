@@ -1400,8 +1400,9 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
           <div className="board-console-panel board-console-serial">
             <header>
               <div className="board-terminal-heading">
-                <i className={serialDetected ? 'is-online' : ''} />
+                <i className={serialReady || serialDetected ? 'is-online' : ''} />
                 <div>
+                  <small>SERIAL TERMINAL</small>
                   <strong>串口终端</strong>
                 </div>
               </div>

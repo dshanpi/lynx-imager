@@ -18,6 +18,8 @@ import { formatErrorMessage } from '../../Utils';
 import BoardConsole from './BoardConsole';
 import AdbFileTransfer from './AdbFileTransfer';
 import SdkTerminal from './SdkTerminal';
+import { BoardThumbnail } from './BoardThumbnail';
+import { useSshPresence } from './useSshPresence';
 import AdvancedOverview, { recordOverview, type MonitorSample } from './AdvancedOverview';
 import { DeviceAiChannel } from '../DeviceAiChannel';
 import {
@@ -26,6 +28,8 @@ import {
   EMPTY_WORKBENCH_PROJECT as emptyProject,
   LINUX_CHIP_VENDORS as CHIP_VENDORS,
   formatUsbBinding,
+  linuxBoardSpecs,
+  linuxVendorMark as vendorMark,
   linuxFlashProtocolLabel as flashProtocolLabel,
   linuxUsedPercent as usedPercent,
   linuxVendorHintFromName as vendorHintFromName,
@@ -51,7 +55,7 @@ export interface WorkbenchProps {
   onStatusChange?: (status: { target: string; task: string }) => void;
 }
 
-type LinuxDeviceView = 'overview' | 'serial' | 'sdk' | 'flash' | 'files' | 'ai' | 'workspace';
+type LinuxDeviceView = 'overview' | 'serial' | 'sdk' | 'flash' | 'ai' | 'workspace';
 type HeaderPowerState = 'on' | 'off' | 'unknown';
 
 type SerialPort = Awaited<ReturnType<typeof listSerialPorts>>[number];
@@ -72,6 +76,7 @@ const GATEWAY_RELOAD_TIMEOUT_MS = 5_000;
 const CONFIG_REFRESH_TIMEOUT_MS = 5_000;
 const ACTIVE_INTERFACE_SCAN_INTERVAL_MS = 5_000;
 const BACKGROUND_INTERFACE_SCAN_INTERVAL_MS = 15_000;
+const SERIAL_PRESENCE_INTERVAL_MS = 2_500;
 const TUNNEL_STATUS_INTERVAL_MS = 3_000;
 const GATEWAY_WATCHDOG_INTERVAL_MS = 15_000;
 
@@ -329,6 +334,34 @@ function matchingSerialPort(board: WorkbenchDevice, ports: SerialPort[]) {
 
 function isSerialOnline(board: WorkbenchDevice, ports: SerialPort[]) {
   return !!matchingSerialPort(board, ports);
+}
+
+// Virtual ports may be absent from USB enumeration while LYNX has an open serial handle.
+function useBoundSerialSession(active: boolean, deviceId: number | null, port: string) {
+  const [seen, setSeen] = useState<{ deviceId: number; port: string; open: boolean } | null>(null);
+  useEffect(() => {
+    setSeen(null);
+    if (!active || deviceId == null || !port) return;
+    const owner = deviceId;
+    let current = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const refresh = async () => {
+      const open = await invokeCommand('serial_is_open', { port }).catch(() => false);
+      if (!current) return;
+      setSeen((previous) =>
+        previous?.deviceId === owner && previous.port === port && previous.open === open
+          ? previous
+          : { deviceId: owner, port, open }
+      );
+      timer = setTimeout(refresh, SERIAL_PRESENCE_INTERVAL_MS);
+    };
+    void refresh();
+    return () => {
+      current = false;
+      clearTimeout(timer);
+    };
+  }, [active, deviceId, port]);
+  return !!(active && seen?.deviceId === deviceId && seen?.port === port && seen.open);
 }
 
 function sameSerialBinding(left: WorkbenchDevice, right: WorkbenchDevice) {
@@ -1395,8 +1428,14 @@ export const Workbench: React.FC<WorkbenchProps> = ({
               ? '连接暂时失败，LYNX 正在自动重试'
               : '保存配置后由 LYNX 自动连接');
 
-  const currentSerialOnline = isSerialOnline(device, serialPorts);
   const currentSerialPort = matchingSerialPort(device, serialPorts);
+  const currentSerialOnline = !!currentSerialPort;
+  const sessionOnlyPort =
+    !currentSerialPort && !serialPorts.some((port) => port.name === device.serialPort)
+      ? device.serialPort
+      : '';
+  const serialSessionOpen = useBoundSerialSession(isActive, device.id, sessionOnlyPort);
+  const serialAvailable = currentSerialOnline || serialSessionOpen;
   const consoleDevices = devices.map((item) => {
     const port = matchingSerialPort(item, serialPorts);
     return port ? { ...item, serialPort: port.name } : item;
@@ -1626,83 +1665,148 @@ export const Workbench: React.FC<WorkbenchProps> = ({
       .toLowerCase()
       .includes(boardSearch.trim().toLowerCase())
   );
-  const tools: ReadonlyArray<readonly [LinuxDeviceView, string, LynxIconName]> = [
-    ['overview', '概览', 'overview'],
-    ['serial', '串口', 'plug'],
-    ['sdk', 'SSH', 'terminal'],
-    ['flash', '固件烧录', 'download'],
-    ['files', '文件传输', 'folder'],
-    ['ai', 'SDK 通道', 'link'],
+  const deviceOnline = serialAvailable || currentAdbOnline || currentUsbOnline;
+  const localMcpReady = !!localConnection.endpoint && !localMcpError;
+  const remoteSdkReady = project.deviceId === device.id && !!remoteEndpoint && !remoteMcpError;
+  const sshPresence = useSshPresence(
+    isActive,
+    project.deviceId === device.id ? project.id : null,
+    device.id
+  );
+  const tools: ReadonlyArray<{
+    id: LinuxDeviceView;
+    label: string;
+    icon: LynxIconName;
+    status: string;
+    online: boolean;
+    partial?: boolean;
+  }> = [
+    {
+      id: 'overview',
+      label: '设备概览',
+      icon: 'board',
+      online: deviceOnline,
+      status: deviceOnline ? '检测到设备' : '设备离线',
+    },
+    {
+      id: 'serial',
+      label: '串口终端',
+      icon: 'terminal',
+      online: serialAvailable,
+      status: serialSessionOpen
+        ? '绑定串口已有打开的会话'
+        : currentSerialOnline
+          ? '已检测到绑定的串口'
+          : '未检测到绑定的串口',
+    },
+    {
+      id: 'sdk',
+      label: 'SSH 终端',
+      icon: 'terminal',
+      online: sshPresence === 'online',
+      status:
+        sshPresence === 'online'
+          ? 'SSH 会话已连接'
+          : sshPresence === 'offline'
+            ? '无已连接的 SSH 会话'
+            : 'SSH 会话状态未知',
+    },
+    {
+      id: 'flash',
+      label: '固件烧录',
+      icon: 'download',
+      online: currentUsbOnline,
+      status: currentUsbOnline ? '检测到烧录设备' : '未检测到烧录设备',
+    },
+    {
+      id: 'ai',
+      label: 'AI 通道',
+      icon: 'agent',
+      online: localMcpReady && remoteSdkReady,
+      partial: localMcpReady !== remoteSdkReady,
+      status: `本机 MCP${localMcpReady ? '已验证' : '未验证'}，远端 SDK${remoteSdkReady ? '已验证' : '未验证'}`,
+    },
   ];
   return (
-    <div className="board-workbench advanced-workbench">
-      <aside className="adv-rail" aria-label="设备">
-        <header>
-          <h2>
-            设备 <small>{devices.length}</small>
-          </h2>
+    <div className="board-workbench advanced-workbench lynx-advanced-desktop">
+      <aside className="board-list workbench-card" aria-label="Linux 单板">
+        <div className="device-board-rail-heading">
+          <span>
+            <h3>Linux 单板</h3>
+            <b>{devices.length}</b>
+          </span>
           <button
+            type="button"
             data-testid="linux-new-board"
-            aria-label="添加设备"
-            title="添加设备"
+            aria-label="新建单板"
             onClick={createDevice}
           >
-            <LynxIcon name="add" size={16} />
+            <LynxIcon name="add" size={16} /> 新建
           </button>
-        </header>
-        <label className="adv-search">
+        </div>
+        <label className="device-board-search">
           <LynxIcon name="search" size={16} />
           <input
-            aria-label="查找设备"
-            placeholder="查找设备"
+            aria-label="搜索单板"
+            placeholder="搜索单板"
             value={boardSearch}
-            onChange={(e) => setBoardSearch(e.target.value)}
+            onChange={(event) => setBoardSearch(event.target.value)}
           />
         </label>
-        <div className="adv-device-list">
-          {CHIP_VENDORS.map((platform) => {
-            const members = visibleDevices.filter((item) => item.chipVendor === platform.value);
+        <div className="board-items">
+          {visibleDevices.map((item) => {
+            const online =
+              (item.id === device.id && serialSessionOpen) ||
+              isSerialOnline(item, serialPorts) ||
+              isUsbOnline(item, usbDevices) ||
+              isAdbOnline(item, adbDevices);
+            const vendor = vendorLabel(item.chipVendor);
+            const [specs, interfaces] = linuxBoardSpecs(item);
             return (
-              members.length > 0 && (
-                <section key={platform.value}>
-                  <h3>{platform.label}</h3>
-                  {members.map((item) => {
-                    const flashMode = isUsbOnline(item, usbDevices);
-                    const connected =
-                      isAdbOnline(item, adbDevices) || isSerialOnline(item, serialPorts);
-                    return (
-                      <button
-                        type="button"
-                        key={item.id}
-                        className="adv-device"
-                        aria-pressed={item.id === device.id}
-                        onClick={() => {
-                          creatingBoardRef.current = false;
-                          setNavigationError('');
-                          setDevice(item);
-                        }}
-                      >
-                        <LynxIcon name="board" size={16} />
-                        <span>
-                          <strong>{item.name}</strong>
-                          <small>{item.serialPort || platform.protocol}</small>
-                        </span>
-                        <em className={flashMode || connected ? 'connected' : ''}>
-                          {flashMode ? '烧录模式' : connected ? '已检测' : '未连接'}
-                        </em>
-                      </button>
-                    );
-                  })}
-                </section>
-              )
+              <div
+                key={item.id}
+                className={`board-item is-${item.chipVendor} ${item.id === device.id ? 'is-active' : ''}`}
+              >
+                <button
+                  type="button"
+                  className="board-item-select device-board-card-select"
+                  aria-pressed={item.id === device.id}
+                  onClick={() => {
+                    creatingBoardRef.current = false;
+                    setNavigationError('');
+                    setDevice(item);
+                  }}
+                >
+                  <BoardThumbnail
+                    imagePath={item.boardImagePath}
+                    marker={vendorMark(item.chipVendor)}
+                    tone={item.chipVendor}
+                  />
+                  <span className="device-board-copy">
+                    <span className="device-board-name-row">
+                      <strong title={item.name}>{item.name}</strong>
+                      <span className={`board-live-row ${online ? 'is-online' : ''}`}>
+                        <i /> {online ? '在线' : '离线'}
+                      </span>
+                    </span>
+                    <small>{vendor}</small>
+                    <span className="device-board-specs">
+                      {specs !== vendor && <b title={specs}>{specs}</b>}
+                      <em title={interfaces}>{interfaces}</em>
+                    </span>
+                  </span>
+                </button>
+              </div>
             );
           })}
           {!visibleDevices.length && (
-            <p>{devices.length ? '没有匹配的设备。' : '尚未添加设备。'}</p>
+            <p className="board-empty">
+              {devices.length ? '没有匹配的单板。' : '点击“新建”添加第一块单板。'}
+            </p>
           )}
         </div>
         {(onOpenRecords || onOpenSettings) && (
-          <footer>
+          <footer className="lynx-board-rail-actions">
             {onOpenRecords && (
               <button onClick={onOpenRecords}>
                 <LynxIcon name="history" size={16} />
@@ -1718,7 +1822,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
           </footer>
         )}
       </aside>
-      <main className="adv-main">
+      <main className="board-main">
         {!settingsOpen && error && (
           <p className="adv-navigation-error" role="alert">
             {error}
@@ -1731,11 +1835,20 @@ export const Workbench: React.FC<WorkbenchProps> = ({
         )}
         {device.id ? (
           <>
-            <header className="adv-context">
-              <div className="adv-identity">
-                <LynxIcon name="board" size={16} />
-                <strong>{device.name}</strong>
-                <span>{vendorLabel(device.chipVendor)}</span>
+            <header className="device-workbench-header workbench-card">
+              <div className="device-workbench-identity">
+                <span className="device-header-icon">
+                  <LynxIcon name="board" filled size={20} />
+                </span>
+                <div>
+                  <span className="device-workbench-kicker">LINUX / SOC BOARD</span>
+                  <h2>{device.name}</h2>
+                  <p>
+                    {vendorLabel(device.chipVendor)} ·{' '}
+                    {device.serialPort ? `串口绑定 ${device.serialPort}` : '串口未绑定'} ·{' '}
+                    {formatUsbBinding(device.usbBinding)}
+                  </p>
+                </div>
               </div>
               <div className="device-header-actions">
                 <button
@@ -1765,14 +1878,9 @@ export const Workbench: React.FC<WorkbenchProps> = ({
                 </button>
                 <span
                   data-testid="linux-header-device-state"
-                  className={
-                    currentSerialOnline || currentAdbOnline || currentUsbOnline ? 'is-online' : ''
-                  }
+                  className={deviceOnline ? 'is-online' : ''}
                 >
-                  <i />{' '}
-                  {currentSerialOnline || currentAdbOnline || currentUsbOnline
-                    ? '设备在线'
-                    : '等待设备'}
+                  <i /> {deviceOnline ? '设备在线' : '设备离线'}
                 </span>
                 <span
                   data-testid="linux-header-flash-state"
@@ -1823,48 +1931,54 @@ export const Workbench: React.FC<WorkbenchProps> = ({
               </div>
             </header>
 
-            <nav className="adv-tabs" aria-label="设备工具">
-              {tools.map(([id, label, icon]) => (
+            <nav className="device-workbench-tabs" aria-label="Linux 单板功能">
+              {tools.map(({ id, label, icon, online, partial, status }) => (
                 <button
                   type="button"
                   key={id}
                   data-testid={`linux-tab-${id}`}
+                  className={activeView === id ? 'is-active' : ''}
                   aria-current={activeView === id ? 'page' : undefined}
+                  aria-description={status}
+                  title={`${label} · ${status}`}
                   onClick={() => setActiveView(id)}
                 >
-                  <LynxIcon name={icon} size={16} />
-                  {label}
+                  <span className="device-tab-icon">
+                    <LynxIcon name={icon} filled={activeView === id} size={20} />
+                    <i className={online ? 'is-online' : partial ? 'is-partial' : ''} />
+                  </span>
+                  <span>{label}</span>
                 </button>
               ))}
             </nav>
-            <div className="adv-content">
+            <div className="lynx-device-tool-content">
               {activeView === 'overview' && (
-                <AdvancedOverview
-                  device={device}
-                  snapshot={currentLinuxOverview}
-                  samples={monitorSamples[device.id] ?? []}
-                  history={taskHistory}
-                  error={linuxOverviewError}
-                  loading={linuxOverviewLoading}
-                  serial={currentSerialPort?.name || device.serialPort}
-                  sdk={host.address}
-                  tunnel={tunnelStatusText}
-                  usb={currentUsbOnline}
-                  adb={currentAdbOnline}
-                  serialOnline={currentSerialOnline}
-                  onRefresh={() => void refreshLinuxOverview()}
-                  onOpenRecords={onOpenRecords}
-                />
-              )}
-              {activeView === 'files' && (
-                <AdbFileTransfer
-                  key={device.id}
-                  device={device}
-                  isActive={isActive}
-                  online={currentAdbOnline}
-                  onOpenSettings={openSettings}
-                  onDetect={() => void scanInterfaces()}
-                />
+                <div className="lynx-device-overview">
+                  <AdvancedOverview
+                    device={device}
+                    snapshot={currentLinuxOverview}
+                    samples={monitorSamples[device.id] ?? []}
+                    history={taskHistory}
+                    error={linuxOverviewError}
+                    loading={linuxOverviewLoading}
+                    serial={currentSerialPort?.name || device.serialPort}
+                    sdk={host.address}
+                    tunnel={tunnelStatusText}
+                    usb={currentUsbOnline}
+                    adb={currentAdbOnline}
+                    serialOnline={serialAvailable}
+                    onRefresh={() => void refreshLinuxOverview()}
+                    onOpenRecords={onOpenRecords}
+                  />
+                  <AdbFileTransfer
+                    key={device.id}
+                    device={device}
+                    isActive={isActive}
+                    online={currentAdbOnline}
+                    onOpenSettings={openSettings}
+                    onDetect={() => void scanInterfaces()}
+                  />
+                </div>
               )}
               <div className="layout adv-hardware-tools">
                 {(['serial', 'flash', 'workspace'] as LinuxDeviceView[]).includes(activeView) && (
@@ -2015,9 +2129,9 @@ export const Workbench: React.FC<WorkbenchProps> = ({
                   )}
                   {device.id && (
                     <div className="board-live-status">
-                      <div className={currentSerialOnline ? 'is-online' : ''}>
+                      <div className={serialAvailable ? 'is-online' : ''}>
                         <small>调试串口</small>
-                        <strong>{currentSerialOnline ? '在线' : '离线'}</strong>
+                        <strong>{serialAvailable ? '在线' : '离线'}</strong>
                         <span>{device.serialPort || '未绑定'}</span>
                       </div>
                       <div className={currentUsbOnline ? 'is-online' : ''}>
