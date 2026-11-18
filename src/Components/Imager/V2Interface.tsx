@@ -62,24 +62,6 @@ const matches = (
   }
 };
 
-function StageStrip({ board, image }: { board: string; image: string }) {
-  const names = ['选择板子', '选择系统', '设备连接', '烧写系统'];
-  const details = [board, image, '连接设备与模式', '执行写入与验证'];
-  return (
-    <ol className="vi-steps" aria-label="当前进度">
-      {names.map((name, i) => (
-        <li key={name} className={i < 2 ? 'done' : i === 2 ? 'now' : ''}>
-          <span>{i < 2 ? <LynxIcon name="check" size={16} /> : i + 1}</span>
-          <div>
-            <strong>{name}</strong>
-            <small title={details[i]}>{details[i]}</small>
-          </div>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
 function SummaryRow({ icon, label, value }: { icon: LynxIconName; label: string; value: string }) {
   return (
     <div className="vi-fact">
@@ -537,7 +519,6 @@ export function V2Interface({
   return (
     <div className={'vi-grid' + (rk ? ' vi-rk' : '')}>
       <section className="vi-main" aria-label="设备连接">
-        {!rk && <StageStrip board={boardName} image={file} />}
         <header className="vi-heading">
           <h2>
             <LynxIcon name={rk ? 'plug' : 'task'} size={24} />

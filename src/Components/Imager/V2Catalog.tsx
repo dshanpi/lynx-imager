@@ -568,44 +568,25 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
     <div className={'v2c-layout v2c-system-layout ' + (inCatalog ? 'catalog' : 'local')}>
       <div className="v2c-primary">
         {inCatalog ? (
-          <>
-            <ol className="v2c-progress" aria-label="当前烧录进度">
-              {['选择板子', '选择系统', '设备连接', '烧写系统'].map((name, i) => (
-                <li
-                  key={name}
-                  className={i === 0 ? 'done' : i === 1 ? 'current' : ''}
-                  aria-current={i === 1 ? 'step' : undefined}
-                >
-                  <span>{i === 0 ? icon('check', 16) : i + 1}</span>
-                  <div>
-                    <b>{name}</b>
-                    <small>
-                      {[boardName, '选择镜像文件', '连接设备与模式', '执行写入与验证'][i]}
-                    </small>
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <div className="v2c-board-banner">
-              <V2BoardArt id={board.id} name={boardName} large />
-              <div>
-                <h2>
-                  {boardName} <small>{vendors[board.chipVendor]}</small>
-                </h2>
-                <p>
-                  {board.chip} · {board.storage}
-                </p>
-                <span>
-                  {icon('board', 16)}
-                  {board.mode}
-                </span>
-                <span>
-                  {icon('branch', 16)}
-                  {prettyRoute(board)}
-                </span>
-              </div>
+          <div className="v2c-board-banner">
+            <V2BoardArt id={board.id} name={boardName} large />
+            <div>
+              <h2>
+                {boardName} <small>{vendors[board.chipVendor]}</small>
+              </h2>
+              <p>
+                {board.chip} · {board.storage}
+              </p>
+              <span>
+                {icon('board', 16)}
+                {board.mode}
+              </span>
+              <span>
+                {icon('branch', 16)}
+                {prettyRoute(board)}
+              </span>
             </div>
-          </>
+          </div>
         ) : (
           <header className="v2c-page-heading">
             <h2>

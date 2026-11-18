@@ -62,14 +62,11 @@
   margin-top: 6px;
   color: var(--vi-muted);
 }
-.vi-grid .vi-box,
-.vi-steps {
+.vi-grid .vi-box {
   min-width: 0;
   background: #fff;
   border: 1px solid var(--vi-border);
   border-radius: 10px;
-}
-.vi-grid .vi-box {
   padding: 13px 15px;
 }
 .vi-grid button,
@@ -103,37 +100,6 @@
   outline: 2px solid #3978ff;
   outline-offset: 2px;
 }
-.vi-grid .vi-steps {
-  list-style: none;
-  display: flex;
-  gap: 8px;
-  padding: 14px 12px;
-}
-.vi-steps li {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.vi-steps li::after {
-  content: '';
-  min-width: 4px;
-  max-width: 75px;
-  flex: 1;
-  height: 1px;
-  background: #c6d2e5;
-}
-.vi-steps li:last-child::after {
-  display: none;
-}
-.vi-steps li.done::after {
-  background: #73bd8a;
-}
-.vi-steps li.now::after {
-  background: #729dfb;
-}
-.vi-steps li > span,
 .vi-grid .vi-number {
   display: inline-grid;
   place-items: center;
@@ -141,45 +107,18 @@
   font-size: 14px;
   font-weight: 650;
   flex: 0 0 auto;
-}
-.vi-steps li > span {
-  width: 26px;
-  height: 26px;
-  background: #e8edf6;
-}
-.vi-steps li.done > span {
-  background: #159447;
-  color: #fff;
-}
-.vi-steps li.now > span,
-.vi-grid .vi-number {
   background: var(--vi-blue);
   color: white;
-}
-.vi-steps li.now strong {
-  color: var(--vi-blue);
-}
-.vi-grid .vi-number {
   width: 23px;
   height: 23px;
 }
-.vi-steps li > div {
-  min-width: 0;
-}
-.vi-grid strong,
-.vi-steps small {
+.vi-grid strong {
   display: block;
 }
 .vi-grid small {
   font-size: 12px;
   color: var(--vi-muted);
   line-height: 1.35;
-}
-.vi-steps small {
-  max-width: 105px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .vi-bar {
   display: flex;
@@ -526,16 +465,6 @@
     grid-template-columns: minmax(0, 2.15fr) minmax(215px, 1fr);
     gap: 8px;
   }
-  .vi-grid .vi-steps {
-    padding-inline: 7px;
-    gap: 3px;
-  }
-  .vi-steps li {
-    gap: 4px;
-  }
-  .vi-steps small {
-    max-width: 70px;
-  }
   .vi-checks > ul > li {
     grid-template-columns: 25px minmax(95px, 1.2fr) 64px minmax(70px, 1fr);
     gap: 5px;
@@ -551,9 +480,6 @@
 @media (max-width: 910px) {
   .vi-grid {
     grid-template-columns: 1fr;
-  }
-  .vi-steps {
-    display: none !important;
   }
   .vi-grid .vi-main {
     grid-row: 1;
@@ -590,7 +516,7 @@
 }
 [data-theme='dark']
   .vi-grid
-  :is(.vi-box, .vi-steps, .vi-device, .vi-checks > ul > li, button, select) {
+  :is(.vi-box, .vi-device, .vi-checks > ul > li, button, select) {
   background: var(--v2-paper);
 }
 [data-theme='dark']

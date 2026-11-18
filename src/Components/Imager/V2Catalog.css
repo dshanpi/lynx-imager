@@ -504,58 +504,6 @@
   font-size: 13px;
   line-height: 1.6;
 }
-.v2c-progress {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: -4px 0 0;
-  padding: 0 0 12px;
-  border-bottom: 1px solid var(--vc-line);
-  list-style: none;
-  gap: 7px;
-}
-.v2c-progress li {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  color: var(--vc-sub);
-}
-.v2c-progress li > span {
-  display: grid;
-  place-items: center;
-  flex: none;
-  border-radius: 50%;
-  width: 27px;
-  height: 27px;
-  border: 1px solid var(--vc-line);
-  background: var(--vc-soft);
-  font-weight: 650;
-}
-.v2c-progress b,
-.v2c-progress small {
-  display: block;
-  line-height: 1.45;
-}
-.v2c-progress b {
-  color: var(--vc-ink);
-  font-size: 13px;
-}
-.v2c-progress small {
-  font-size: 11px;
-}
-.v2c-progress li.done > span {
-  background: #077a46;
-  color: white;
-  border: 0;
-}
-.v2c-progress li.current > span {
-  background: var(--vc-accent);
-  color: white;
-  border: 0;
-}
-.v2c-progress li.current b {
-  color: var(--vc-accent);
-}
 .v2c-tabs {
   display: flex;
   gap: 0;
@@ -945,9 +893,6 @@
     font-size: 13px;
     padding-inline: 7px;
   }
-  .v2c-progress small {
-    display: none;
-  }
   .v2c-resource-filter {
     grid-template-columns: minmax(96px, 1.7fr) repeat(3, minmax(55px, 0.7fr)) 30px;
   }
@@ -989,13 +934,8 @@
   .v2c-resource-filter .v2c-search {
     grid-column: span 2;
   }
-  .v2c-progress small,
   .v2c-board-banner div > span svg {
     display: none;
-  }
-  .v2c-progress li {
-    flex-direction: column;
-    align-items: flex-start;
   }
   .v2c-board-banner {
     grid-template-columns: 85px minmax(0, 1fr);
