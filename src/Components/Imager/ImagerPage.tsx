@@ -140,7 +140,7 @@ export const ImagerPage: React.FC<ImagerPageProps> = ({
   onOpenAdvancedWorkbench,
 }) => {
   const [step, setStep] = useState<BasicStep>(1);
-  const [boardId, setBoardId] = useState('f101');
+  const [boardId, setBoardId] = useState('t113-pro');
   const [boardSearch, setBoardSearch] = useState('');
   const [boardFilter, setBoardFilter] = useState<BoardPreset['chipVendor'] | 'all'>('all');
   const [imagePath, setImagePath] = useState('');
@@ -268,7 +268,7 @@ export const ImagerPage: React.FC<ImagerPageProps> = ({
       setError(cause instanceof Error ? cause.message : '烧录任务提交失败');
       setNotice('任务未开始，设备保持不动');
     }
-  }, [board.route, confirmChecked, imagePath, loaderPath, selectedDeviceId]);
+  }, [board.chipVendor, board.route, confirmChecked, imagePath, loaderPath, selectedDeviceId]);
 
   return (
     <section className="imager-page" aria-label="LYNX Imager">
