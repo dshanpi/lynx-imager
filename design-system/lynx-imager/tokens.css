@@ -1,0 +1,75 @@
+/* See tokens.json for the corresponding semantic values. */
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --color-background: #FFFFFF;
+  --color-sidebar: #F4F5F6;
+  --color-surface: #FFFFFF;
+  --color-text: #202427;
+  --color-muted: #505960;
+  --color-selected: #E5E8EB;
+  --color-selection-line: #343B42;
+  --color-primary: #2056A3;
+  --color-on-primary: #FFFFFF;
+  --color-connected: #186545;
+  --color-warning: #865900;
+  --color-error: #B42318;
+  --color-focus: #005FCC;
+  --color-border: #D3D7DA;
+  --color-control-border: #717980;
+  --color-chart-cpu: #276474;
+  --color-chart-memory: #795682;
+  --color-console: #20272B;
+  --color-console-text: #EBEFF1;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-background: #161B22;
+  --color-sidebar: #0D1117;
+  --color-surface: #21262D;
+  --color-text: #E6EDF3;
+  --color-muted: #A6B0BA;
+  --color-selected: #2C333B;
+  --color-selection-line: #CED5DD;
+  --color-primary: #79ACF4;
+  --color-on-primary: #101B29;
+  --color-connected: #71C99C;
+  --color-warning: #F2BE69;
+  --color-error: #FF9B91;
+  --color-focus: #9EC8FF;
+  --color-border: #37414C;
+  --color-control-border: #85919C;
+  --color-chart-cpu: #73C4D4;
+  --color-chart-memory: #D2A3D9;
+  --color-console: #0D1117;
+  --color-console-text: #E6EDF3;
+}
+
+:root {
+  --size-titlebar: 44px;
+  --size-context: 40px;
+  --size-tabs: 36px;
+  --size-statusbar: 24px;
+  --size-rail: 208px;
+  --size-row: 32px;
+  --size-control: 32px;
+  --size-icon: 16px;
+  --size-target: 24px;
+  --size-gutter: 16px;
+  --size-actions: 52px;
+  --size-focus: 2px;
+  --size-radius: 4px;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+
+  --font-ui: "Segoe UI", "Microsoft YaHei UI", "Noto Sans CJK SC", system-ui, sans-serif;
+  --font-mono: "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
+  --font-caption: 12px;
+  --font-body: 14px;
+  --font-section: 16px;
+  --font-title: 20px;
+}
