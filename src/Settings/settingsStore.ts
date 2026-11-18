@@ -95,7 +95,7 @@ function getDefaultSettings(): AppSettings {
 }
 
 /** Settings directory name in home folder */
-const SETTINGS_DIR = import.meta.env.VITE_LYNX_LOCAL_BUILD === '1' ? '.lynx-imager-local' : '.lynx';
+const SETTINGS_DIR = import.meta.env.VITE_LYNX_LOCAL_BUILD === '1' ? '.lynx-imager-local' : '.lynx-imager';
 
 /** Settings file name */
 const SETTINGS_FILE = 'settings.json';
@@ -106,7 +106,7 @@ let saveQueue: Promise<void> = Promise.resolve();
 /**
  * Ensures settings directory exists.
  *
- * Creates .lynx directory in user home if it doesn't exist.
+ * Creates the product settings directory in user home if it doesn't exist.
  */
 async function ensureSettingsDir(): Promise<void> {
   await mkdir(SETTINGS_DIR, { baseDir: BaseDirectory.Home, recursive: true });

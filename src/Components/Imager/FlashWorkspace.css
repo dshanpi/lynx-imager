@@ -1,0 +1,403 @@
+.imager-themed .imager-app-shell.v2-basic-shell {
+  --v2-paper: var(--color-surface);
+  --v2-ink: var(--color-text);
+  --v2-secondary: var(--color-muted);
+  --v2-line: var(--color-border);
+  --v2-blue: var(--color-primary);
+  --v2-active: var(--color-selected);
+  --v2-tint: var(--color-background);
+  --v2-green: var(--color-connected);
+  --v2-rail: 208px;
+  grid-template-rows: 44px minmax(0, 1fr);
+}
+.v2-basic-shell .v2-top {
+  gap: 0;
+  padding: 0 12px 0 20px;
+}
+.v2-top .v2-brand {
+  width: 188px;
+  gap: 8px;
+}
+.v2-top .v2-brand strong {
+  font-size: 16px;
+}
+.v2-top .v2-brand small {
+  font-size: 11px;
+  border-radius: 3px;
+}
+.v2-top .v2-brand > svg {
+  width: 23px;
+  height: 23px;
+  background: transparent;
+  color: var(--v2-blue);
+  padding: 0;
+}
+.v2-top nav button {
+  font-size: 13px;
+  border-radius: 0;
+  padding-inline: 13px;
+}
+.v2-top nav button.is-current {
+  background: transparent;
+}
+.v2-top .v2-top-tools {
+  margin-left: auto;
+  border: 0;
+}
+.v2-top button svg {
+  width: 16px;
+  height: 16px;
+}
+.v2-basic .v2-rail {
+  padding: 24px 12px 12px;
+  background: var(--v2-tint);
+}
+.v2-rail .v2-rail-title {
+  margin: 0 8px 20px;
+  gap: 8px;
+}
+.v2-rail-title > svg {
+  width: 18px;
+  color: var(--v2-secondary);
+}
+.v2-rail-title h2 {
+  font-size: 16px;
+  margin: 0;
+}
+.v2-rail nav button {
+  min-height: 50px;
+  border-radius: 5px;
+}
+.v2-rail .v2-step-label strong {
+  font-size: 14px;
+}
+.v2-rail .v2-step-label small {
+  font-size: 12px;
+}
+.v2-step-number svg {
+  width: 16px;
+  height: 16px;
+}
+.r3-help {
+  margin-top: auto;
+  font-size: 12px;
+  color: var(--v2-secondary);
+  padding: 12px 4px 2px;
+  border-top: 1px solid var(--v2-line);
+}
+.r3-help summary {
+  cursor: pointer;
+  font-size: 13px;
+}
+.r3-help p {
+  line-height: 1.6;
+  margin: 7px 0;
+}
+.v2-basic .v2-content {
+  background: var(--v2-paper);
+  padding: 16px clamp(12px, 2vw, 28px);
+}
+.v2-basic .v2-foot {
+  min-height: 52px;
+  padding-block: 6px;
+}
+.v2-basic .v2-foot-actions button {
+  height: 32px;
+  min-height: 32px;
+  font-size: 13px;
+  border-radius: 4px;
+}
+.v2-basic .v2c-layout {
+  --vc-ink: var(--v2-ink);
+  --vc-sub: var(--v2-secondary);
+  --vc-line: var(--v2-line);
+  --vc-panel: var(--v2-paper);
+  --vc-soft: var(--v2-tint);
+  --vc-shade: var(--color-subtle);
+  --vc-accent: var(--v2-blue);
+  --vc-tint: var(--v2-active);
+  min-height: 0;
+}
+.v2c-layout.v2c-board-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 28%);
+  align-items: start;
+  gap: 20px;
+}
+.v2c-board-layout .v2c-primary {
+  border: 0;
+  padding: 0;
+  border-radius: 0;
+  gap: 10px;
+}
+.v2-basic .v2c-page-heading h2,
+.r3-heading h2 {
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.v2c-board-layout .v2c-page-heading {
+  border-bottom: 1px solid var(--vc-line);
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+}
+.v2-basic .v2c-page-heading p,
+.r3-heading p {
+  color: var(--v2-secondary);
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+.v2c-board-layout .v2c-search {
+  min-height: 32px;
+  border-radius: 4px;
+}
+.v2c-board-layout .v2c-filters {
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.v2c-board-layout .v2c-filters button {
+  min-height: 28px;
+  padding: 3px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+.v2c-board-layout .v2c-board-grid {
+  display: block;
+  border-top: 1px solid var(--vc-line);
+}
+.v2c-board-layout .v2c-board-card {
+  grid-template-columns: 54px minmax(0, 1fr);
+  border: 0;
+  border-bottom: 1px solid var(--vc-line);
+  border-radius: 0;
+  padding: 3px 34px 3px 8px;
+  min-height: 50px;
+  box-shadow: none;
+  gap: 9px;
+}
+.v2c-board-card.selected {
+  box-shadow: inset 3px 0 var(--vc-accent);
+}
+.v2c-board-card .v2c-board-art {
+  height: 40px;
+  max-width: 52px;
+}
+.v2c-board-card .v2c-chip-package {
+  height: 35px;
+  width: 43px;
+}
+.v2c-board-card .v2c-chip-package b {
+  font-size: 10px;
+}
+.v2c-board-card .v2c-chip-package small {
+  display: none;
+}
+.v2c-board-card .v2c-board-copy {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 6px;
+  align-items: center;
+}
+.v2c-board-card .v2c-board-copy strong {
+  font-size: 14px;
+}
+.v2c-board-card .v2c-chip-vendor {
+  font-size: 12px;
+  grid-row: 2;
+}
+.v2c-board-card .v2c-tags {
+  grid-column: 2;
+  grid-row: 1/3;
+  flex-wrap: wrap;
+  justify-content: end;
+}
+.v2c-board-card .v2c-tags small {
+  background: transparent;
+  color: var(--vc-sub);
+  font-weight: 400;
+  font-size: 12px;
+}
+.v2c-board-layout .v2c-detail {
+  border-radius: 5px;
+  min-height: 0;
+  height: auto;
+}
+.v2c-board-layout .v2c-detail summary {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+.v2c-board-layout .v2c-detail-content {
+  padding: 10px 12px;
+  gap: 9px;
+}
+.v2c-board-layout .v2c-task-preview {
+  padding: 8px;
+  gap: 4px;
+}
+.v2c-board-layout .v2c-task-preview p {
+  max-width: none;
+  font-size: 12px;
+}
+.v2c-board-layout .v2c-select-model input {
+  max-width: 100%;
+  padding: 6px;
+  border: 1px solid var(--vc-line);
+  border-radius: 4px;
+  color: var(--vc-ink);
+  background: var(--vc-panel);
+}
+.r3-connect {
+  display: grid;
+  gap: 14px;
+  color: var(--v2-ink);
+}
+.r3-heading {
+  border-bottom: 1px solid var(--v2-line);
+  padding-bottom: 13px;
+}
+.r3-heading h2,
+.r3-wire span,
+.r3-connect .vi-bar,
+.r3-connect .vi-bar h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.r3-wire {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+  grid-template-columns: auto minmax(64px, 1fr) auto;
+  padding: 15px;
+  border: 1px solid var(--v2-line);
+  border-radius: 4px;
+  background: var(--v2-tint);
+}
+.r3-wire span {
+  min-width: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.r3-wire .r3-wire-path {
+  display: block;
+  text-align: center;
+  font: 12px/1.5 var(--font-mono, monospace);
+  color: var(--v2-secondary);
+  border-bottom: 1px solid var(--v2-line);
+}
+.r3-connect-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(235px, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+.r3-connect-columns > section {
+  min-width: 0;
+  border: 1px solid var(--v2-line);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.r3-connect .vi-bar,
+.r3-connect-facts h3 {
+  background: var(--v2-tint);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--v2-line);
+  margin: 0;
+  flex-wrap: wrap;
+}
+.r3-connect h3 {
+  font-size: 14px;
+}
+.r3-connect .vi-bar h3 {
+  margin-right: auto;
+}
+.r3-connect button,
+.v2-engine-error button {
+  font: inherit;
+  font-size: 13px;
+  border: 1px solid var(--v2-line);
+  background: var(--v2-paper);
+  color: var(--v2-ink);
+  border-radius: 4px;
+  min-height: 28px;
+  padding: 3px 9px;
+}
+.r3-connect .vi-device {
+  border-radius: 0;
+  margin: 0;
+  flex-wrap: wrap;
+  padding: 9px;
+  gap: 8px;
+  background: var(--v2-paper);
+  border: 0;
+  border-bottom: 1px solid var(--v2-line);
+  color: var(--v2-ink);
+}
+.r3-connect .vi-device.chosen {
+  background: var(--v2-active);
+}
+.r3-connect .vi-usb-identity small,
+.r3-connect-facts dd {
+  overflow-wrap: anywhere;
+}
+.r3-connect .vi-empty,
+.r3-connect .vi-binding,
+.r3-connect .vi-help,
+.r3-connect .vi-error {
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.r3-connect .vi-info {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--v2-secondary);
+  background: var(--v2-tint);
+}
+.r3-connect-facts ol,
+.r3-connect-facts dl {
+  margin: 9px 12px;
+  font-size: 13px;
+}
+.r3-connect-facts ol {
+  padding-left: 20px;
+  line-height: 1.8;
+}
+.r3-connect-facts dl > div {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--v2-line);
+}
+.r3-connect-facts dd {
+  margin: 0;
+}
+.r3-connect-facts dt {
+  color: var(--v2-secondary);
+}
+@media (max-width: 1000px) {
+  .v2c-layout.v2c-board-layout {
+    grid-template-columns: minmax(0, 1fr) 210px;
+    gap: 12px;
+  }
+  .v2c-board-card .v2c-tags small + small {
+    display: none;
+  }
+}
+@media (max-width: 800px) {
+  .v2c-layout.v2c-board-layout,
+  .r3-connect-columns {
+    grid-template-columns: 1fr;
+  }
+  .v2-basic-shell .v2-top-tools span {
+    display: none;
+  }
+  .r3-wire {
+    grid-template-columns: 1fr;
+  }
+  .v2-top .v2-brand {
+    width: auto;
+    margin-right: 12px;
+  }
+}

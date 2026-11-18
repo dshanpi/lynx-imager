@@ -1,0 +1,19 @@
+{
+  "data": {
+    "protocols": [
+      "learn.v2"
+    ],
+    "manifestFormats": [],
+    "actionCatalogVersions": [],
+    "minClientRequirements": [],
+    "limits": {
+      "maxEventBatchItems": 100,
+      "maxEventBatchBytes": 524288,
+      "maxJsonBytes": 1048576
+    }
+  },
+  "meta": {
+    "requestId": "req_capabilities_example",
+    "serverTime": "2026-10-06T10:00:00Z"
+  }
+}

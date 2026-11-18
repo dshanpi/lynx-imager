@@ -557,6 +557,7 @@ mod tests {
 
     fn candidate(key: &str, mode: &str) -> FlasherDeviceCandidate {
         FlasherDeviceCandidate {
+            dfu_alternates: Vec::new(),
             key: key.to_owned(),
             flasher_kind: "openrockcli".to_owned(),
             bus: 0,

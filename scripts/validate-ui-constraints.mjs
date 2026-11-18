@@ -160,7 +160,7 @@ for (const name of ['烧录系统', '高级功能', '连接 AI']) assert(shell.i
 for (const forbidden of ['LearningCenterPage', '学习中心', 'import Layout from']) {
   assert(!shell.includes(forbidden), `Legacy workspace entry ${forbidden}`);
 }
-for (const name of ['选择板子', '选择系统', '设备连接', '烧写系统', 'V2BoardPicker', 'V2SystemPicker', 'V2Interface', 'V2Write']) {
+for (const name of ['选择烧录目标', '选择系统', '设备连接', '烧写系统', 'V2BoardPicker', 'V2SystemPicker', 'V2Interface', 'V2Write']) {
   assert(page.includes(name), `Missing basic flow control ${name}`);
 }
 for (const vendor of ['allwinner', 'rockchip', 'nxp', 'st', 'kendryte']) {

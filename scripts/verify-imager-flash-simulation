@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Run isolated simulation in a native Ubuntu Tauri window and keep the per-page results.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+output="${LYNX_SIMULATION_OUTPUT:-$PWD/.verification/flash-simulation}"
+export VITE_LYNX_LOCAL_BUILD=1
+export CARGO_TARGET_DIR="${LYNX_SIMULATION_CARGO_TARGET_DIR:-$PWD/.verification/cargo-simulation}"
+node_modules/.bin/vite build --config tests/imager/vite.simulation.mjs
+export TAURI_CONFIG
+TAURI_CONFIG="$(python3 - <<'PY'
+import json
+from pathlib import Path
+config = json.loads(Path('src-tauri/tauri.local-test.conf.json').read_text())
+config['build'] = {'frontendDist':'../dist-review-simulation'}
+print(json.dumps(config))
+PY
+)"
+cargo build --locked --manifest-path src-tauri/Cargo.toml --features tauri/custom-protocol --bin lynx-imager
+binary="$CARGO_TARGET_DIR/debug/lynx-imager"
+mkdir -p "$output"
+dbus-run-session -- python3 tests/imager/native_review.py "$binary" "$output" "$@"

@@ -49,7 +49,9 @@ const reviewedFocusCounts = new Map([
   // Closing the confirmation drawer with Back or Escape restores keyboard focus.
   ['src/Components/Imager/V2Write.tsx', 1],
   // Explicit Ctrl+K on the visible board picker focuses its search box.
-  ['src/Components/Imager/V2Catalog.tsx', 1],
+  ['src/Components/Imager/TargetPicker.tsx', 1],
+  // Opening an inspector, clicking Back or pressing Escape inside it transfers focus once.
+  ['src/Components/Imager/SystemImageReview.tsx', 1],
 ]);
 
 const violations = [];

@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "LYNX Imager",
-  "version": "0.1.0",
-  "identifier": "com.dshanpi.lynx",
+  "version": "0.1.0-rc.0",
+  "identifier": "com.dshanpi.lynximager",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:3030",
@@ -46,12 +46,12 @@
     "linux": {
       "deb": {
         "files": {
-          "/usr/lib/udev/rules.d/70-dshanpi-lynx.rules": "packaging/70-dshanpi-lynx.rules"
+          "/usr/lib/udev/rules.d/70-dshanpi-lynx-imager.rules": "packaging/70-dshanpi-lynx.rules"
         }
       },
       "rpm": {
         "files": {
-          "/usr/lib/udev/rules.d/70-dshanpi-lynx.rules": "packaging/70-dshanpi-lynx.rules"
+          "/usr/lib/udev/rules.d/70-dshanpi-lynx-imager.rules": "packaging/70-dshanpi-lynx.rules"
         }
       }
     },
@@ -61,7 +61,7 @@
     "deep-link": {
       "desktop": {
         "schemes": [
-          "lynx"
+          "lynx-imager"
         ]
       }
     },
@@ -70,9 +70,9 @@
     },
     "updater": {
       "endpoints": [
-        "https://github.com/dshanpi/lynx-releases/releases/latest/download/latest.json"
+        "https://raw.githubusercontent.com/dshanpi/lynx-imager/main/updates/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ2NEFGQjYzQ0JCQUFCMTMKUldRVHE3ckxZL3RLMW5Ha2NSYnp4VmtWS0FoNFVUSU83SnJnUEdvdVdMN0ZIWFdrZEt2VFI0dTgK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEEzQjc5OTM5RDFGMTIyRUUKUldUdUl2SFJPWm0zb3c3UExJN04xYWVSYW9TT3pkZU5JYTNCZ01nYXpXNUw3V1R4WHRKR3VlbmgK"
     }
   }
 }

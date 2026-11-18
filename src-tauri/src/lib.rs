@@ -20,6 +20,7 @@ mod gateway;
 mod hardware_monitor;
 mod hardware_safety;
 mod hotplug;
+mod imager_inspect;
 mod invoke_handler;
 mod k230;
 mod learning;
@@ -34,7 +35,6 @@ mod supervisor;
 mod task_bar;
 mod task_lifecycle;
 mod tcp;
-mod update_line;
 mod update_recovery;
 mod usb;
 mod workbench;
@@ -45,7 +45,7 @@ pub(crate) fn keyring_service(service: &str) -> std::borrow::Cow<'_, str> {
     if option_env!("VITE_LYNX_LOCAL_BUILD") == Some("1") {
         format!("{service}.imager-local").into()
     } else {
-        service.into()
+        format!("{service}.imager").into()
     }
 }
 
@@ -105,16 +105,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
-        .plugin(
-            tauri_plugin_updater::Builder::new()
-                .default_version_comparator(|current, candidate| {
-                    update_line::compatible_line(
-                        (current.major, current.minor),
-                        (candidate.version.major, candidate.version.minor),
-                    ) && candidate.version > current
-                })
-                .build(),
-        )
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init());
 
     app_lifecycle::manage_runtime_state(builder)

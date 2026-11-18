@@ -7,6 +7,7 @@
 mod arguments;
 mod rockchip_raw;
 mod scan;
+pub mod vendor_image;
 
 use arguments::{build_flash_args, validate_dfu_args, version_args};
 use scan::{parse_dfu_util_scan, parse_openrockcli_scan, parse_uuu_scan};
@@ -607,6 +608,7 @@ pub(crate) fn scan_flasher_devices(
             Ok(devices) => Ok(devices
                 .into_iter()
                 .map(|device| FlasherDeviceCandidate {
+                    dfu_alternates: Vec::new(),
                     key: device.location_path.as_ref().map_or_else(
                         || format!("{}:{}", device.bus, device.port),
                         |location| stable_allwinner_binding(location),
@@ -673,6 +675,7 @@ pub(crate) fn scan_flasher_devices(
                 devices
                     .into_iter()
                     .map(|(bus, port)| FlasherDeviceCandidate {
+                        dfu_alternates: Vec::new(),
                         key: format!("{bus}:{port}"),
                         flasher_kind: "k230".to_owned(),
                         bus: u16::from(bus),
@@ -759,35 +762,46 @@ pub(crate) fn allwinner_binding_matches(expected: &str, candidate: &str) -> bool
 }
 
 #[command]
-pub fn workbench_start_flash(
+pub async fn workbench_start_flash(
     device_id: i64,
     firmware_path: String,
     options: Option<LocalFlashOptions>,
     app: AppHandle,
     state: State<'_, Arc<WorkbenchState>>,
 ) -> Result<String, String> {
-    if let Some(options) = options {
-        let device = {
-            let db = state.db.lock().map_err(|error| error.to_string())?;
-            storage::device_by_id(&db, device_id).map_err(|error| error.to_string())?
-        };
-        let args = local_flash_args(&device, options)?;
-        return start_flash_with_args(
-            device_id,
-            firmware_path,
-            args,
-            app,
-            state.inner(),
-            FlashAuditActor::User,
-        );
-    }
-    start_flash_with_actor(
-        device_id,
-        firmware_path,
-        app,
-        state.inner(),
-        FlashAuditActor::User,
-    )
+    let state = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        if let Some(options) = options {
+            let device = {
+                let db = state.db.lock().map_err(|error| error.to_string())?;
+                storage::device_by_id(&db, device_id).map_err(|error| error.to_string())?
+            };
+            if let Some(setup) = options.vendor_setup.as_ref() {
+                let inspection = vendor_image::inspect(&setup.route, Path::new(&firmware_path))?;
+                if let Some(issue) = inspection.blockers.first() {
+                    return Err(format!("VENDOR_IMAGE_INVALID:{issue}"));
+                }
+                setup.check_evidence(&inspection)?;
+                if setup.route.starts_with("st-") {
+                    let candidates =
+                        scan_flasher_devices(&app, &device.flasher_kind, &device.flasher_path)?;
+                    setup.validate_dfu(&device, &inspection, &candidates)?;
+                }
+            }
+            let args = local_flash_args(&device, options)?;
+            return start_flash_with_args(
+                device_id,
+                firmware_path,
+                args,
+                app,
+                &state,
+                FlashAuditActor::User,
+            );
+        }
+        start_flash_with_actor(device_id, firmware_path, app, &state, FlashAuditActor::User)
+    })
+    .await
+    .map_err(|error| error.to_string())?
 }
 
 /// The offline UI exposes bounded options, never a USB selector or arbitrary arguments.
@@ -795,6 +809,7 @@ pub fn workbench_start_flash(
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct LocalFlashOptions {
     system_type: String,
+    vendor_setup: Option<vendor_image::VendorSetup>,
     loader_path: Option<String>,
     mainline_route: Option<String>,
     mode: Option<String>,
@@ -806,6 +821,9 @@ fn local_flash_args(
     device: &DeviceConfig,
     options: LocalFlashOptions,
 ) -> Result<Option<Vec<String>>, String> {
+    if let Some(ref setup) = options.vendor_setup {
+        return setup.arguments(device, &options);
+    }
     match options.system_type.as_str() {
         "mainline" => {
             if device.chip_vendor == "rockchip" {
@@ -1725,6 +1743,16 @@ pub(crate) fn run_flasher(
         .as_ref()
         .map(|p| p.image.to_string_lossy().into_owned());
     let firmware_path = prepared_path.as_deref().unwrap_or(firmware_path);
+    let script_path = if device.flasher_kind == "uuu" && extra_args.is_empty() {
+        let path = Path::new(firmware_path);
+        Some(std::path::absolute(path).map_err(|error| format!("UUU_SCRIPT_PATH:{error}"))?)
+    } else {
+        None
+    };
+    let firmware_path = script_path
+        .as_deref()
+        .and_then(Path::to_str)
+        .unwrap_or(firmware_path);
     let mut args = build_flash_args(
         &device.flasher_kind,
         &device.usb_binding,
@@ -1779,6 +1807,9 @@ pub(crate) fn run_flasher(
         "running",
     );
     let mut command = Command::new(executable);
+    if let Some(folder) = script_path.as_deref().and_then(Path::parent) {
+        command.current_dir(folder);
+    }
     command
         .args(&args)
         .stdin(Stdio::null())
@@ -3135,6 +3166,9 @@ mod scan_tests {
         assert_eq!(devices[0].vid, 0x0483);
         assert_eq!(devices[0].pid, 0xdf11);
         assert_eq!(devices[0].mode, "dfu");
+        assert_eq!(devices[0].dfu_alternates.len(), 2);
+        assert_eq!(devices[0].dfu_alternates[0].name, "@FSBL");
+        assert_eq!(devices[0].dfu_alternates[1].number, 1);
     }
 }
 
@@ -3186,6 +3220,74 @@ fn finish_task(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn local_vendor_routes_forward_only_reviewed_options() {
+        let st = device("st", "dfu-util");
+        let mut st_with_stale = st.clone();
+        st_with_stale.flasher_args = r#"["-a","9","-s","0x1000","-R"]"#.into();
+        let args = |d: &DeviceConfig, setup: Value| {
+            local_flash_args(
+                d,
+                serde_json::from_value(json!({"systemType":"vendor","vendorSetup":setup})).unwrap(),
+            )
+        };
+        let selected = args(
+            &st_with_stale,
+            json!({"route":"st-dfuse","alt":2,"targetKey":"1:2"}),
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(selected, ["-R", "-a", "2"]);
+        assert!(args(
+            &st,
+            json!({"route":"st-raw","alt":0,"address":"0x44:mass-erase"})
+        )
+        .is_err());
+        let local = args(
+            &st,
+            json!({"route":"st-raw","alt":0,"address":"0x08001000","targetKey":"1:2"}),
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(local, ["-a", "0", "-s", "0x08001000"]);
+        let kendryte = device("kendryte", "k230");
+        assert!(args(
+            &kendryte,
+            json!({"route":"k230-raw","medium":"spi_nor","targetKey":"1:3"})
+        )
+        .is_err());
+        assert_eq!(
+            args(
+                &kendryte,
+                json!({"route":"k230-kdimage","medium":"sdcard","targetKey":"1:2"})
+            )
+            .unwrap()
+            .unwrap(),
+            ["--medium", "sdcard"]
+        );
+        assert!(args(&kendryte, json!({"route":"st-raw","alt":0})).is_err());
+        let mut nxp = device("nxp", "uuu");
+        nxp.flasher_args = r#"["-b","emmc"]"#.into();
+        assert_eq!(
+            args(&nxp, json!({"route":"nxp-configured"}))
+                .unwrap()
+                .unwrap(),
+            ["-b", "emmc"]
+        );
+        assert!(args(&nxp, json!({"route":"nxp-uuu","medium":"emmc"})).is_err());
+        assert!(args(&nxp, json!({"route":"nxp-uuu"}))
+            .unwrap()
+            .unwrap()
+            .is_empty());
+        nxp.flasher_args = r#"["-b","unknown-file"]"#.into();
+        assert!(args(&nxp, json!({"route":"nxp-configured"})).is_err());
+        assert!(args(
+            &device("rockchip", "openrockcli"),
+            json!({"route":"rk-emmc"})
+        )
+        .is_err());
+    }
 
     #[test]
     fn native_rockchip_windows_location_roundtrips_without_truncation() {

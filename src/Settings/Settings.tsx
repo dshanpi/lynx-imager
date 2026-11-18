@@ -23,6 +23,7 @@ import type {
 import { LynxIcon } from '../CoreUI';
 import {
   checkForUpdate,
+  installIdleUpdate,
   getUpdateAssetSize,
   getUpdateStrategy,
   skipUpdateVersion,
@@ -390,7 +391,7 @@ export const Settings: React.FC<SettingsProps> = ({
       setUpdateInfo((prev) => (prev ? { ...prev, strategy } : null));
       let downloaded = 0;
       let contentLength = 0;
-      await update.downloadAndInstall((event) => {
+      await installIdleUpdate(update, (event) => {
         switch (event.event) {
           case 'Started': {
             contentLength = event.data.contentLength || 0;

@@ -37,12 +37,12 @@ if (!target || !openocdExecutable) {
 
 // The local Windows test package reuses the hardware-accepted executable.
 // The pinned source alone cannot detect a previous binary left in this cache.
-if (target === 'windows-x86_64' && process.env.VITE_LYNX_LOCAL_BUILD === '1') {
+if (target === 'windows-x86_64') {
   const openix = join(scriptDir, '..', 'src-tauri', 'resources', 'binaries', 'openixcli.exe');
   const expected = '790347ec815bdd691f4b061d327a05277e671355f21ad6b5366ff2469277b284';
   const actual = createHash('sha256').update(readFileSync(openix)).digest('hex');
   if (actual !== expected) {
-    throw new Error(`Local Windows bundle stopped: openixcli.exe SHA-256 ${actual}; expected ${expected}. See src-tauri/resources/binaries/README.md.`);
+    throw new Error(`Windows bundle stopped: openixcli.exe SHA-256 ${actual}; expected ${expected}. See src-tauri/resources/binaries/README.md.`);
   }
 }
 

@@ -1,4 +1,4 @@
-import { check } from '@tauri-apps/plugin-updater';
+import { check, type Update, type DownloadEvent } from '@tauri-apps/plugin-updater';
 import { confirm, message } from '@tauri-apps/plugin-dialog';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { invokeCommand } from '../Platform/IPC';
@@ -28,7 +28,7 @@ function updateDescription(
   const notes = body?.trim() || '此版本未提供额外更新说明。';
   const size = assetSize ? `（${(assetSize / 1024 / 1024).toFixed(1)} MiB）` : '';
   const method = strategy === 'delta' ? `小版本增量包${size}` : `完整安装包${size}`;
-  return `发现芯桥新版本 ${version}\n\n更新方式：${method}\n\n更新内容：\n${notes}\n\n是否立即下载并安装？安装完成后应用将自动重启。`;
+  return `发现 LYNX Imager 新版本 ${version}\n\n更新方式：${method}\n\n更新内容：\n${notes}\n\n是否立即下载并安装？安装完成后应用将自动重启。`;
 }
 
 async function getSystemProxy(): Promise<string | undefined> {
@@ -74,6 +74,17 @@ export async function checkForUpdate(forceFull = false) {
   }
 }
 
+export async function installIdleUpdate(update: Update, progress?: (event: DownloadEvent) => void) {
+  const requireIdle = async () => {
+    const status = await invokeCommand('hardware_safety_status');
+    if (status.busy) throw new Error('请先结束硬件任务再安装更新：' + status.activities.join('、'));
+  };
+  await requireIdle();
+  await update.download(progress);
+  await requireIdle();
+  await update.install();
+}
+
 async function offerFullFallback(failure: DeltaUpdateFailure): Promise<void> {
   const accepted = await confirm(
     `小版本更新未能完成：${failure.message}。\n\nLYNX 已恢复原版本，是否改用完整安装包？完整包仍会进行签名校验。`,
@@ -97,7 +108,7 @@ async function offerFullFallback(failure: DeltaUpdateFailure): Promise<void> {
   if (getUpdateStrategy(update) !== 'full') {
     throw new Error('更新服务未返回强制完整包，已停止安装。');
   }
-  await update.downloadAndInstall();
+  await installIdleUpdate(update);
   await relaunch();
 }
 
@@ -158,7 +169,7 @@ export function scheduleAutomaticUpdateCheck(): () => void {
       }
 
       try {
-        await update.downloadAndInstall();
+        await installIdleUpdate(update);
       } catch (error) {
         if (getUpdateStrategy(update) !== 'delta') throw error;
         const fallback = await confirm(
@@ -175,7 +186,7 @@ export function scheduleAutomaticUpdateCheck(): () => void {
         if (!fullUpdate || getUpdateStrategy(fullUpdate) !== 'full') {
           throw new Error('更新服务当前没有可用的完整安装包。');
         }
-        await fullUpdate.downloadAndInstall();
+        await installIdleUpdate(fullUpdate);
       }
       if (!cancelled) {
         await relaunch();

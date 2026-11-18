@@ -1,0 +1,156 @@
+{
+  "format": "100ask.learn-course",
+  "schemaVersion": 1,
+  "courseId": "course_linux_app_demo",
+  "releaseId": "release_demo_1",
+  "version": "1.0.0",
+  "title": "Linux应用开发：第一个程序（模拟示例）",
+  "track": "linux_app",
+  "requiredClientCapabilities": [
+    "learn.course-manifest.v1",
+    "learn.ssh-workspace.v1"
+  ],
+  "resources": [
+    {
+      "resourceId": "doc_intro",
+      "kind": "document",
+      "title": "第一课教材（模拟）",
+      "sourceUrl": "https://solution.100ask.org/docs/course/",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "size": 2048,
+      "artifactRef": "artifact_doc_demo"
+    },
+    {
+      "resourceId": "source_hello",
+      "kind": "source",
+      "title": "练习源码（模拟，地址不代表实际仓库）",
+      "sourceUrl": "https://example.invalid/linux-app-demo",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "size": 4096,
+      "artifactRef": "artifact_code_demo",
+      "commit": "cccccccccccccccccccccccccccccccccccccccc"
+    }
+  ],
+  "environments": [
+    {
+      "profileId": "env_read",
+      "target": "none",
+      "requiredCapabilities": [],
+      "versionChecks": []
+    },
+    {
+      "profileId": "env_ubuntu",
+      "target": "ubuntu",
+      "requiredCapabilities": [
+        "ssh",
+        "gcc",
+        "git"
+      ],
+      "versionChecks": [
+        {
+          "component": "os",
+          "operator": "eq",
+          "expected": "Ubuntu 22.04"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "actionId": "compile_hello",
+      "catalogVersion": "1.0.0",
+      "target": "ubuntu",
+      "risk": "workspace_write",
+      "parameters": {
+        "projectRef": "bound-project",
+        "targetName": "hello"
+      },
+      "evidenceOutputs": [
+        "build_log",
+        "artifact_digest"
+      ]
+    },
+    {
+      "actionId": "run_hello",
+      "catalogVersion": "1.0.0",
+      "target": "ubuntu",
+      "risk": "workspace_write",
+      "parameters": {
+        "artifactRef": "current-build"
+      },
+      "evidenceOutputs": [
+        "exit_status",
+        "stdout"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "ruleId": "rule_hello",
+      "validatorId": "process_output",
+      "validatorVersion": "1.0.0",
+      "parameters": {
+        "exitCode": 0,
+        "stdoutContains": "Hello Linux"
+      },
+      "requiredEvidenceKinds": [
+        "exit_status",
+        "stdout"
+      ],
+      "minimumTrust": "client_measured"
+    }
+  ],
+  "chapters": [
+    {
+      "chapterId": "chapter_01",
+      "title": "从源码到程序",
+      "summaryPrompt": "解释编译、运行与输出的区别。",
+      "units": [
+        {
+          "unitId": "unit_hello",
+          "title": "在Ubuntu构建并运行",
+          "objective": "亲手完成源码修改、构建和结果解释。",
+          "activities": [
+            {
+              "activityId": "read_intro",
+              "kind": "read",
+              "title": "理解源码与程序",
+              "instruction": "阅读教材并说出编译的作用。",
+              "expectedObservation": "能够区分源码和可执行文件。",
+              "recoveryHint": "展开术语解释。",
+              "required": true,
+              "resourceRefs": [
+                "doc_intro"
+              ],
+              "environmentRef": "env_read",
+              "actionRefs": [],
+              "ruleRefs": [],
+              "completionMode": "user_confirmed"
+            },
+            {
+              "activityId": "practice_hello",
+              "kind": "code",
+              "title": "在VS Code修改并运行",
+              "instruction": "绑定Ubuntu工程，打开VS Code，修改输出，构建并运行。",
+              "expectedObservation": "构建成功且程序输出Hello Linux。",
+              "recoveryHint": "按构建错误位置检查头文件、工具链和工程路径。",
+              "required": true,
+              "resourceRefs": [
+                "source_hello"
+              ],
+              "environmentRef": "env_ubuntu",
+              "actionRefs": [
+                "compile_hello",
+                "run_hello"
+              ],
+              "ruleRefs": [
+                "rule_hello"
+              ],
+              "completionMode": "validator"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

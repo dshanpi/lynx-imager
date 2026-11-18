@@ -1,11 +1,19 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { save } from '@tauri-apps/plugin-dialog';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
-import { LynxIcon, type LynxIconName } from '../../CoreUI';
+import { LynxIcon, type LynxIconName } from '../../CoreUI/LynxIcon/LynxIcon';
 import { formatErrorMessage } from '../../Utils';
 import { formatLinuxBytes } from '../Workbench/linuxWorkbenchModel';
 import { ended, stateName, type useBasicTask } from './BasicTask';
 import { copyVerifiedText } from './imagerAIControls';
+import { BootEvidence, useBootEvidence } from './BootEvidence';
+import {
+  failureEvidence,
+  physicalPlan,
+  physicalReadback,
+  positive,
+  type BootScope,
+} from './writeEvidence';
 import './V2Write.css';
 
 export interface V2WriteSnapshot {
@@ -20,6 +28,10 @@ export interface V2WriteSnapshot {
   loaderPath?: string;
   loaderSha256?: string;
   device: string;
+  deviceId?: number;
+  candidateId?: string;
+  targetDetails?: Array<[string, string]>;
+  eraseEmmcUserArea?: boolean;
   usb: string;
   mode: string;
   verify: string;
@@ -56,8 +68,7 @@ function duration(seconds: number) {
       : `${s} 秒`;
 }
 const time = (s: number | null) => (s == null ? '未报告' : new Date(s * 1000).toLocaleString());
-const good = (s?: string | null) =>
-  ['success', 'verified', 'completed', 'passed', 'executed'].includes(s ?? '');
+const good = positive;
 function evidence(value?: string | null, success = '已完成', unknown = '未报告') {
   if (good(value)) return { label: success, tone: 'good' };
   if (value === 'failed') return { label: '失败', tone: 'bad' };
@@ -68,7 +79,7 @@ function evidence(value?: string | null, success = '已完成', unknown = '未�
 }
 function stageIndex(phase: string) {
   if (/post_flash|reboot|poweroff/.test(phase)) return 4;
-  if (/verify|verifying/.test(phase)) return 3;
+  if (/verify|verifying|readback/.test(phase)) return 3;
   if (/write|writing/.test(phase)) return 2;
   if (/eras/.test(phase)) return 1;
   if (/preflight|prepar|query|metadata|bootstrap|reconnect|loader|probe|backup/.test(phase))
@@ -189,12 +200,14 @@ function Fingerprint({ value }: { value: string }) {
   );
 }
 function Stages({ task }: { task?: Task }) {
-  const current = task ? stageIndex(task.details.phase || task.phase) : 0;
+  const current = task ? stageIndex(task.details.phase || task.phase) : -1;
   const statuses = [
     undefined,
     undefined,
     task?.details.writeState,
-    task?.details.verifyState,
+    task?.details.storageType === 'spinor'
+      ? task.details.physicalVerifyState
+      : task?.details.verifyState,
     task?.details.postFlashState,
   ];
   return (
@@ -225,6 +238,9 @@ function Stages({ task }: { task?: Task }) {
   );
 }
 function Confirm({ snapshot: s, confirmed, busy, onConfirmChange, onBack, onStart }: Props) {
+  const wholeEmmc =
+    s.eraseEmmcUserArea ?? /(?:瑞芯微主线 eMMC 整盘|Rockchip eMMC 完整镜像)/i.test(s.route);
+  const f101Physical = s.chip.toUpperCase() === 'F101' && /物理|主线.*NOR/i.test(s.route);
   const slot = useRef<HTMLDivElement>(null);
   const modal = useRef<HTMLDialogElement>(null);
   useLayoutEffect(() => {
@@ -304,9 +320,24 @@ function Confirm({ snapshot: s, confirmed, busy, onConfirmChange, onBack, onStar
         {s.loaderSha256 && <small className="v2w-code">{s.loaderSha256}</small>}
       </>,
     ]);
+  for (const [label, value] of s.targetDetails ?? []) {
+    if (value) rows.push(['list', label, value]);
+  }
+  if (f101Physical && s.imageSize > 0)
+    rows.push([
+      'database',
+      '计划镜像范围',
+      <code key="plan-range">
+        0x000000 – 0x{(s.imageSize - 1).toString(16).toUpperCase().padStart(6, '0')}
+      </code>,
+    ]);
   const plan = [
     '检查设备和镜像，复核本次文件指纹。',
-    '按所选路线处理目标存储。',
+    wholeEmmc
+      ? '完整擦除目标 eMMC 用户区。'
+      : f101Physical
+        ? '读取物理备份，确定目标容量、擦除对齐和写入块。'
+        : '按所选路线处理目标存储。',
     '将系统镜像写入选定目标。',
     s.verify,
     s.postAction,
@@ -342,7 +373,7 @@ function Confirm({ snapshot: s, confirmed, busy, onConfirmChange, onBack, onStar
             <LynxIcon name="list-check" size={40} />
             <div>
               <b>准备就绪</b>
-              <p>已完成只读预检，等待确认本次设备和镜像。</p>
+              <p>已复核 USB 身份和文件指纹。提交后，烧录器将检查实际介质。</p>
             </div>
           </div>
         </div>
@@ -386,8 +417,15 @@ function Confirm({ snapshot: s, confirmed, busy, onConfirmChange, onBack, onStar
           <div className="v2w-warning">
             <LynxIcon name="warning" size={40} />
             <div>
-              <strong>危险操作：将擦除并写入目标存储！</strong>
-              <p>目标存储原有数据可能被覆盖，请先完成备份。</p>
+              <strong>
+                {wholeEmmc
+                  ? '将完整擦除目标 eMMC 用户区'
+                  : '即将写入 ' + s.device + ' 的 ' + s.storage}
+              </strong>
+              <p>
+                {wholeEmmc ? '现有用户区分区和数据将被覆盖。' : '写入范围内的数据将被覆盖。'}
+                请核对设备和镜像，并备份重要数据。
+              </p>
             </div>
           </div>
           <Facts rows={rows} />
@@ -423,6 +461,7 @@ function Summary({
   compact?: boolean;
 }) {
   const finished = ended(task.status);
+  const plan = physicalPlan(task.evidenceLines, s.imageSize);
   const rows: Row[] = compact
     ? [
         ['plug', '目标设备', s.usb],
@@ -440,6 +479,12 @@ function Summary({
         ['shield', '校验策略', s.verify],
         ['play', '结束动作', s.postAction],
       ];
+  if (plan)
+    rows.push(
+      ['database', '物理容量', size(plan.capacity)],
+      ['list', '对齐写块', plan.blocks + ' × ' + size(plan.alignment) + ' · ' + size(plan.span)],
+      ['shield', '末块保留', size(plan.keep)]
+    );
   if (finished && !compact)
     rows.push(
       ['clock', '开始时间', time(task.startedAt)],
@@ -459,6 +504,21 @@ function Summary({
         {compact && <em className="v2w-red-pill">需要重新确认</em>}
       </h3>
       {!compact && <Board snapshot={s} />}
+      {plan && (
+        <div className="v2w-write-range">
+          <b>本次物理写块</b>
+          <div
+            className="v2w-range-track"
+            role="img"
+            aria-label={'有效载荷 ' + size(s.imageSize) + '，末块保留 ' + size(plan.keep)}
+          >
+            <span style={{ width: (s.imageSize / plan.span) * 100 + '%' }} />
+          </div>
+          <small>
+            镜像 {size(s.imageSize)} · 保留 {size(plan.keep)}
+          </small>
+        </div>
+      )}
       <Facts rows={rows} />
       {!finished && (
         <Info>
@@ -471,7 +531,7 @@ function Summary({
     </section>
   );
 }
-function Progress({ task }: { task: Task }) {
+function Progress({ task, imageSize }: { task: Task; imageSize: number }) {
   const d = task.details;
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -492,15 +552,16 @@ function Progress({ task }: { task: Task }) {
       ? duration((total - transferred) / d.bytesPerSecond)
       : '—';
   const metrics: Row[] = [
+    ['document', '镜像有效载荷', size(imageSize)],
     ['runtime', '传输速度', d.bytesPerSecond != null ? size(d.bytesPerSecond) + '/s' : '—'],
     ['database', unitLabel, size(bytes ?? transferred)],
-    ['clock', '预计剩余时间', eta],
+    ['clock', '当前传输剩余', eta],
     ['clock', '已用时间', task.startedAt ? duration(now / 1000 - task.startedAt) : '—'],
   ];
   return (
     <section className="v2w-card v2w-progress">
       <Heading
-        title="正在烧录系统"
+        title={task.status === 'queued' ? '等待烧录器响应' : '正在烧录系统'}
         subtitle="系统镜像正在处理，请保持 USB 连接稳定，避免断电或断开设备。"
         icon="download"
       />
@@ -609,17 +670,36 @@ function Logs({
     </section>
   );
 }
-function Results({ task, storage }: { task: Task; storage: string }) {
+function Results({
+  task,
+  storage,
+  hashMismatch = false,
+}: {
+  task: Task;
+  storage: string;
+  hashMismatch?: boolean;
+}) {
   const d = task.details;
+  const physical = d.storageType === 'spinor' || /spi\s*nor/i.test(storage);
   const items: Array<[LynxIconName, string, ReturnType<typeof evidence>]> = [
     ['database', '镜像写入', evidence(d.writeState)],
-    ['shield', '协议校验', evidence(d.verifyState, '已通过', '待确认')],
   ];
-  if (d.physicalVerifyState || d.storageType === 'spinor' || /spi\s*nor/i.test(storage))
-    items.push(['search', '物理回读', evidence(d.physicalVerifyState, '已通过', '待确认')]);
+  if (!physical) items.push(['shield', '后端校验', evidence(d.verifyState, '已通过', '待确认')]);
+  if (d.physicalVerifyState || physical)
+    items.push([
+      'search',
+      '物理回读',
+      hashMismatch
+        ? { label: '指纹不符', tone: 'bad' }
+        : evidence(d.physicalVerifyState, '已通过', '待确认'),
+    ]);
   items.push(
-    ['play', '结束动作', evidence(d.postFlashState, '已执行', '待确认')],
-    ['desktop', '系统启动', evidence(d.bootVerifyState, '已验证', '待确认')]
+    [
+      'play',
+      d.postFlashAction === 'reboot' ? '重启指令' : '结束动作',
+      evidence(d.postFlashState, '已执行', '待确认'),
+    ],
+    ['desktop', '烧录器启动验证', evidence(d.bootVerifyState, '已验证', '未验证')]
   );
   return (
     <ul className="v2w-results">
@@ -635,36 +715,216 @@ function Results({ task, storage }: { task: Task; storage: string }) {
     </ul>
   );
 }
-function Success({ task, storage }: { task: Task; storage: string }) {
+function Success({
+  task,
+  snapshot,
+  scope,
+  acceptance,
+}: {
+  task: Task;
+  snapshot: V2WriteSnapshot;
+  scope: BootScope | null;
+  acceptance: ReturnType<typeof useBootEvidence>;
+}) {
   const d = task.details;
-  const detail =
-    good(d.writeState) && good(d.verifyState)
-      ? '系统镜像已写入并校验通过'
-      : '烧录任务已结束，执行结果见下方记录';
+  const physical = physicalReadback(d, [...task.evidenceLines, ...task.logs], snapshot.imageSha256);
+  const isNor = d.storageType === 'spinor' || /spi\s*nor/i.test(snapshot.storage);
+  const verified = isNor ? physical?.matches === true : good(d.verifyState);
+  const wrote = good(d.writeState);
+  const boot = acceptance.report;
+  const bootFailed = boot?.result === 'fail' || d.bootVerifyState === 'failed';
+  const bootPassed = boot?.result === 'pass' || good(d.bootVerifyState);
+  let title = '任务已结束';
+  if (physical?.matches === false) title = '回读指纹与所选镜像不一致';
+  else if (bootFailed) title = '任务已结束，启动验收失败';
+  else if (wrote && verified) title = bootPassed ? '写入完成，启动已验证' : '烧写完成，启动待验证';
+  else if (wrote) title = '镜像写入完成，校验待确认';
   return (
     <section className="v2w-card v2w-success">
-      <div className="v2w-celebration">
-        <div className="v2w-success-mark">
-          <LynxIcon name="check" size={48} />
+      <Heading
+        title={title}
+        icon={physical?.matches === false ? 'warning' : 'list-check'}
+        subtitle={snapshot.device + ' · ' + basename(snapshot.imagePath)}
+      />
+      <Results task={task} storage={snapshot.storage} hashMismatch={physical?.matches === false} />
+      {physical && (
+        <Facts
+          rows={[
+            [
+              'database',
+              '物理回读范围',
+              physical.fullBytes == null ? '后端未报告长度' : size(physical.fullBytes),
+            ],
+            [
+              'key',
+              '回读镜像 SHA-256',
+              physical.imageHash ? <Fingerprint value={physical.imageHash} /> : '未报告',
+            ],
+            ['shield', '镜像以外区域', physical.outsidePreserved ? '内容保持一致' : '未报告'],
+          ]}
+        />
+      )}
+      {boot ? (
+        <div className={'v2w-boot-record' + (bootFailed ? ' is-failed' : '')} role="status">
+          <h3>
+            <LynxIcon name={boot.result === 'fail' ? 'warning' : 'check'} size={20} />
+            {boot.result === 'fail'
+              ? '人工启动验收失败'
+              : boot.coldBoot
+                ? '独立上电验收通过'
+                : '人工启动验收通过'}
+          </h3>
+          <p>
+            {boot.operator} · {time(boot.recordedAt)}
+          </p>
+          <code>{boot.evidence}</code>
         </div>
-        <h2>烧录完成</h2>
-        <p>{detail}</p>
-      </div>
-      <Results task={task} storage={storage} />
-      <Info>
-        {good(d.bootVerifyState)
-          ? '后端已记录系统启动验证结果。'
-          : '请通过开发板屏幕、调试串口或有效启动日志确认系统启动。'}
-      </Info>
+      ) : (
+        <Info>
+          {good(d.bootVerifyState)
+            ? '烧录器已报告系统启动验证通过。'
+            : '启动验收需核对本次目标板上新应用的标识。重启命令执行结果单独记录。'}
+        </Info>
+      )}
+      {acceptance.error && (
+        <p role="alert">
+          读取启动验收记录失败：{acceptance.error}
+          <button type="button" className="v2w-text-button" onClick={acceptance.refresh}>
+            重新读取
+          </button>
+        </p>
+      )}
+      {scope &&
+        !boot &&
+        !acceptance.loading &&
+        !acceptance.error &&
+        physical?.matches !== false && (
+          <BootEvidence
+            scope={scope}
+            candidateId={snapshot.candidateId}
+            onSaved={acceptance.refresh}
+          />
+        )}
     </section>
   );
 }
-const recovery: Array<[LynxIconName, string, string]> = [
-  ['plug', '检查 USB 连接和供电', '确认 USB 线缆、连接端口和供电稳定。'],
-  ['desktop', '确认设备模式', '按板型说明重新进入所选路线要求的烧录模式。'],
-  ['refresh', '重新检测设备', '重读 USB 身份，并重新绑定本次目标。'],
-  ['list', '核对镜像与 Loader', '复核镜像文件、指纹和路线所需的 Loader。'],
-];
+
+export interface PreflightContext {
+  board: string;
+  device: string;
+  route: string;
+  storage: string;
+  imagePath: string;
+  loaderPath: string;
+  usb: string;
+  usbId: string;
+  mode: string;
+}
+
+export function WritePreflightFailure({
+  context: s,
+  message,
+  onReconnect,
+}: {
+  context: PreflightContext;
+  message: string;
+  onReconnect: () => void;
+}) {
+  const disconnected = /已断开|未检测到绑定的 USB/.test(message);
+  const fileChanged = /文件|镜像|Loader/i.test(message);
+  const rows: Row[] = [
+    ['board', '目标开发板', s.board],
+    ['plug', '设备名称', s.device],
+    ['plug', '上次选定的端口', <code key="usb-port">{s.usb}</code>],
+    [
+      'key',
+      'USB 标识 / 模式',
+      <code key="usb-identity">
+        {s.usbId} · {s.mode}
+      </code>,
+    ],
+    ['list', '烧录路线', s.route],
+    ['database', '目标存储', s.storage],
+    [
+      'document',
+      '系统镜像',
+      <span key="image-path" title={s.imagePath}>
+        {s.imagePath}
+      </span>,
+    ],
+  ];
+  if (s.loaderPath)
+    rows.push([
+      'document',
+      'RAM Loader',
+      <span key="loader-path" title={s.loaderPath}>
+        {s.loaderPath}
+      </span>,
+    ]);
+  return (
+    <section className="v2w-region v2w-preflight-error" aria-label="提交前检查未通过">
+      <div className="v2w-preflight-layout">
+        <article className="v2w-card v2w-preflight-main">
+          <Heading
+            title={disconnected ? '预检时失去目标设备' : '提交前检查未通过'}
+            subtitle={
+              disconnected
+                ? '提交前检查未通过，原先选定的 USB 目标已离线。'
+                : '本次选择已保留，可根据复核结果重新准备。'
+            }
+            icon="shield"
+          />
+          <div className="v2w-preflight-alert" role="alert">
+            <LynxIcon name="error" size={24} />
+            <div>
+              <h3>尚未擦除或写入</h3>
+              <p>未提交烧录任务，未执行擦除、写入或重启。</p>
+            </div>
+          </div>
+          <section className="v2w-preflight-stage">
+            <h3>执行到哪一步</h3>
+            <ol>
+              <li>
+                <span>选定开发板、镜像与接口</span>
+                <b>已选择</b>
+              </li>
+              <li>
+                <span>写前复核</span>
+                <b className="v2w-preflight-stopped">未通过</b>
+              </li>
+              <li>
+                <span>擦除、写入与回读</span>
+                <b>未执行</b>
+              </li>
+              <li>
+                <span>烧后动作</span>
+                <b>未执行</b>
+              </li>
+            </ol>
+          </section>
+          <section className="v2w-preflight-recovery">
+            <h3>恢复操作</h3>
+            <p>
+              {fileChanged
+                ? '返回「选择系统」重新核对镜像及依赖文件，再检测目标设备。'
+                : '检查 USB 下载口和数据线，让开发板进入下载模式。重新检测后，再选择实际接入的物理端口。'}
+            </p>
+            <button type="button" className="v2w-button v2w-primary" onClick={onReconnect}>
+              <LynxIcon name="plug" size={16} />
+              重新检测设备
+            </button>
+          </section>
+        </article>
+        <aside className="v2w-card v2w-preflight-detail">
+          <h3>上次选定的目标</h3>
+          <Facts rows={rows} />
+          <h3>复核返回信息</h3>
+          <code className="v2w-preflight-diagnostic">{message}</code>
+        </aside>
+      </div>
+    </section>
+  );
+}
 function Failure({
   task,
   onRetry,
@@ -674,6 +934,7 @@ function Failure({
   onRetry: () => void;
   onExport: () => void;
 }) {
+  const issue = failureEvidence(task);
   return (
     <section className="v2w-card v2w-failure">
       <Heading title="烧写系统" subtitle="查看当前任务的失败阶段和设备状态。" icon="list-check" />
@@ -683,8 +944,8 @@ function Failure({
             <LynxIcon name="dismiss" size={40} />
           </span>
           <div>
-            <h2>{task.status === 'failed' ? '烧录失败' : stateName(task.status)}</h2>
-            <p>任务已停止，设备状态需重新确认。</p>
+            <h2>{issue.title}</h2>
+            <p>{issue.impact}</p>
           </div>
         </div>
         <p>
@@ -692,33 +953,21 @@ function Failure({
         </p>
         <div className="v2w-failure-error">
           <LynxIcon name="error" size={20} />
-          <span>
-            {task.error ||
-              task.details.postFlashError ||
-              task.details.diagnosticErrorCode ||
-              '后端未返回详细错误。请导出任务记录。'}
-          </span>
+          <span>{issue.evidence}</span>
         </div>
       </div>
       <h3>
         <LynxIcon name="wrench" size={24} />
         恢复建议
       </h3>
-      <ol className="v2w-recovery">
-        {recovery.map(([icon, name, text], i) => (
-          <li key={name}>
-            <span>
-              <LynxIcon name={icon} size={20} />
-            </span>
-            <div>
-              <strong>
-                {i + 1}. {name}
-              </strong>
-              <p>{text}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      <p>{issue.recovery}</p>
+      <Facts
+        rows={[
+          ['database', '镜像写入', evidence(task.details.writeState).label],
+          ['shield', '物理回读', evidence(task.details.physicalVerifyState).label],
+          ['play', '结束动作', evidence(task.details.postFlashState).label],
+        ]}
+      />
       <div className="v2w-failure-actions">
         <ToolButton icon="refresh" primary onClick={onRetry}>
           重新检测设备
@@ -735,6 +984,11 @@ export function V2Write(props: Props) {
   const { snapshot, task, onRetry, onOpenRecords } = props;
   const [exportStatus, setExportStatus] = useState('');
   const [exporting, setExporting] = useState(false);
+  const scope: BootScope | null =
+    task?.status === 'success' && snapshot.deviceId != null
+      ? { taskId: task.id, deviceId: snapshot.deviceId, imageSha256: snapshot.imageSha256 }
+      : null;
+  const acceptance = useBootEvidence(scope, snapshot.candidateId);
   async function exportTask(diagnostic = false) {
     if (!task || exporting) return;
     setExporting(true);
@@ -759,6 +1013,8 @@ export function V2Write(props: Props) {
           finishedAt: task.finishedAt,
           details: task.details,
           error: task.error,
+          bootAcceptance: acceptance.report,
+          evidenceLines: task.evidenceLines,
           logTail: task.logs,
         },
         null,
@@ -775,6 +1031,8 @@ export function V2Write(props: Props) {
         ...task.logs,
       ];
       if (task.error) lines.push(task.error);
+      if (acceptance.report)
+        lines.push('人工启动验收 · ' + acceptance.report.operator, acceptance.report.evidence);
       await writeTextFile(dest, diagnostic ? digest : lines.join('\n'));
       setExportStatus('已导出 ' + basename(dest));
     } catch (error) {
@@ -789,7 +1047,7 @@ export function V2Write(props: Props) {
     body = (
       <div className="v2w-layout v2w-running">
         <div className="v2w-main-stack">
-          <Progress task={task} />
+          <Progress task={task} imageSize={snapshot.imageSize} />
           <Logs key={task.id} task={task} onExport={() => void exportTask()} />
         </div>
         <Summary snapshot={snapshot} task={task} />
@@ -805,7 +1063,13 @@ export function V2Write(props: Props) {
   else if (task.status === 'success')
     body = (
       <div className="v2w-layout v2w-done">
-        <Success task={task} storage={snapshot.storage} />
+        <Success
+          key={task.id}
+          task={task}
+          snapshot={snapshot}
+          scope={scope}
+          acceptance={acceptance}
+        />
         <Summary snapshot={snapshot} task={task} />
         <div className="v2w-success-actions">
           <ToolButton icon="add" primary onClick={onRetry}>

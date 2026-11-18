@@ -1,0 +1,467 @@
+.imager-aw-route {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+.imager-aw-route legend,
+.imager-image-review h3,
+.imager-review-page h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.imager-aw-route legend {
+  padding: 0;
+  margin-bottom: 6px;
+}
+.imager-aw-route label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--vc-line);
+  border-radius: 5px;
+  padding: 7px 11px;
+  cursor: pointer;
+  flex: 1 1 160px;
+}
+.imager-aw-route label:has(:checked) {
+  background: var(--vc-tint);
+  border-color: var(--vc-accent);
+}
+.imager-aw-route input,
+.imager-image-confirm input {
+  accent-color: var(--vc-accent);
+}
+.imager-image-review {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+.imager-image-review > button {
+  justify-self: start;
+}
+.imager-image-line,
+.imager-image-reference {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--vc-line);
+}
+.imager-image-line > div {
+  min-width: 0;
+}
+.imager-image-line code,
+.imager-image-facts code {
+  overflow-wrap: anywhere;
+}
+.imager-image-line button,
+.imager-image-reference button,
+.imager-review-page button,
+.imager-image-review > button {
+  padding: 5px 10px;
+  border: 1px solid var(--vc-line);
+  background: var(--vc-panel);
+  border-radius: 4px;
+  color: var(--vc-ink);
+}
+.imager-image-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.imager-image-line small,
+.imager-aw-route small,
+.imager-image-reference small {
+  display: block;
+  color: var(--vc-sub);
+  font-size: 12px;
+}
+.imager-image-confirm {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.imager-image-problem {
+  border-inline-start: 3px solid var(--lynx-danger);
+  padding: 6px 10px;
+}
+.imager-image-facts {
+  margin: 0;
+}
+.imager-image-facts > div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--vc-line);
+}
+.imager-image-facts dt {
+  color: var(--vc-sub);
+}
+.imager-image-facts dd {
+  margin: 0;
+}
+.imager-image-directory {
+  max-height: 240px;
+  overflow: auto;
+}
+.imager-image-directory table {
+  width: 100%;
+  font-size: 12px;
+}
+.imager-image-directory :is(th, td) {
+  padding: 3px 6px;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+.imager-image-directory caption {
+  text-align: start;
+  padding-top: 6px;
+}
+
+.v2c-layout.v2c-system-layout.local {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  min-height: 0;
+}
+.v2c-system-layout.local > .v2c-primary {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  gap: 13px;
+}
+.v2c-system-layout.local .v2c-page-heading h2 {
+  font-size: 20px;
+}
+.v2c-system-layout.local .v2c-page-heading p {
+  font-size: 13px;
+}
+.v2c-system-layout.local .v2c-tabs {
+  justify-content: flex-start;
+}
+.v2c-system-layout.local .v2c-tabs button {
+  flex: 0 1 auto;
+  padding-inline: 18px;
+}
+.v2c-system-layout.local .imager-aw-route {
+  align-items: stretch;
+}
+.v2c-system-layout.local .imager-aw-route label {
+  flex: 0 1 auto;
+  min-width: 160px;
+}
+.v2c-system-layout.local .imager-aw-route label small {
+  display: none;
+}
+.imager-image-line {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.15fr) minmax(150px, 0.65fr) minmax(260px, 1fr);
+  align-items: center;
+  justify-content: normal;
+  gap: 14px;
+  padding: 13px 0;
+}
+.imager-image-line > div:first-child > code {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.imager-image-line code > svg,
+.imager-file-destination > svg {
+  color: var(--vc-sub);
+  flex: 0 0 auto;
+  align-self: center;
+}
+.imager-file-destination {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-left: 12px;
+  border-left: 1px solid var(--vc-line);
+}
+.imager-file-destination strong {
+  font-size: 14px;
+}
+.imager-image-line .imager-image-actions {
+  justify-content: flex-end;
+}
+.imager-image-line .imager-image-remove {
+  color: var(--vc-sub);
+  border-color: transparent;
+}
+.imager-file-details {
+  font-size: 13px;
+  color: var(--vc-sub);
+}
+.imager-file-details > summary {
+  font-weight: 600;
+  cursor: pointer;
+  padding: 3px 0;
+}
+.imager-file-details .v2c-facts {
+  margin-block: 8px;
+}
+.imager-image-line.vendor-file-tools {
+  display: flex;
+  justify-content: flex-end;
+}
+.v2c-system-layout.local .v2c-drop.imager-empty-files {
+  min-height: 85px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+}
+@media (max-width: 1050px) {
+  .imager-image-line {
+    grid-template-columns: minmax(0, 1.25fr) minmax(150px, 0.7fr);
+  }
+  .imager-image-line .imager-image-actions {
+    grid-column: 1/-1;
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 680px) {
+  .imager-image-line {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .imager-file-destination {
+    padding-left: 0;
+    border: 0;
+  }
+  .imager-image-facts > div {
+    grid-template-columns: 80px minmax(0, 1fr);
+  }
+}
+
+/* Within step 2, the inspector takes over the same working area as file selection. */
+.v2c-system-layout:has(.imager-review-page) {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+}
+.v2c-system-layout:has(.imager-review-page) > .v2c-detail-stack,
+.v2c-system-layout:has(.imager-review-page) > .v2c-primary > :not(.imager-image-review) {
+  display: none;
+}
+.v2c-system-layout:has(.imager-review-page) > .v2c-primary {
+  border: 0;
+  padding: 0;
+  gap: 0;
+  background: transparent;
+}
+.imager-review-page {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  color: var(--vc-ink);
+}
+.imager-review-page :is(p, h2, h3) {
+  margin: 0;
+}
+.imager-review-heading,
+.imager-review-band,
+.imager-review-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.imager-review-heading {
+  align-items: flex-start;
+}
+.imager-review-heading h2 {
+  font-size: 20px;
+  line-height: 1.35;
+}
+.imager-review-heading h2:focus {
+  outline: none;
+}
+.imager-review-heading p,
+.imager-review-empty,
+.imager-feature {
+  color: var(--vc-sub);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.imager-review-heading p {
+  margin-top: 3px;
+}
+.imager-review-file {
+  justify-content: flex-start;
+  background: var(--vc-soft);
+  border: 1px solid var(--vc-line);
+  padding: 10px 12px;
+  border-radius: 5px;
+}
+.imager-review-file > svg {
+  color: var(--vc-accent);
+  flex: none;
+}
+.imager-review-file > div {
+  min-width: 0;
+}
+.imager-review-file strong {
+  display: block;
+  font-size: 14px;
+  word-break: break-all;
+}
+.imager-review-file small,
+.imager-review-band span,
+.imager-review-file > span,
+.imager-map-axis,
+.imager-map-legend small,
+.imager-review-hashes small {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--vc-sub);
+}
+.imager-review-file > span {
+  margin-left: auto;
+}
+.imager-review-block {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  align-content: start;
+}
+.imager-review-block > button {
+  justify-self: start;
+}
+.imager-review-band h3 {
+  font-size: 15px;
+  line-height: 1.45;
+  white-space: nowrap;
+}
+.imager-review-band span {
+  text-align: right;
+}
+.imager-review-band {
+  min-height: 23px;
+  border-bottom: 1px solid var(--vc-line);
+  padding-bottom: 4px;
+}
+.imager-review-empty {
+  padding: 5px 0;
+}
+.imager-image-map {
+  display: flex;
+  height: 14px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--vc-soft);
+}
+.imager-image-map span {
+  flex-basis: 0;
+}
+.imager-review-page [data-segment='0'] {
+  background: var(--vc-accent);
+}
+.imager-review-page [data-segment='1'] {
+  background: #788cb0;
+}
+.imager-review-page [data-segment='2'] {
+  background: #c4cedb;
+}
+.imager-map-axis {
+  margin-top: -5px;
+  display: flex;
+  justify-content: space-between;
+}
+.imager-map-legend {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 32px;
+  list-style: none;
+}
+.imager-map-legend li {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.imager-map-legend b {
+  font-size: 13px;
+}
+.imager-map-legend li i {
+  height: 8px;
+  width: 8px;
+  border-radius: 2px;
+}
+.imager-map-legend small {
+  display: block;
+}
+.imager-byte-table,
+.imager-loader-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+.imager-review-page th,
+.imager-review-page td {
+  text-align: left;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--vc-line);
+  vertical-align: top;
+}
+.imager-review-page thead {
+  background: var(--vc-soft);
+  color: var(--vc-sub);
+}
+.imager-review-page th {
+  font-weight: 600;
+}
+.imager-byte-table td:first-of-type {
+  overflow-wrap: anywhere;
+}
+.imager-review-page code {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.imager-review-page .imager-feature {
+  font-size: 12px;
+}
+.imager-review-hashes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.imager-review-hashes > div {
+  min-width: 0;
+}
+.imager-review-hashes small,
+.imager-review-hashes code {
+  display: block;
+}
+.imager-review-hashes code,
+.imager-review-page dd code {
+  overflow-wrap: anywhere;
+}
+.imager-review-page button:focus-visible {
+  outline: 2px solid var(--vc-accent);
+  outline-offset: 2px;
+}
+@media (max-width: 900px) {
+  .imager-review-hashes {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .imager-review-heading,
+  .imager-review-band {
+    flex-wrap: wrap;
+  }
+  .imager-review-band span {
+    text-align: left;
+  }
+}

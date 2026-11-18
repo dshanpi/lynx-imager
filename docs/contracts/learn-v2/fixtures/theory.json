@@ -1,0 +1,65 @@
+{
+  "format": "100ask.learn-course",
+  "schemaVersion": 1,
+  "courseId": "course_theory_demo",
+  "releaseId": "release_theory_demo",
+  "version": "1.0.0",
+  "title": "嵌入式基础概念（模拟示例）",
+  "track": "theory",
+  "requiredClientCapabilities": [
+    "learn.course-manifest.v1"
+  ],
+  "resources": [
+    {
+      "resourceId": "doc_intro",
+      "kind": "document",
+      "title": "第一课教材（模拟）",
+      "sourceUrl": "https://solution.100ask.org/docs/course/",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "size": 2048,
+      "artifactRef": "artifact_doc_demo"
+    }
+  ],
+  "environments": [
+    {
+      "profileId": "env_read",
+      "target": "none",
+      "requiredCapabilities": [],
+      "versionChecks": []
+    }
+  ],
+  "actions": [],
+  "rules": [],
+  "chapters": [
+    {
+      "chapterId": "chapter_01",
+      "title": "从源码到程序",
+      "summaryPrompt": "解释编译、运行与输出的区别。",
+      "units": [
+        {
+          "unitId": "unit_hello",
+          "title": "基础阅读",
+          "objective": "理解嵌入式系统与开发流程。",
+          "activities": [
+            {
+              "activityId": "read_intro",
+              "kind": "read",
+              "title": "理解源码与程序",
+              "instruction": "阅读教材并说出编译的作用。",
+              "expectedObservation": "能够区分源码和可执行文件。",
+              "recoveryHint": "展开术语解释。",
+              "required": true,
+              "resourceRefs": [
+                "doc_intro"
+              ],
+              "environmentRef": "env_read",
+              "actionRefs": [],
+              "ruleRefs": [],
+              "completionMode": "user_confirmed"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -87,7 +87,10 @@ export default function BasicCatalog({
       const loader = await open({
         title: '选择这块 F101 对应的 RAM FES Loader',
         multiple: false,
-        filters: [{ name: 'RAM FES Loader', extensions: ['fex', 'bin'] }],
+        filters: [
+          { name: 'RAM FES 引导来源', extensions: ['img', 'fex', 'bin'] },
+          { name: '所有文件', extensions: ['*'] },
+        ],
       });
       if (typeof loader !== 'string' || !active.current) return;
       const c = await invokeCommand('workbench_firmware_download', {

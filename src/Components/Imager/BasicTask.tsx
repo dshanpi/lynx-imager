@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { invokeCommand, subscribeEvent, type WorkbenchTaskHistory } from '../../Platform/IPC';
 import { formatErrorMessage } from '../../Utils';
+import { retainEvidence } from './writeEvidence';
 
 type Details = NonNullable<WorkbenchTaskHistory['details']>;
 type View = {
@@ -9,6 +10,7 @@ type View = {
   phase: string;
   details: Details;
   logs: string[];
+  evidenceLines: string[];
   logVersion: number;
   error: string;
   startedAt: number | null;
@@ -21,6 +23,7 @@ const initial = (id: string): View => ({
   phase: '',
   details: {},
   logs: [],
+  evidenceLines: [],
   logVersion: 0,
   error: '',
   startedAt: null,
@@ -81,18 +84,17 @@ export function useBasicTask(id: string) {
       sequence++;
       if (ended(event.status)) finalSeen = true;
       update((old) => {
-        const progress =
-          event.total && event.current != null
-            ? Math.min(100, Math.max(0, (event.current / event.total) * 100))
-            : null;
+        // A sub-operation can report its own current/total. Overall progress belongs to flash telemetry.
         return {
           ...old,
           status: ended(old.status) ? old.status : event.status || old.status,
           phase: event.phase || old.phase,
           error: event.status === 'failed' ? event.message : old.error,
           logs: event.message ? [...old.logs.slice(-79), event.message] : old.logs,
+          evidenceLines: event.message
+            ? retainEvidence(old.evidenceLines, [event.message])
+            : old.evidenceLines,
           logVersion: old.logVersion + (event.message ? 1 : 0),
-          details: progress == null ? old.details : { ...old.details, progressPct: progress },
         };
       });
     })
@@ -149,6 +151,7 @@ export function useBasicTask(id: string) {
                 ? { ...old.details, ...recordDetails }
                 : { ...recordDetails, ...old.details },
               logs,
+              evidenceLines: retainEvidence(old.evidenceLines, tail ?? []),
               logVersion: old.logVersion + logs.length - overlap,
             };
           });

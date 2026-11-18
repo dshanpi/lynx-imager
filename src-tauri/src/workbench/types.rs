@@ -25,7 +25,20 @@ pub fn platform_spec(value: &str) -> Option<&'static PlatformSpec> {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct DfuAlternate {
+    pub number: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interface: Option<u8>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub configuration: Option<u8>,
+    pub name: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FlasherDeviceCandidate {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub dfu_alternates: Vec<DfuAlternate>,
     pub key: String,
     pub flasher_kind: String,
     pub bus: u16,

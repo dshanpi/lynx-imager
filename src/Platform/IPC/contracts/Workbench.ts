@@ -307,7 +307,37 @@ export interface LinuxDeviceOverview {
   ipAddresses: string[];
 }
 
+export type WorkbenchVendorRoute =
+  | 'rk-update'
+  | 'rk-emmc'
+  | 'nxp-uuu'
+  | 'nxp-configured'
+  | 'st-dfuse'
+  | 'st-raw'
+  | 'k230-kdimage'
+  | 'k230-raw';
+export interface VendorFileReference {
+  path: string;
+  bytes: number;
+  sha256: string;
+}
+export interface WorkbenchVendorInspection {
+  dependencies: VendorFileReference[];
+  route: WorkbenchVendorRoute;
+  path: string;
+  bytes: number;
+  format: string;
+  items: Array<{ label: string; detail: string; ok: boolean }>;
+  blockers: string[];
+  alternates: number[];
+}
 export interface WorkbenchFlasherDevice {
+  dfuAlternates?: Array<{
+    number: number;
+    name: string;
+    interface?: number;
+    configuration?: number;
+  }>;
   key: string;
   flasherKind: string;
   bus: number;
@@ -625,6 +655,10 @@ export interface WorkbenchCommandMap {
   >;
   workbench_cancel_task: IpcCommandSpec<{ taskId: string }>;
   workbench_test_flasher: IpcCommandSpec<{ kind: string; path: string }, string>;
+  imager_inspect_vendor_image: IpcCommandSpec<
+    { route: WorkbenchVendorRoute; path: string },
+    WorkbenchVendorInspection
+  >;
   workbench_scan_flasher_devices: IpcCommandSpec<
     { kind: string; path: string },
     WorkbenchFlasherDevice[]
@@ -636,6 +670,15 @@ export interface WorkbenchCommandMap {
       options?: {
         systemType: 'vendor' | 'mainline';
         loaderPath?: string;
+        vendorSetup?: {
+          route: WorkbenchVendorRoute;
+          medium?: string;
+          alt?: number;
+          address?: string;
+          targetKey?: string;
+          eraseConfirmed?: boolean;
+          dependencies?: VendorFileReference[];
+        };
         mainlineRoute?: 'mainline_nand' | 'mainline_emmc' | 'mainline_spinor' | 'rockchip_raw_emmc';
         mode?: 'full_erase' | 'partition' | 'partition_erase';
         verify?: boolean;

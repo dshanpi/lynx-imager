@@ -13,7 +13,8 @@ if (!/^v\d+\.\d+(?:\.\d+)?(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/.test(tag)) {
 const numericTag = tag.slice(1);
 const [core, prerelease] = numericTag.split('-', 2);
 const normalizedCore = core.split('.').length === 2 ? `${core}.0` : core;
-const expected = prerelease ? `${normalizedCore}-${prerelease}` : normalizedCore;
+const suffix = prerelease?.replace(/^rc(\d+)$/, 'rc.$1');
+const expected = suffix ? `${normalizedCore}-${suffix}` : normalizedCore;
 const packageVersion = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')).version;
 const packageLock = JSON.parse(readFileSync(join(repoRoot, 'package-lock.json'), 'utf8'));
 const tauriVersion = JSON.parse(

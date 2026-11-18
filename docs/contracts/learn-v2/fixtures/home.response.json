@@ -1,0 +1,21 @@
+{
+  "data": {
+    "enrolled": [
+      {
+        "enrollmentId": "enr_test",
+        "courseId": "course_linux_app_demo",
+        "releaseId": "release_demo_1",
+        "manifestSha256": "3ddaf4e05f0d9cdf1b8208fc04d0dc19d6029e55497bf2e961e3c27b7c3fae82",
+        "title": "Linux应用开发：第一个程序（模拟示例）",
+        "version": "1.0.0",
+        "summary": "跨语言签名测试课程，不是正式内容",
+        "track": "linux_app",
+        "currentUnitId": "unit_hello"
+      }
+    ]
+  },
+  "meta": {
+    "requestId": "req_test_vector",
+    "serverTime": "2026-10-08T00:00:00Z"
+  }
+}

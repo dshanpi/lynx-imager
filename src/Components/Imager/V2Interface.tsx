@@ -1,17 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { getCurrentWebview } from '@tauri-apps/api/webview';
-import { LynxIcon, type LynxIconName } from '../../CoreUI';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { LynxIcon } from '../../CoreUI';
 import { invokeCommand, type WorkbenchDevice } from '../../Platform/IPC';
 import { subscribeUsbHotplug } from '../../Platform/IPC/Events';
 import type { WorkbenchFlasherDevice } from '../../Platform/IPC/contracts/Workbench';
 import { formatErrorMessage } from '../../Utils';
-import {
-  EMPTY_LINUX_DEVICE,
-  LINUX_CHIP_VENDORS,
-  formatLinuxBytes,
-} from '../Workbench/linuxWorkbenchModel';
+import { EMPTY_LINUX_DEVICE, LINUX_CHIP_VENDORS } from '../Workbench/linuxWorkbenchModel';
 import { uniqueUsbTarget } from './BasicPlan';
-import { V2BoardArt } from './V2Catalog';
 import './V2Interface.css';
 
 export interface V2InterfaceProps {
@@ -25,14 +19,8 @@ export interface V2InterfaceProps {
     loaderLabel?: string;
   };
   boardName: string;
-  imagePath: string;
-  imageSize: number | null;
-  imageVerified: boolean;
-  imageSha256?: string;
-  loaderPath: string;
-  loaderReady: boolean;
-  onChooseLoader: () => void;
-  onDropLoader: (path: string) => void;
+  routeLabel: string;
+  vendorTarget?: ReactNode;
   selectedDeviceId: number | null;
   fixedDeviceId?: number | null;
   onTargetChange: (profile: WorkbenchDevice | null, usb: WorkbenchFlasherDevice | null) => void;
@@ -41,7 +29,6 @@ export interface V2InterfaceProps {
   active?: boolean;
 }
 
-const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
 const usbId = (usb: WorkbenchFlasherDevice) =>
   [usb.vid, usb.pid].map((n) => n.toString(16).padStart(4, '0')).join(':');
 const usbLocation = (usb: WorkbenchFlasherDevice) => `USB ${usbId(usb)} · ${usb.key}`;
@@ -62,62 +49,11 @@ const matches = (
   }
 };
 
-function SummaryRow({ icon, label, value }: { icon: LynxIconName; label: string; value: string }) {
-  return (
-    <div className="vi-fact">
-      <dt>
-        <LynxIcon name={icon} size={16} />
-        {label}
-      </dt>
-      <dd title={value}>{value}</dd>
-    </div>
-  );
-}
-
-function CheckRow({
-  icon,
-  title,
-  help,
-  state,
-  value,
-}: {
-  icon: LynxIconName;
-  title: string;
-  help: string;
-  state: string;
-  value: string;
-}) {
-  return (
-    <li>
-      <span className="vi-check-icon">
-        <LynxIcon name={icon} size={20} />
-      </span>
-      <span>
-        <strong>{title}</strong>
-        <small>{help}</small>
-      </span>
-      <span className={'vi-verdict' + (state === '通过' ? ' ok' : '')}>
-        <LynxIcon name={state === '通过' ? 'check-circle' : 'clock'} size={16} />
-        {state}
-      </span>
-      <span className="vi-value" title={value}>
-        {value}
-      </span>
-    </li>
-  );
-}
-
 export function V2Interface({
   board,
   boardName,
-  imagePath,
-  imageSize,
-  imageVerified,
-  imageSha256,
-  loaderPath,
-  loaderReady,
-  onChooseLoader,
-  onDropLoader,
+  routeLabel,
+  vendorTarget,
   selectedDeviceId,
   fixedDeviceId,
   onTargetChange,
@@ -136,14 +72,12 @@ export function V2Interface({
   const [binding, setBinding] = useState(false);
   const [error, setError] = useState('');
   const [help, setHelp] = useState(false);
-  const [routeHelp, setRouteHelp] = useState(false);
   const sequence = useRef(0);
   const bindLock = useRef(false);
-  const callbacks = useRef({ onTargetChange, onDetected, onDropLoader });
+  const callbacks = useRef({ onTargetChange, onDetected });
   useEffect(() => {
-    callbacks.current = { onTargetChange, onDetected, onDropLoader };
-  }, [onTargetChange, onDetected, onDropLoader]);
-  const dropZone = useRef<HTMLDivElement>(null);
+    callbacks.current = { onTargetChange, onDetected };
+  }, [onTargetChange, onDetected]);
   const allProfiles = useCallback(
     () => invokeCommand('workbench_list_devices', undefined, { timeoutMs: 8000 }),
     []
@@ -233,40 +167,6 @@ export function V2Interface({
     };
   }, [active, refresh, board.id, boardName]);
 
-  useEffect(() => {
-    if (!active || !board.needsLoader) return;
-    let cancelled = false;
-    let release: (() => void) | undefined;
-    try {
-      void getCurrentWebview()
-        .onDragDropEvent(({ payload }) => {
-          if (cancelled || payload.type !== 'drop' || payload.paths.length !== 1) return;
-          const area = dropZone.current?.getBoundingClientRect();
-          if (!area || !area.width) return;
-          const { x, y } = payload.position;
-          const ratio = window.devicePixelRatio;
-          if (
-            x / ratio >= area.left &&
-            x / ratio < area.right &&
-            y / ratio >= area.top &&
-            y / ratio < area.bottom
-          )
-            callbacks.current.onDropLoader(payload.paths[0]);
-        })
-        .then((unlisten) => {
-          if (cancelled) unlisten();
-          else release = unlisten;
-        })
-        .catch(() => {});
-    } catch {
-      /* Native file selection remains available. */
-    }
-    return () => {
-      cancelled = true;
-      release?.();
-    };
-  }, [active, board.needsLoader]);
-
   if (!active) return null;
   const detecting = loading || (!scanned && !error);
   const usb = found.find((d) => d.key === picked);
@@ -326,43 +226,9 @@ export function V2Interface({
   }
 
   const rk = board.chipVendor === 'rockchip';
-  const loaderLabel = rk ? 'RAM Loader' : 'RAM FES Loader';
-  const missingLoader = board.needsLoader && !loaderReady;
-  const file = fileName(imagePath);
-  const fileSize = imageSize === null ? '尚未读取' : formatLinuxBytes(imageSize);
   const choices = usb ? deviceMatches(usb).filter(allowed) : [];
   const customPaths = profilePaths(profiles).filter(Boolean);
   const hasTarget = !!profile && !!usb && modeOk(usb);
-  const status = detecting
-    ? '正在检测设备'
-    : missingLoader
-      ? '等待补齐 Loader'
-      : error
-        ? '需要检查'
-        : usb && !modeOk(usb)
-          ? '设备模式不匹配'
-          : hasTarget
-            ? '设备已就绪'
-            : '等待选择设备';
-  const hint = missingLoader
-    ? `请选择与 ${boardName} 匹配的 ${loaderLabel} 文件。`
-    : hasTarget
-      ? '可继续核对本次烧录参数。'
-      : `请连接目标板，并按板型要求进入 ${board.mode} 模式。`;
-  const route = rk
-    ? 'Rockchip 完整 eMMC 镜像'
-    : board.id === 'f101'
-      ? '全志 SPI NOR 物理写入'
-      : platform.label + ' 厂商镜像';
-  const verify = rk
-    ? '完整写入后校验'
-    : board.id === 'f101'
-      ? '独立物理回读'
-      : board.chipVendor === 'allwinner'
-        ? '写入后校验'
-        : '按已保存的厂商配置';
-  const lastAction =
-    board.chipVendor === 'allwinner' || rk ? '校验后发送重启指令' : '按已保存的厂商配置';
   const renderDevices = (
     <section className={'vi-box vi-devices' + (rk ? ' vi-device-rk' : '')} aria-label="检测设备">
       <div className="vi-bar">
@@ -516,208 +382,76 @@ export function V2Interface({
     </section>
   );
 
+  const title = hasTarget
+    ? '核对已连接的下载设备'
+    : found.length > 1
+      ? '选定这次要写入的物理端口'
+      : '连接开发板的 USB 下载口';
   return (
-    <div className={'vi-grid' + (rk ? ' vi-rk' : '')}>
-      <section className="vi-main" aria-label="设备连接">
-        <header className="vi-heading">
-          <h2>
-            <LynxIcon name={rk ? 'plug' : 'task'} size={24} />
-            设备连接
-          </h2>
-          <p>
-            {rk
-              ? '连接设备并配置当前路线所需的接口、模式和 Loader 文件。'
-              : `连接开发板并选择目标设备，系统将自动识别设备模式（${board.mode}）。`}
-          </p>
-        </header>
+    <section className="r3-connect" aria-label="设备连接">
+      <header className="r3-heading">
+        <h2>
+          <LynxIcon name="plug" size={20} />
+          {title}
+        </h2>
+        <p>
+          {found.length > 1
+            ? '请按实际接线选择目标；相同的 VID 和 PID 可以对应不同开发板。'
+            : '使用开发板的 USB 下载口，按板级说明进入下载模式后匹配实际端口。'}
+        </p>
+      </header>
+      <div className="r3-wire">
+        <span>
+          <LynxIcon name="desktop" size={24} />
+          <strong>运行 LYNX 的电脑</strong>
+        </span>
+        <span className="r3-wire-path">
+          {usb
+            ? usb.key
+            : detecting
+              ? '正在枚举'
+              : found.length
+                ? found.length + ' 个候选端口'
+                : '等待设备'}
+        </span>
+        <span>
+          <LynxIcon name="board" size={24} />
+          <strong>
+            {boardName} · {board.mode}
+          </strong>
+        </span>
+      </div>
+      <div className="r3-connect-columns">
         {renderDevices}
-        {board.needsLoader && (
-          <>
-            <section className="vi-box vi-route">
-              <h3>
-                <LynxIcon name="box" size={20} />
-                烧录路线与 Loader 配置
-              </h3>
-              <div>
-                <label>
-                  平台 / 路线<output>{route}</output>
-                </label>
-                <label>
-                  目标存储<output>{board.storage}</output>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setRouteHelp(!routeHelp)}
-                  aria-expanded={routeHelp}
-                >
-                  <LynxIcon name="book" size={16} />
-                  路线说明
-                </button>
-              </div>
-              {routeHelp && (
-                <p className="vi-route-note">
-                  {rk
-                    ? '使用板型匹配的完整 eMMC 镜像与 RAM Loader。Maskrom 模式下加载至内存，已在 Loader 模式时沿用当前会话。写入会擦除目标 eMMC。'
-                    : '完整镜像从 SPI NOR 物理起始位置写入。独立 FES Loader 仅加载至 RAM，物理回读和启动结果由后端分别报告。'}
-                </p>
-              )}
-            </section>
-            <section className={'vi-box vi-loader' + (missingLoader ? ' missing' : '')}>
-              <h3>
-                <LynxIcon name={missingLoader ? 'warning' : 'check-circle'} size={20} />
-                {loaderLabel} <em>（必填）</em>
-              </h3>
-              <p>
-                {missingLoader
-                  ? `当前路线需要匹配的 ${loaderLabel}，补齐文件后才能开始预检或烧录。`
-                  : `已读取 ${fileName(loaderPath)}`}
-              </p>
-              <div ref={dropZone} className="vi-drop">
-                <LynxIcon name="upload" size={24} />
-                <span>
-                  {loaderReady ? fileName(loaderPath) : `将 ${loaderLabel} 文件拖拽到此处，或`}
-                </span>
-                <button type="button" onClick={onChooseLoader}>
-                  <LynxIcon name="folder" size={16} />
-                  {loaderPath ? '重新选择' : '选择文件'}
-                </button>
-                <small>
-                  {rk ? '选择板型对应的 Rockchip Loader' : '使用与该板匹配的独立 RAM FES Loader'}
-                </small>
-              </div>
-            </section>
-          </>
-        )}
-        {(!rk || loaderReady) && (
-          <section className="vi-box vi-checks">
-            <h3>
-              <b className="vi-number">2</b>预检（只读检查）
-            </h3>
-            <ul>
-              <CheckRow
-                icon="document"
-                title="镜像读取"
-                help="检查文件可读性与实际大小"
-                state={imageSize ? '通过' : '待检查'}
-                value={`${file} · ${fileSize}`}
-              />
-              <CheckRow
-                icon="board"
-                title="板型兼容"
-                help="核对镜像与目标板的适配依据"
-                state={imageVerified ? '通过' : '待核对'}
-                value={
-                  imageVerified
-                    ? `发布清单 · ${boardName}`
-                    : `本地镜像，请核对 ${boardName} 的适配说明`
-                }
-              />
-              <CheckRow
-                icon="plug"
-                title="目标设备"
-                help="检查 USB 身份、模式与设备绑定"
-                state={hasTarget ? '通过' : '待选择'}
-                value={usb ? usbLocation(usb) : '请选择实际 USB 目标'}
-              />
-              <CheckRow
-                icon="box"
-                title="后端路线"
-                help="核对存储、接口与必要文件"
-                state={missingLoader ? '缺文件' : '待复核'}
-                value={route}
-              />
-            </ul>
-            <p className="vi-info">
-              <LynxIcon name="info" size={16} />
-              {hasTarget && !missingLoader ? '目标已选择，继续后将复核接口与文件。' : hint}
-            </p>
-          </section>
-        )}
-      </section>
-      <aside className="vi-side">
-        <details open className="vi-box vi-summary">
-          <summary>
-            <LynxIcon name="list-check" size={20} />
-            {rk ? '任务详情' : '任务摘要'}
-          </summary>
-          {!rk && (
-            <div className="vi-board">
-              <V2BoardArt id={board.id} name={boardName} />
-              <div>
-                <strong>{boardName}</strong>
-                <small>{platform.label}</small>
-              </div>
-            </div>
-          )}
-          <dl>
-            {rk && (
-              <SummaryRow
-                icon="board"
-                label="目标设备"
-                value={usb ? `${boardName} · ${usbId(usb)}` : boardName}
-              />
-            )}
-            <SummaryRow icon="desktop" label={rk ? '镜像文件' : '系统镜像'} value={file} />
-            {rk && imageSha256 && <SummaryRow icon="shield" label="SHA-256" value={imageSha256} />}
-            {!rk && (
-              <>
-                <SummaryRow icon="document" label="大小" value={fileSize} />
-                <SummaryRow
-                  icon="board"
-                  label="目标设备"
-                  value={profile?.name || (usb ? usb.chip : '等待选择')}
-                />
-                <SummaryRow
-                  icon="plug"
-                  label="USB 身份"
-                  value={usb ? usbLocation(usb) : '等待选择'}
-                />
-                <SummaryRow
-                  icon="terminal"
-                  label="设备模式"
-                  value={usb ? modeLabel(usb.mode) : '待检测'}
-                />
-              </>
-            )}
-            <SummaryRow icon="database" label="目标存储" value={board.storage} />
-            <SummaryRow
-              icon={rk ? 'shield' : 'task'}
-              label={rk ? '校验策略' : '结束动作'}
-              value={rk ? verify : lastAction}
-            />
-          </dl>
-        </details>
-        <section className="vi-box vi-tips">
-          <h3>
-            <LynxIcon name="info" size={20} />
-            {rk ? '当前状态' : '提示'}
-          </h3>
-          {rk ? (
-            <>
-              <strong className={'vi-badge' + (hasTarget && !missingLoader ? ' ready' : '')}>
-                {status}
-              </strong>
-              <p>{hint}</p>
-            </>
+        <section className="r3-connect-facts">
+          <h3>{usb ? '连接详情' : '如何连接'}</h3>
+          {usb ? (
+            <dl>
+              {[
+                ['物理端口', usb.key],
+                ['VID : PID', usbId(usb)],
+                ['实际模式', modeLabel(usb.mode)],
+                ['板卡配置', profile?.name || '等待绑定'],
+                ['本次路线', routeLabel],
+                ['目标存储', board.storage + ' · 配置值'],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
           ) : (
-            <>
-              <ul>
-                <li>当前为只读检查，尚未开始擦写。</li>
-                <li>烧录将覆盖目标存储内容，请先备份重要数据。</li>
-                <li>如检测不到设备，请检查 USB 连接、供电和设备模式。</li>
-              </ul>
-              <button
-                type="button"
-                className="vi-text-action"
-                onClick={() => setHelp(!help)}
-                aria-expanded={help}
-              >
-                查看连接与模式说明
-              </button>
-            </>
+            <ol>
+              <li>使用数据线连接开发板的 USB 下载口。</li>
+              <li>按板级说明进入 {board.mode} 模式并重新检测。</li>
+              <li>选择实际端口。调试串口可用于稍后观察启动。</li>
+            </ol>
           )}
         </section>
-      </aside>
-    </div>
+      </div>
+      {vendorTarget}
+      {hasTarget && <p className="vi-info">提交前将再次检查文件、接口和已保存的设备绑定。</p>}
+    </section>
   );
 }

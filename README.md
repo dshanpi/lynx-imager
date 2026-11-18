@@ -6,9 +6,15 @@ LYNX Imager 是面向开发板系统镜像烧录的开源桌面软件。它用�
 
 ## 工作区
 
-- **烧录系统**：选择板子和系统，连接设备，确认后写入并校验。
+- **烧录系统**：按厂商、系列、芯片和目标存储选择路线，再选镜像、连接设备、确认写入并校验。
 - **高级功能**：打开现有专业工作台，配置 SPI NOR、NAND、eMMC、Loader、物理回读和结束动作。
 - **连接 AI**：进入现有 AI 配置与监督中心；AI 只能提出动作，设备作用域、门禁和人工确认由 LYNX 决定。
+
+## 安装与更新
+
+Windows x64 用户下载 NSIS 安装包，Ubuntu amd64 用户下载 Debian 安装包。安装包、独立 OTA 签名和 SHA-256 校验值随版本提供。[GitHub Releases](https://github.com/dshanpi/lynx-imager/releases)
+
+应用启动后会检查更新，也可在设置中手动检查。发现较高版本后，经用户确认下载完整包，并用 Imager 内置公钥校验。Ubuntu 安装 Debian 更新时可能要求系统授权。[发布门禁](docs/engineering/imager-release.md)
 
 ## 开发
 

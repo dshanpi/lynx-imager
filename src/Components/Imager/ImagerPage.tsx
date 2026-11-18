@@ -1,13 +1,12 @@
+import { V2BoardPicker } from './TargetPicker';
+import { profiles, type TargetChoice } from './targetCatalog';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { open } from '@tauri-apps/plugin-dialog';
 import {
   ArrowRight20Regular,
   CheckmarkCircle20Regular,
-  ClipboardTaskListLtr24Regular,
-  DeveloperBoard24Regular,
   Flash24Regular,
-  Info20Regular,
   Layer24Regular,
   UsbPlug24Regular,
 } from '@fluentui/react-icons';
@@ -21,13 +20,26 @@ import { formatErrorMessage } from '../../Utils';
 import { linuxVendorLabel } from '../Workbench/linuxWorkbenchModel';
 import { ended, stateName, useBasicTask } from './BasicTask';
 import { flashOptions, uniqueUsbTarget, type BasicRoute } from './BasicPlan';
-import { V2BoardArt, V2BoardPicker, V2SystemPicker, type V2ImageSource } from './V2Catalog';
+import { V2BoardArt, V2SystemPicker, type V2ImageSource } from './V2Catalog';
 import { V2Interface } from './V2Interface';
-import { V2Write } from './V2Write';
+import { V2Write, WritePreflightFailure, type PreflightContext } from './V2Write';
+import { VendorRoutePanel, VendorTargetPanel } from './VendorRoutePanel';
+import { recheckImageEvidence, type ImageReviewEvidence } from './imageReviewEvidence';
+import {
+  defaultVendorSelection,
+  inspectVendorImage,
+  vendorNeedsLoader,
+  vendorGate,
+  vendorFlashOptions,
+  type VendorInspection,
+  type VendorSelection,
+} from './vendorPlan';
 import './ImagerPage.css';
+import './FlashWorkspace.css';
 
 type BasicStep = 1 | 2 | 3 | 4;
-const STEPS = ['选择板子', '选择系统', '设备连接', '烧写系统'] as const;
+class PreSubmitError extends Error {}
+const STEPS = ['选择烧录目标', '选择系统', '设备连接', '烧写系统'] as const;
 type BoardPreset = {
   id: string;
   name: string;
@@ -59,6 +71,16 @@ const BOARD_PRESETS: BoardPreset[] = [
     storage: 'SPI NOR',
     mode: 'FEL',
     route: 'mainline_spinor',
+    needsLoader: true,
+  },
+  {
+    id: 't153-emmc',
+    name: 'T153 Omnigate',
+    chipVendor: 'allwinner',
+    chip: '全志 · T153',
+    storage: 'eMMC',
+    mode: 'FEL',
+    route: 'mainline_emmc',
     needsLoader: true,
   },
   {
@@ -107,7 +129,11 @@ const BOARD_PRESETS: BoardPreset[] = [
 type FileIdentity = { sizeBytes: number; sha256: string };
 type Files = { image: FileIdentity; loader: FileIdentity | null };
 type Target = { device: WorkbenchDevice; usb: WorkbenchFlasherDevice };
-type Preflight = Target & { files: Files; ticket: FirmwareConfirmation | null };
+type Preflight = Target & {
+  files: Files;
+  ticket: FirmwareConfirmation | null;
+  vendorEvidence: string;
+};
 interface ImagerPageProps {
   active: boolean;
   onOpenAdvancedWorkbench: () => void;
@@ -199,7 +225,17 @@ export function ImagerPage({
 }: ImagerPageProps) {
   const [step, setStep] = useState<BasicStep>(1);
   const [boardId, setBoardId] = useState<string | null>(null);
+  const [choice, setChoice] = useState<TargetChoice | null>(null);
   const [rkBoard, setRkBoard] = useState('');
+  const [routeOverride, setRouteOverride] = useState<BasicRoute | null>(null);
+  const [selection, setSelection] = useState<VendorSelection | null>(null);
+  const [reviewReady, setReviewReady] = useState(false);
+  const reviewEvidence = useRef<ImageReviewEvidence | null>(null);
+  const observeReview = useCallback((ready: boolean, evidence?: ImageReviewEvidence) => {
+    reviewEvidence.current = ready ? (evidence ?? null) : null;
+    setReviewReady(ready);
+  }, []);
+  const [interfaceRevision, refreshInterface] = useState(0);
   const [source, setSource] = useState<V2ImageSource>('catalog');
   const [imagePath, setImagePath] = useState('');
   const [loaderPath, setLoaderPath] = useState('');
@@ -214,12 +250,52 @@ export function ImagerPage({
   const [count, setCount] = useState<number | null>(null);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
+  const [failedPreflight, setFailedPreflight] = useState<PreflightContext | null>(null);
+  const reviewedContext = useRef<PreflightContext | null>(null);
   const lock = useRef(false);
   const reviewingUsb = useRef<WorkbenchFlasherDevice | null>(null);
   const [watchReady, setWatchReady] = useState(false);
   const dropRef = useRef<HTMLDivElement>(null);
-  const board = BOARD_PRESETS.find((b) => b.id === boardId);
-  const boardName = (board?.id === 'rk3588' && rkBoard) || board?.name || '';
+  const preset = BOARD_PRESETS.find((b) => b.id === boardId);
+  const routeKey = selection
+    ? selection.route === 'rk-emmc'
+      ? 'rockchip_raw_emmc'
+      : 'vendor'
+    : (routeOverride ?? preset?.route);
+  const board =
+    preset && routeKey
+      ? {
+          ...preset,
+          route: routeKey,
+          needsLoader: selection ? vendorNeedsLoader(selection.route) : routeKey !== 'vendor',
+          storage: choice?.medium ?? preset.storage,
+        }
+      : undefined;
+  const boardName = rkBoard || board?.name || '';
+  const vendorRoute = selection?.route;
+  const [inspected, setInspected] = useState<{
+    key: string;
+    value: VendorInspection | null;
+    error: string;
+  } | null>(null);
+  const inspectionKey = JSON.stringify([vendorRoute, imagePath, revision]);
+  useEffect(() => {
+    if (!vendorRoute || !imagePath) return;
+    let current = true;
+    inspectVendorImage(vendorRoute, imagePath)
+      .then((value) => {
+        if (current) setInspected({ key: inspectionKey, value, error: '' });
+      })
+      .catch((error) => {
+        if (current)
+          setInspected({ key: inspectionKey, value: null, error: formatErrorMessage(error) });
+      });
+    return () => {
+      current = false;
+    };
+  }, [vendorRoute, imagePath, inspectionKey]);
+  const inspection = inspected?.key === inspectionKey ? inspected.value : null;
+  const inspectionError = inspected?.key === inspectionKey ? inspected.error : '';
   const image = useFingerprint(imagePath, revision);
   const loader = useFingerprint(loaderPath, revision);
   const imageValid =
@@ -230,9 +306,17 @@ export function ImagerPage({
   const terminal = !!taskId && task.id === taskId && ended(task.status);
   const running = !!taskId && !terminal;
   const locked = !!busy || running;
-  const hasBoard = !!board && (board.id !== 'rk3588' || !!rkBoard);
-  const statusText = taskId ? stateName(task.status) : busy || (target ? '等待确认' : '就绪');
-  const statusTone = terminal ? task.status : busy || running ? 'working' : undefined;
+  const hasBoard = !!choice && !!board && (board.chipVendor === 'allwinner' || !!rkBoard.trim());
+  const statusText = taskId
+    ? stateName(task.status)
+    : busy || (failedPreflight ? '未提交烧录' : target ? '等待确认' : '就绪');
+  const statusTone = terminal
+    ? task.status
+    : failedPreflight
+      ? 'failed'
+      : busy || running
+        ? 'working'
+        : undefined;
   const statusTarget = selected?.device.name || boardName || '未选择板子';
   const watchTarget = active && step >= 3 && !taskId;
   // Keep the same subscription from interface detection through the confirmation drawer.
@@ -262,6 +346,7 @@ export function ImagerPage({
       setCount(null);
       setStep(3);
       setError('目标 USB 已断开，请重新选择设备并预检。');
+      setFailedPreflight(reviewedContext.current);
     })
       .then((stop) => {
         if (!current) stop();
@@ -283,12 +368,12 @@ export function ImagerPage({
     onStatusChange?.({ target: statusTarget, task: statusText });
   }, [statusTarget, statusText, onStatusChange]);
   useEffect(() => {
-    if (!active || step !== 2 || board?.id !== 'f101' || source !== 'catalog') return;
+    if (!active || step !== 2 || preset?.id !== 'f101' || source !== 'catalog') return;
     let current = true;
     invokeCommand('workbench_list_devices', undefined, { timeoutMs: 8000 })
       .then((rows) => {
         if (current)
-          setDevices(rows.filter((d) => d.id != null && d.chipVendor === board.chipVendor));
+          setDevices(rows.filter((d) => d.id != null && d.chipVendor === preset.chipVendor));
       })
       .catch((e) => {
         if (current) setError(formatErrorMessage(e));
@@ -296,25 +381,33 @@ export function ImagerPage({
     return () => {
       current = false;
     };
-  }, [active, board, step, source]);
+  }, [active, preset, step, source]);
   function invalidate() {
     reviewingUsb.current = null;
+    reviewedContext.current = null;
     setTarget(null);
     setConfirmed(false);
     setError('');
+    setFailedPreflight(null);
   }
   function clearFiles() {
+    setReviewReady(false);
     setImagePath('');
     setLoaderPath('');
     setCandidate(null);
   }
-  function selectBoard(id: string) {
-    if (boardId === id) return;
+  function chooseHardware(next: TargetChoice | null) {
+    if (choice?.model === next?.model && choice?.medium === next?.medium) return;
+    const id = next ? profiles[next.model]?.preset ?? null : null;
+    setChoice(next);
     invalidate();
     clearFiles();
     setBoardId(id);
+    const vendor = BOARD_PRESETS.find((p) => p.id === id)?.chipVendor;
+    setSelection(vendor && vendor !== 'allwinner' ? defaultVendorSelection(vendor) : null);
+    setRouteOverride(null);
     setRkBoard('');
-    setSource('catalog');
+    setSource(id === 'f101' ? 'catalog' : 'local');
     setDevices([]);
     setCatalogId(null);
     setSelected(null);
@@ -335,6 +428,7 @@ export function ImagerPage({
     setSource(value);
   }
   const loadImage = useCallback((path: string) => {
+    setReviewReady(false);
     setCandidate(null);
     setSource('local');
     setImagePath(path.trim());
@@ -347,8 +441,33 @@ export function ImagerPage({
   function loadLoader(path: string) {
     if (candidate) return;
     setLoaderPath(path.trim());
+    setReviewReady(false);
     recheck((r) => r + 1);
     invalidate();
+  }
+  function changeRoute(next: BasicRoute) {
+    if (candidate || next === routeKey) return;
+    setRouteOverride(next);
+    setReviewReady(false);
+    setLoaderPath('');
+    setSelected(null);
+    invalidate();
+  }
+  function useImageAsLoader(next: BasicRoute) {
+    if (candidate || !imagePath) return;
+    setRouteOverride(next);
+    setLoaderPath(imagePath);
+    loadImage('');
+  }
+  function changeVendor(next: VendorSelection) {
+    if (selection?.route !== next.route) {
+      clearFiles();
+      setSelected(null);
+    }
+    setSelection(next);
+    setTarget(null);
+    setConfirmed(false);
+    setError('');
   }
   async function chooseFile(which: 'image' | 'loader') {
     const result = await open({
@@ -360,7 +479,7 @@ export function ImagerPage({
           ? [
               {
                 name: '系统镜像',
-                extensions: ['img', 'bin', 'xz', 'gz', 'wic', 'dfu', 'tsv', 'uuu', 'iso'],
+                extensions: ['img', 'bin', 'xz', 'gz', 'wic', 'dfu', 'tsv', 'uuu', 'lst', 'kdimg'],
               },
               { name: '所有文件', extensions: ['*'] },
             ]
@@ -404,6 +523,8 @@ export function ImagerPage({
     invalidate();
     setSelected(null);
     setSource('catalog');
+    setRouteOverride('mainline_spinor');
+    setReviewReady(false);
     setCandidate(c);
     setCatalogId(c.deviceId);
     setImagePath(c.imagePath);
@@ -413,6 +534,11 @@ export function ImagerPage({
   const selectTarget = useCallback(
     (device: WorkbenchDevice | null, usb: WorkbenchFlasherDevice | null) => {
       if (lock.current) return;
+      setSelection((previous) =>
+        previous?.targetKey && previous.targetKey !== usb?.key
+          ? { ...previous, targetKey: '', medium: '', alt: '', address: '', eraseConfirmed: false }
+          : previous
+      );
       setSelected(device && usb ? { device, usb } : null);
       setTarget(null);
       setConfirmed(false);
@@ -432,9 +558,16 @@ export function ImagerPage({
     lock.current = true;
     setBusy(label);
     setError('');
+    setFailedPreflight(null);
     try {
       await fn();
     } catch (e) {
+      if (label === '只读预检中' || e instanceof PreSubmitError) {
+        reviewingUsb.current = null;
+        setFailedPreflight(reviewedContext.current);
+        setSelected(null);
+        setCount(null);
+      }
       setError(formatErrorMessage(e));
       setConfirmed(false);
     } finally {
@@ -443,9 +576,10 @@ export function ImagerPage({
     }
   }
   async function inspectFiles(): Promise<Files> {
-    if (!image?.value || !board || (board.needsLoader && !loader?.value))
+    if (!reviewReady || !image?.value || !board || (board.needsLoader && !loader?.value))
       throw new Error('请先核对镜像和所需的 Loader。');
     const fresh = await identities(imagePath, board.needsLoader ? loaderPath : '');
+    await recheckImageEvidence(reviewEvidence.current);
     if (
       !fresh.image.sizeBytes ||
       fresh.image.sha256 !== image.value.sha256 ||
@@ -463,13 +597,35 @@ export function ImagerPage({
     }
     return fresh;
   }
+  async function checkVendor(targetUsb: WorkbenchFlasherDevice, profile: WorkbenchDevice) {
+    if (!selection) return '';
+    const fresh = await inspectVendorImage(selection.route, imagePath);
+    const reason = vendorGate(selection, fresh, targetUsb, 'target', profile);
+    if (reason) throw new Error(reason);
+    const signature = JSON.stringify(fresh);
+    if (signature !== JSON.stringify(inspection))
+      throw new Error('厂商镜像或依赖文件已变化，请返回选择系统并重新分析。');
+    return signature;
+  }
   async function preflight() {
     if (!selected?.device.id || !board || !watchReady) return;
     invalidate();
     const reviewing = selected.usb;
+    reviewedContext.current = {
+      board: boardName,
+      device: selected.device.name,
+      route,
+      storage: board.storage,
+      imagePath,
+      loaderPath: board.needsLoader ? loaderPath : '',
+      usb: reviewing.key,
+      usbId: [reviewing.vid, reviewing.pid].map((v) => v.toString(16).padStart(4, '0')).join(':'),
+      mode: reviewing.mode,
+    };
     reviewingUsb.current = reviewing;
     const files = await inspectFiles();
     const fresh = await checkTarget(selected.device);
+    const vendorEvidence = await checkVendor(fresh.usb, fresh.device);
     if (!sameUsb(selected.usb, fresh.usb)) {
       setSelected(null);
       throw new Error('实际接口已变化，请重新选择设备。');
@@ -488,13 +644,14 @@ export function ImagerPage({
       : null;
     if (reviewingUsb.current !== reviewing) throw new Error('目标 USB 连接已变化，请重新预检。');
     reviewingUsb.current = fresh.usb;
-    setTarget({ ...fresh, files, ticket });
+    setTarget({ ...fresh, files, ticket, vendorEvidence });
     setConfirmed(false);
     setStep(4);
   }
   async function startFlash() {
     if (!board || !confirmed || !target?.device.id || taskId) return;
     const deviceId = target.device.id;
+    let submitted = false;
     try {
       const files = await inspectFiles();
       if (
@@ -505,11 +662,14 @@ export function ImagerPage({
       const fresh = await checkTarget(target.device);
       if (!sameUsb(fresh.usb, target.usb))
         throw new Error('USB 设备标识或工作模式已变化，请重新检查接口。');
+      if ((await checkVendor(fresh.usb, fresh.device)) !== target.vendorEvidence)
+        throw new Error('厂商目标或镜像依赖已变化，请重新预检。');
       if (!watchReady || reviewingUsb.current !== target.usb)
         throw new Error('目标 USB 连接已变化，请重新预检。');
       // The backend owns device transitions after the explicit start request.
       reviewingUsb.current = null;
       setConfirmed(false);
+      submitted = true;
       const id = target.ticket
         ? await invokeCommand('workbench_firmware_start', {
             deviceId,
@@ -519,7 +679,9 @@ export function ImagerPage({
         : await invokeCommand('workbench_start_flash', {
             deviceId,
             firmwarePath: imagePath,
-            options: flashOptions(board.route, board.chipVendor, loaderPath),
+            options: selection
+              ? vendorFlashOptions(selection, loaderPath, inspection)
+              : flashOptions(board.route, board.chipVendor, loaderPath),
           });
       setTaskId(id);
     } catch (e) {
@@ -535,7 +697,8 @@ export function ImagerPage({
       setTarget(null);
       setConfirmed(false);
       setStep(3);
-      throw e;
+      if (!submitted) throw new PreSubmitError(formatErrorMessage(e));
+      throw new Error('提交未取得任务编号，请先在任务记录核对设备状态。' + formatErrorMessage(e));
     }
   }
   function retry() {
@@ -546,14 +709,26 @@ export function ImagerPage({
     setCount(null);
     setStep(3);
   }
-  const route =
-    board?.route === 'mainline_spinor'
-      ? '全志 SPI NOR 物理写入'
-      : board?.route === 'rockchip_raw_emmc'
-        ? 'Rockchip eMMC 完整镜像'
-        : board?.chipVendor === 'allwinner'
-          ? '全志厂家镜像'
-          : '已保存的厂商烧录配置';
+  const vendorLabels: Record<string, string> = {
+    'rk-update': '瑞芯微厂商升级包',
+    'rk-emmc': '瑞芯微主线 eMMC 整盘',
+    'nxp-uuu': 'NXP UUU 脚本',
+    'nxp-configured': 'NXP 板级配置',
+    'st-dfuse': 'STM32 DfuSe 容器',
+    'st-raw': 'STM32 RAW',
+    'k230-kdimage': 'K230 分区包',
+    'k230-raw': 'K230 RAW',
+  };
+  const route = selection
+    ? vendorLabels[selection.route]
+    : (
+        {
+          mainline_spinor: '全志 SPI NOR 物理写入',
+          mainline_emmc: '全志主线 eMMC',
+          mainline_nand: '全志主线 NAND 组件包',
+          vendor: '全志原厂系统',
+        } as Record<string, string>
+      )[routeKey || 'vendor'];
   const usesRecipe = board?.route === 'vendor' && board.chipVendor !== 'allwinner';
   const verify =
     board?.route === 'mainline_spinor'
@@ -562,35 +737,36 @@ export function ImagerPage({
         ? '由当前厂商配置决定'
         : '启用后端写入校验';
   const imageError =
-    image?.error || (candidate && image?.value && !imageValid ? '镜像 SHA-256 与清单不符。' : '');
+    inspectionError ||
+    image?.error ||
+    (candidate && image?.value && !imageValid ? '镜像 SHA-256 与清单不符。' : '');
+  const filesReady =
+    reviewReady &&
+    imageValid &&
+    (!board?.needsLoader || loaderValid) &&
+    (!selection || (!!inspection && !vendorGate(selection, inspection, undefined, 'files')));
   const enabled =
     step === 1
       ? hasBoard
       : step === 2
-        ? imageValid && (source !== 'catalog' || !!candidate)
-        : watchReady && !!selected && imageValid && (!board?.needsLoader || loaderValid);
+        ? filesReady && (source !== 'catalog' || !!candidate)
+        : watchReady &&
+          !!selected &&
+          filesReady &&
+          (!selection ||
+            !vendorGate(selection, inspection, selected.usb, 'target', selected.device));
   const stepDetails = [
     boardName,
     baseName(imagePath),
     selected?.usb.mode,
     taskId ? stateName(task.status) : '确认并执行烧录',
   ];
-  const hints =
-    step === 1
-      ? ['选择具体的开发板型号。', '无需连接 USB 即可继续。', '板型决定可用镜像与烧录路线。']
-      : [boardName || '未选择', baseName(imagePath) || '未选择', selected?.usb.mode || '未配置'];
   return (
     <section className="v2-basic" aria-label="烧录系统" data-step={step}>
       <aside className="v2-rail">
         <div className="v2-rail-title">
-          <span className="v2-chip-icon">
-            <DeveloperBoard24Regular />
-            <Flash24Regular />
-          </span>
-          <div>
-            <h2>烧录系统</h2>
-            <p>四步完成系统烧录</p>
-          </div>
+          <Flash24Regular aria-hidden="true" />
+          <h2>烧录系统</h2>
         </div>
         <nav aria-label="烧录步骤">
           <ol>
@@ -606,50 +782,41 @@ export function ImagerPage({
                     aria-current={n === step ? 'step' : undefined}
                     onClick={() => back(n)}
                   >
-                    <span className="v2-step-number">{n}</span>
+                    <span className="v2-step-number">
+                      {done ? <CheckmarkCircle20Regular /> : n}
+                    </span>
                     <span className="v2-step-label">
                       <strong>{label}</strong>
                       {step > 1 && !!stepDetails[i] && n <= step && <small>{stepDetails[i]}</small>}
                     </span>
-                    {done && <CheckmarkCircle20Regular />}
                   </button>
                 </li>
               );
             })}
           </ol>
         </nav>
-        <section className="v2-rail-note">
-          <h3>
-            {step === 1 ? <Info20Regular /> : <ClipboardTaskListLtr24Regular />}
-            {step === 1 ? '操作提示' : '当前任务'}
-          </h3>
-          {step === 1 ? (
-            <ul>
-              {hints.map((s) => (
-                <li key={s}>{s}</li>
-              ))}
-            </ul>
-          ) : (
-            <dl>
-              {['板型', '镜像', '接口'].map((t, i) => (
-                <div key={t}>
-                  <dt>{t}</dt>
-                  <dd title={hints[i]}>{hints[i]}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-        </section>
+        <details className="r3-help">
+          <summary>使用帮助</summary>
+          <p>
+            {
+              [
+                '按板上丝印选定型号，这一步可以离线完成。',
+                '先选系统文件。使用独立 RAM 引导的路线还需要配套 Loader。',
+                '连接 USB 下载口，按实际接线选择物理端口；调试串口用于观察启动。',
+                '检查实际写入范围。结果页分别记录写入、校验、重启和启动证据。',
+              ][step - 1]
+            }
+          </p>
+        </details>
       </aside>
       <div className="v2-content">
         <fieldset className="v2-control-area" disabled={!!busy}>
           {step === 1 && (
             <V2BoardPicker
-              boards={BOARD_PRESETS}
-              selectedId={boardId}
-              onSelect={selectBoard}
-              rkBoard={rkBoard}
-              onRkBoard={selectVariant}
+              choice={choice}
+              onChoice={chooseHardware}
+              boardName={rkBoard}
+              onBoardName={selectVariant}
             />
           )}
           {step === 2 && board && (
@@ -674,22 +841,65 @@ export function ImagerPage({
               onCandidate={selectCandidate}
               candidate={candidate}
               fileError={imageError}
+              route={board.route}
+              onRoute={changeRoute}
+              onUseImageAsLoader={useImageAsLoader}
+              loaderPath={loaderPath}
+              loaderIdentity={loader?.value ?? null}
+              loaderError={loader?.error}
+              onChooseLoader={() => void run('选择引导来源', () => chooseFile('loader'))}
+              onReviewReady={observeReview}
+              vendorTitle={selection ? route : undefined}
+              vendorControls={
+                selection && (
+                  <VendorRoutePanel
+                    boardName={boardName}
+                    boardArt={<V2BoardArt id={board.id} name={boardName} />}
+                    mode={board.mode}
+                    vendor={board.chipVendor}
+                    selection={selection}
+                    inspection={inspection}
+                    onChange={changeVendor}
+                    imagePath={imagePath}
+                    loaderPath={loaderPath}
+                    onChooseImage={() => void run('选择镜像', () => chooseFile('image'))}
+                    onChooseLoader={() => void run('选择 Loader', () => chooseFile('loader'))}
+                  />
+                )
+              }
             />
           )}
-          {step === 3 && board && (
+          {step === 3 && failedPreflight && (
+            <WritePreflightFailure
+              context={failedPreflight}
+              message={error}
+              onReconnect={() => {
+                invalidate();
+                setSelected(null);
+                setCount(null);
+                refreshInterface((n) => n + 1);
+              }}
+            />
+          )}
+          {step === 3 && board && !failedPreflight && (
             <V2Interface
+              key={interfaceRevision}
+              routeLabel={route}
+              vendorTarget={
+                selection &&
+                selected && (
+                  <VendorTargetPanel
+                    targetMedium={choice?.medium}
+                    selection={selection}
+                    inspection={inspection}
+                    usb={selected.usb}
+                    profile={selected.device}
+                    onChange={changeVendor}
+                  />
+                )
+              }
               board={board}
               boardName={boardName}
-              imagePath={imagePath}
-              imageSize={image?.value?.sizeBytes ?? null}
-              imageSha256={image?.value?.sha256}
-              imageVerified={!!candidate && imageValid}
-              loaderPath={loaderPath}
-              loaderReady={loaderValid}
-              onChooseLoader={() => void run('选择 Loader', () => chooseFile('loader'))}
-              onDropLoader={(path) => {
-                if (!lock.current) loadLoader(path);
-              }}
               selectedDeviceId={selected?.device.id ?? null}
               onTargetChange={selectTarget}
               onDetected={setCount}
@@ -702,6 +912,23 @@ export function ImagerPage({
             <V2Write
               snapshot={{
                 board: boardName,
+                deviceId: target.device.id ?? undefined,
+                candidateId: candidate?.id,
+                eraseEmmcUserArea: selection?.route === 'rk-emmc',
+                targetDetails: selection
+                  ? [
+                      ...(selection.medium
+                        ? [['目标介质', selection.medium] as [string, string]]
+                        : []),
+                      ...(selection.alt !== ''
+                        ? [['DFU Alternate', selection.alt] as [string, string]]
+                        : []),
+                      ...(selection.address
+                        ? [['目标地址', selection.address] as [string, string]]
+                        : []),
+                      ...(inspection ? [['输入格式', inspection.format] as [string, string]] : []),
+                    ]
+                  : undefined,
                 boardArt: <V2BoardArt id={board.id} name={boardName} />,
                 chip: board.chip,
                 vendor: linuxVendorLabel(board.chipVendor),
@@ -734,9 +961,21 @@ export function ImagerPage({
             />
           )}
         </fieldset>
-        {(error || (step === 3 && loader?.error)) && (
+        {!failedPreflight && (error || (step === 3 && loader?.error)) && (
           <p role="alert" className="v2-engine-error">
             {error || loader?.error}
+            {step === 3 && (
+              <button
+                type="button"
+                onClick={() => {
+                  invalidate();
+                  setSelected(null);
+                  refreshInterface((n) => n + 1);
+                }}
+              >
+                重新检测设备
+              </button>
+            )}
           </p>
         )}
       </div>
@@ -752,10 +991,10 @@ export function ImagerPage({
           </span>
           <span>
             <Layer24Regular />
-            {step === 1 ? '当前任务：未创建' : boardName}
+            {step === 1 ? (choice ? choice.model + ' / ' + choice.medium : '选择目标时无需连接 USB') : boardName}
           </span>
         </div>
-        {step < 4 && (
+        {step < 4 && !failedPreflight && (
           <div className="v2-foot-actions">
             {step > 1 && (
               <button type="button" disabled={locked} onClick={() => back((step - 1) as BasicStep)}>
@@ -776,7 +1015,11 @@ export function ImagerPage({
                 }
               }}
             >
-              {step === 1 ? '下一步：选择系统' : step === 2 ? '下一步：设备连接' : '检查并烧录'}{' '}
+              {step === 1
+                ? '下一步：选择系统'
+                : step === 2
+                  ? '下一步：设备连接'
+                  : '下一步：确认烧写'}{' '}
               <ArrowRight20Regular />
             </button>
           </div>

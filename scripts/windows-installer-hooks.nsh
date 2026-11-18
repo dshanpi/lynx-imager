@@ -20,11 +20,6 @@ Var LynxPreviousInstallDir
 
 !macro LynxRequireIdleProcesses
   !insertmacro LynxRejectRunning "lynx-imager.exe"
-  ; Keep the legacy process guard so a v0.1.0 process cannot keep using the
-  ; old UI while a renamed executable is being installed beside it.
-  !ifndef LYNX_IMAGER_LOCAL_TEST
-    !insertmacro LynxRejectRunning "lynx-app.exe"
-  !endif
   !insertmacro LynxRejectRunning "openixcli.exe"
   !insertmacro LynxRejectRunning "openrockcli.exe"
   !insertmacro LynxRejectRunning "uuu.exe"
@@ -73,7 +68,7 @@ Var LynxPreviousInstallDir
   ; Install into a fresh, versioned program directory. User data and keyring
   ; state live outside this tree and are intentionally preserved.
   System::Call 'kernel32::GetTickCount() i .r0'
-  StrCpy $INSTDIR "$LOCALAPPDATA\DshanPI\LYNX\app-${VERSION}-$0"
+  StrCpy $INSTDIR "$LOCALAPPDATA\DshanPI\LYNX Imager\app-${VERSION}-$0"
   SetOutPath $INSTDIR
   !endif
 !macroend
@@ -84,8 +79,7 @@ Var LynxPreviousInstallDir
   ; are deferred with /REBOOTOK and cannot roll back the completed install.
   StrCmp $LynxPreviousInstallDir "" lynx_previous_cleanup_done
   StrCmp $LynxPreviousInstallDir "$INSTDIR" lynx_previous_cleanup_done
-  StrCmp $LynxPreviousInstallDir "$LOCALAPPDATA\LYNX" lynx_previous_cleanup_allowed
-  StrCpy $1 "$LOCALAPPDATA\DshanPI\LYNX\app-"
+  StrCpy $1 "$LOCALAPPDATA\DshanPI\LYNX Imager\app-"
   StrLen $2 $1
   StrCpy $3 $LynxPreviousInstallDir $2
   StrCmp $3 $1 lynx_previous_cleanup_allowed lynx_previous_cleanup_done

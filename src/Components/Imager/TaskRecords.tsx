@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { save } from '@tauri-apps/plugin-dialog';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
+import { formatErrorMessage } from '../../Utils/Error';
 import { LynxIcon } from '../../CoreUI/LynxIcon/LynxIcon';
+import { loadRecordedBoot } from './BootEvidence';
+import type { BootReport } from './writeEvidence';
 import {
   invokeCommand,
   type WorkbenchDevice,
@@ -34,6 +37,7 @@ export function TaskRecords({ onClose }: { onClose: () => void }) {
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [detailError, setDetailError] = useState('');
+  const [bootReport, setBootReport] = useState<BootReport | null>(null);
   useEffect(() => {
     const el = dialog.current;
     el?.showModal();
@@ -72,7 +76,15 @@ export function TaskRecords({ onClose }: { onClose: () => void }) {
     let current = true;
     setSteps([]);
     setDetailError('');
-    if (selectedId)
+    setBootReport(null);
+    if (selectedId && selected) {
+      loadRecordedBoot(selected)
+        .then((boot) => {
+          if (current) setBootReport(boot);
+        })
+        .catch((e) => {
+          if (current) setDetailError('读取启动验收失败：' + String(e));
+        });
       invokeCommand('workbench_list_workflow_steps', { taskId: selectedId })
         .then((result) => {
           if (current) setSteps(result);
@@ -80,22 +92,35 @@ export function TaskRecords({ onClose }: { onClose: () => void }) {
         .catch((error) => {
           if (current) setDetailError(String(error));
         });
+    }
     return () => {
       current = false;
     };
-  }, [selectedId, version]);
+  }, [selectedId, selected, version]);
   async function exportRecord() {
     if (!selected) return;
     try {
-      const detail = await invokeCommand('workbench_list_workflow_steps', {
-        taskId: selected.taskId,
-      });
+      const [detail, boot] = await Promise.all([
+        invokeCommand('workbench_list_workflow_steps', { taskId: selected.taskId }),
+        loadRecordedBoot(selected).catch((e) => ({ readError: formatErrorMessage(e) })),
+      ]);
       const path = await save({
         defaultPath: 'lynx-task.json',
         filters: [{ name: 'JSON', extensions: ['json'] }],
       });
       if (path)
-        await writeTextFile(path, JSON.stringify({ task: selected, steps: detail }, null, 2));
+        await writeTextFile(
+          path,
+          JSON.stringify(
+            {
+              task: selected,
+              steps: detail,
+              manualBootAcceptance: boot,
+            },
+            null,
+            2
+          )
+        );
     } catch (error) {
       setDetailError(String(error));
     }
@@ -182,11 +207,23 @@ export function TaskRecords({ onClose }: { onClose: () => void }) {
               <code>{selected.taskId}</code>
             </p>
             {selected.error && <p>{selected.error}</p>}
+            {bootReport?.taskId === selected.taskId && (
+              <div>
+                <h3>
+                  {bootReport.coldBoot ? '人工断电上电验收' : '人工启动验收'} ·{' '}
+                  {bootReport.result === 'pass' ? '通过' : '失败'}
+                </h3>
+                <p>
+                  {bootReport.operator} · {date(bootReport.recordedAt)}
+                </p>
+                <code>{bootReport.evidence}</code>
+              </div>
+            )}
             {steps.length ? (
               <ol>
                 {steps.map((s) => (
                   <li key={s.id}>
-                    {date(s.startedAt)}　{s.stepName}　{statusText(s.status)} {s.error}
+                    {date(s.startedAt)} · {s.stepName} · {statusText(s.status)} {s.error}
                   </li>
                 ))}
               </ol>

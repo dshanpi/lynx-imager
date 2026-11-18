@@ -239,7 +239,11 @@ fn file_info_from_header(header: &FileHeaderDto) -> FileInfoDto {
 
 pub fn parse_image(file_path: &str) -> Result<ParseImageResultDto, String> {
     let mut file = File::open(file_path).map_err(|e| format!("failed to open image: {e}"))?;
+    parse_open_image(&mut file)
+}
 
+pub(crate) fn parse_open_image(file: &mut File) -> Result<ParseImageResultDto, String> {
+    file.seek(SeekFrom::Start(0)).map_err(|e| e.to_string())?;
     let mut magic = [0u8; 8];
     file.read_exact(&mut magic)
         .map_err(|e| format!("failed to read image magic: {e}"))?;
@@ -261,6 +265,10 @@ pub fn parse_image(file_path: &str) -> Result<ParseImageResultDto, String> {
     let image_header = to_image_header_dto(&header_bytes)?;
     let header_version = image_header.header_version;
     let num_files = num_files_from_header(&image_header);
+    let length = file.metadata().map_err(|e| e.to_string())?.len();
+    if (u64::from(num_files) + 1) * IMAGEWTY_FILEHDR_LEN as u64 > length {
+        return Err("IMAGEWTY 目录超过文件长度".into());
+    }
 
     let mut file_headers = Vec::with_capacity(num_files as usize);
     for index in 0..num_files {
@@ -382,4 +390,71 @@ pub fn read_entry_range_by_maintype_subtype(
         |entry| entry.maintype == maintype && entry.subtype == subtype,
         Some((start, length)),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Both formats use 1 KiB table records. The directory count occupies a
+    // different header word in v3. The payload is shared by both fixture layouts.
+    fn sample(version: u32, count: u32) -> Vec<u8> {
+        let mut data = vec![0; 2048 + 4];
+        data[..8].copy_from_slice(IMAGEWTY_MAGIC);
+        data[8..12].copy_from_slice(&version.to_le_bytes());
+        let count_offset = if version == 0x100 { 56 } else { 60 };
+        data[count_offset..count_offset + 4].copy_from_slice(&count.to_le_bytes());
+        let record = &mut data[1024..2048];
+        let (name, length, offset) = if version == 0x100 {
+            (52, 40, 44)
+        } else {
+            (36, 300, 308)
+        };
+        record[name..name + 5].copy_from_slice(b"entry");
+        record[length..length + 4].copy_from_slice(&4u32.to_le_bytes());
+        record[offset..offset + 4].copy_from_slice(&2048u32.to_le_bytes());
+        data[2048..].copy_from_slice(b"data");
+        data
+    }
+
+    fn with_sample(data: &[u8], test: impl FnOnce(&str)) {
+        let path =
+            std::env::temp_dir().join(format!("imager-image-test-{:016x}", rand::random::<u64>()));
+        std::fs::write(&path, data).unwrap();
+        let path_str = path.to_str().unwrap();
+        test(path_str);
+        std::fs::remove_file(&path).unwrap();
+    }
+
+    #[test]
+    fn saved_path_and_already_open_handle_agree_for_v1_and_v3() {
+        for version in [0x100, 0x300] {
+            with_sample(&sample(version, 1), |path| {
+                let old = parse_image(path).unwrap();
+                assert_eq!(old.file_headers.len(), 1);
+                let mut file = File::open(path).unwrap();
+                file.seek(SeekFrom::End(0)).unwrap();
+                let from_handle = parse_open_image(&mut file).unwrap();
+                assert_eq!(
+                    serde_json::to_value(&old).unwrap(),
+                    serde_json::to_value(&from_handle).unwrap()
+                );
+                assert_eq!(
+                    read_entry_by_filename(path, "entry").unwrap().unwrap(),
+                    b"data"
+                );
+            });
+        }
+    }
+
+    #[test]
+    fn declared_directory_must_fit_whole_records_in_both_versions() {
+        for version in [0x100, 0x300] {
+            for count in [2, u32::MAX] {
+                with_sample(&sample(version, count), |path| {
+                    assert!(parse_image(path).unwrap_err().contains("目录超过文件长度"));
+                });
+            }
+        }
+    }
 }

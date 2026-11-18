@@ -28,13 +28,42 @@ pub(super) fn parse_dfu_util_scan(output: &str) -> Vec<FlasherDeviceCandidate> {
             continue;
         };
         let key = format!("{bus}:{port}");
-        if devices
-            .iter()
-            .any(|candidate: &FlasherDeviceCandidate| candidate.key == key)
+        let field_number = |prefix: &str| {
+            line.split(',')
+                .map(str::trim)
+                .find_map(|f| f.strip_prefix(prefix))
+                .and_then(|s| s.parse::<u8>().ok())
+        };
+        let alternate = line
+            .split(',')
+            .map(str::trim)
+            .find_map(|field| field.strip_prefix("alt="))
+            .and_then(|number| number.parse::<u8>().ok())
+            .map(|number| super::super::types::DfuAlternate {
+                number,
+                interface: field_number("intf="),
+                configuration: field_number("cfg="),
+                name: extract_field(line, "name=\"").unwrap_or("").to_owned(),
+            });
+        if let Some(candidate) = devices
+            .iter_mut()
+            .find(|candidate: &&mut FlasherDeviceCandidate| candidate.key == key)
         {
+            if let Some(alternate) = alternate {
+                if !candidate.dfu_alternates.iter().any(|existing| {
+                    existing.number == alternate.number
+                        && existing.name == alternate.name
+                        && existing.interface == alternate.interface
+                        && existing.configuration == alternate.configuration
+                }) {
+                    candidate.dfu_alternates.push(alternate);
+                    candidate.dfu_alternates.sort_by_key(|item| item.number);
+                }
+            }
             continue;
         }
         devices.push(FlasherDeviceCandidate {
+            dfu_alternates: alternate.into_iter().collect(),
             key,
             flasher_kind: "dfu-util".to_owned(),
             bus,
@@ -79,6 +108,7 @@ pub(super) fn parse_openrockcli_scan(output: &str) -> Result<Vec<FlasherDeviceCa
         };
         let port = columns[1].to_owned();
         devices.push(FlasherDeviceCandidate {
+            dfu_alternates: Vec::new(),
             key: format!("{bus}:{port}"),
             flasher_kind: "openrockcli".to_owned(),
             bus,
@@ -113,6 +143,7 @@ pub(super) fn parse_uuu_scan(output: &str) -> Result<Vec<FlasherDeviceCandidate>
         };
         let port = port.to_owned();
         devices.push(FlasherDeviceCandidate {
+            dfu_alternates: Vec::new(),
             key: format!("{bus}:{port}"),
             flasher_kind: "uuu".to_owned(),
             bus,

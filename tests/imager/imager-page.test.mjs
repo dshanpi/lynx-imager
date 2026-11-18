@@ -13,7 +13,7 @@ test('LYNX Imager exposes four visible steps and all three workspaces', async ()
   assert.match(source, /烧录系统/);
   assert.match(shell, /高级功能/);
   assert.match(shell, /连接 AI/);
-  assert.match(source, /\['选择板子', '选择系统', '设备连接', '烧写系统'\]/);
+  assert.match(source, /\['选择烧录目标', '选择系统', '设备连接', '烧写系统'\]/);
   assert.match(source, /aria-current=.*'step'/);
   assert.match(source, /aria-label="烧录步骤"/);
   assert.match(source.replace(/\s/g, ''), /\[boardId,setBoardId\]=useState<string\|null>\(null\)/);
