@@ -30,8 +30,8 @@ import './Components/Imager/ImagerShell.css';
 type Workspace = 'basic' | 'advanced' | 'ai';
 type WorkspaceStatus = { target: string; task: string };
 const workspaceNames: Record<Workspace, string> = {
-  basic: '基础烧录',
-  advanced: '高级烧录',
+  basic: '烧录系统',
+  advanced: '高级功能',
   ai: '连接 AI',
 };
 

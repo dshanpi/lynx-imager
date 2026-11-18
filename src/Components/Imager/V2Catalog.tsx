@@ -570,7 +570,7 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
         {inCatalog ? (
           <>
             <ol className="v2c-progress" aria-label="当前烧录进度">
-              {['选择板子', '选择系统', '配置接口', '烧写系统'].map((name, i) => (
+              {['选择板子', '选择系统', '设备连接', '烧写系统'].map((name, i) => (
                 <li
                   key={name}
                   className={i === 0 ? 'done' : i === 1 ? 'current' : ''}
@@ -813,7 +813,7 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
           />
           <Notice kind="info" title="说明">
             {imagePath
-              ? '本地文件的板型适配仍需核对。请继续配置接口，完成目标设备与烧录参数的预检。'
+              ? '本地文件的板型适配仍需核对。请前往「设备连接」，完成目标设备与烧录参数的预检。'
               : '选择本地镜像后，将在这里显示路径、文件大小和 SHA-256 指纹。'}
           </Notice>
         </DetailsPane>

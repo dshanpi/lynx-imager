@@ -6,7 +6,7 @@ LYNX Imager 是面向开发板系统镜像烧录的开源桌面软件。它用�
 
 ## 工作区
 
-- **基础烧录**：选择板子、选择镜像、配置接口、确认后写入和校验。
+- **烧录系统**：选择板子和系统，连接设备，确认后写入并校验。
 - **高级功能**：打开现有专业工作台，配置 SPI NOR、NAND、eMMC、Loader、物理回读和结束动作。
 - **连接 AI**：进入现有 AI 配置与监督中心；AI 只能提出动作，设备作用域、门禁和人工确认由 LYNX 决定。
 
@@ -30,7 +30,7 @@ npm run tauri -- dev
 ## 目录
 
 ```text
-src/Components/Imager/   LYNX Imager 三工作区入口和基础烧录向导
+src/Components/Imager/   LYNX Imager 三工作区入口和烧录系统向导
 src/Components/Workbench/现有专业工作台与硬件交互
 src-tauri/src/            Rust IPC、硬件安全门禁、OpenixCLI 和任务执行
 prototype/                原始离线 UI 原型和 17 页面状态机

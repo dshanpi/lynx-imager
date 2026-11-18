@@ -27,7 +27,7 @@ import { V2Write } from './V2Write';
 import './ImagerPage.css';
 
 type BasicStep = 1 | 2 | 3 | 4;
-const STEPS = ['选择板子', '选择系统', '配置接口', '烧写系统'] as const;
+const STEPS = ['选择板子', '选择系统', '设备连接', '烧写系统'] as const;
 type BoardPreset = {
   id: string;
   name: string;
@@ -169,7 +169,7 @@ async function checkTarget(selected: WorkbenchDevice) {
   if (!device || signature(device) !== signature(selected))
     throw new Error('保存的设备或接口配置已变化。请刷新列表并重新选择。');
   if (!device.usbBinding)
-    throw new Error('该设备尚未绑定 USB 接口。请到高级烧录的设备设置中绑定。');
+    throw new Error('该设备尚未绑定 USB 接口。请到「高级功能」的设备设置中绑定。');
   const found = await invokeCommand('workbench_scan_flasher_devices', {
     kind: device.flasherKind,
     path: device.flasherPath,
@@ -580,7 +580,7 @@ export function ImagerPage({
       ? ['选择具体的开发板型号。', '无需连接 USB 即可继续。', '板型决定可用镜像与烧录路线。']
       : [boardName || '未选择', baseName(imagePath) || '未选择', selected?.usb.mode || '未配置'];
   return (
-    <section className="v2-basic" aria-label="基础烧录" data-step={step}>
+    <section className="v2-basic" aria-label="烧录系统" data-step={step}>
       <aside className="v2-rail">
         <div className="v2-rail-title">
           <span className="v2-chip-icon">
@@ -588,7 +588,7 @@ export function ImagerPage({
             <Flash24Regular />
           </span>
           <div>
-            <h2>基础烧录</h2>
+            <h2>烧录系统</h2>
             <p>四步完成系统烧录</p>
           </div>
         </div>
@@ -776,7 +776,7 @@ export function ImagerPage({
                 }
               }}
             >
-              {step === 1 ? '下一步：选择系统' : step === 2 ? '下一步：配置接口' : '检查并烧录'}{' '}
+              {step === 1 ? '下一步：选择系统' : step === 2 ? '下一步：设备连接' : '检查并烧录'}{' '}
               <ArrowRight20Regular />
             </button>
           </div>

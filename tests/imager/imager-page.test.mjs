@@ -10,10 +10,10 @@ const read = (relative) => fs.readFile(path.join(root, relative), 'utf8');
 test('LYNX Imager exposes four visible steps and all three workspaces', async () => {
   const source = await read('src/Components/Imager/ImagerPage.tsx');
   const shell = await read('src/main.tsx');
-  assert.match(source, /基础烧录/);
-  assert.match(shell, /高级烧录/);
+  assert.match(source, /烧录系统/);
+  assert.match(shell, /高级功能/);
   assert.match(shell, /连接 AI/);
-  assert.match(source, /\['选择板子', '选择系统', '配置接口', '烧写系统'\]/);
+  assert.match(source, /\['选择板子', '选择系统', '设备连接', '烧写系统'\]/);
   assert.match(source, /aria-current=.*'step'/);
   assert.match(source, /aria-label="烧录步骤"/);
   assert.match(source.replace(/\s/g, ''), /\[boardId,setBoardId\]=useState<string\|null>\(null\)/);
@@ -107,7 +107,7 @@ test('the product shell has no learning-center navigation', async () => {
   const source = await read('src/main.tsx');
   assert.doesNotMatch(source, /LearningCenterPage/);
   assert.doesNotMatch(source, /学习中心/);
-  assert.match(source, /基础烧录/);
+  assert.match(source, /烧录系统/);
   assert.match(source, /连接 AI/);
 });
 

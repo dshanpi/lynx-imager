@@ -43,7 +43,7 @@ export function uniqueUsbTarget(binding: string, kind: string, found: WorkbenchF
   if (candidates.length !== 1)
     throw new Error(
       candidates.length
-        ? '多个物理端口符合已保存的绑定。请在高级烧录中重新绑定当前设备。'
+        ? '多个物理端口符合已保存的绑定。请在「高级功能」中重新绑定当前设备。'
         : '未检测到绑定的 USB 接口。请核对物理端口、连接线和板卡的烧录模式。'
     );
   return candidates[0];

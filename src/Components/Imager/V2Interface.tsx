@@ -63,7 +63,7 @@ const matches = (
 };
 
 function StageStrip({ board, image }: { board: string; image: string }) {
-  const names = ['选择板子', '选择系统', '配置接口', '烧写系统'];
+  const names = ['选择板子', '选择系统', '设备连接', '烧写系统'];
   const details = [board, image, '连接设备与模式', '执行写入与验证'];
   return (
     <ol className="vi-steps" aria-label="当前进度">
@@ -536,12 +536,12 @@ export function V2Interface({
 
   return (
     <div className={'vi-grid' + (rk ? ' vi-rk' : '')}>
-      <section className="vi-main" aria-label="配置接口">
+      <section className="vi-main" aria-label="设备连接">
         {!rk && <StageStrip board={boardName} image={file} />}
         <header className="vi-heading">
           <h2>
             <LynxIcon name={rk ? 'plug' : 'task'} size={24} />
-            配置接口
+            设备连接
           </h2>
           <p>
             {rk

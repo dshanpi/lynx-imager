@@ -30,11 +30,11 @@ export function V2BasicHeader({
       <nav aria-label="工作区">
         <button type="button" className="is-current" aria-current="page">
           <Flash24Regular />
-          基础烧录
+          烧录系统
         </button>
         <button type="button" onClick={onAdvanced}>
           <Layer24Regular />
-          高级烧录
+          高级功能
         </button>
         <button type="button" onClick={onAI}>
           <Bot24Regular />

@@ -156,11 +156,11 @@ for (const mode of names) {
 const page = await read('src/Components/Imager/ImagerPage.tsx');
 const shell = await read('src/main.tsx');
 const shellStyles = await read('src/Components/Imager/ImagerShell.css');
-for (const name of ['基础烧录', '高级烧录', '连接 AI']) assert(shell.includes(name), `Missing workspace ${name}`);
+for (const name of ['烧录系统', '高级功能', '连接 AI']) assert(shell.includes(name), `Missing workspace ${name}`);
 for (const forbidden of ['LearningCenterPage', '学习中心', 'import Layout from']) {
   assert(!shell.includes(forbidden), `Legacy workspace entry ${forbidden}`);
 }
-for (const name of ['选择板子', '选择系统', '配置接口', '烧写系统', 'V2BoardPicker', 'V2SystemPicker', 'V2Interface', 'V2Write']) {
+for (const name of ['选择板子', '选择系统', '设备连接', '烧写系统', 'V2BoardPicker', 'V2SystemPicker', 'V2Interface', 'V2Write']) {
   assert(page.includes(name), `Missing basic flow control ${name}`);
 }
 for (const vendor of ['allwinner', 'rockchip', 'nxp', 'st', 'kendryte']) {
