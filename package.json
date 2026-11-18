@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/fetch-python-runtime.mjs && node scripts/fetch-openocd-runtime.mjs && node scripts/fetch-ch347-runtime.mjs && node scripts/sync-version.js && node scripts/check-input-safety.mjs && node scripts/check-ui-scale.mjs && node scripts/validate-ui-constraints.mjs && node scripts/validate-skills-index.mjs && node scripts/validate-package-config.js && vite build",
+    "build": "node scripts/fetch-python-runtime.mjs && node scripts/fetch-openocd-runtime.mjs && node scripts/fetch-ch347-runtime.mjs && node scripts/sync-version.js && node scripts/check-input-safety.mjs && node scripts/check-ui-scale.mjs && node scripts/validate-lynx-imager-ui.mjs && node scripts/validate-skills-index.mjs && node scripts/validate-package-config.js && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
     "init": "node scripts/init.js",
@@ -14,7 +14,7 @@
     "validate:package": "node scripts/check-input-safety.mjs && node scripts/validate-skills-index.mjs && node scripts/validate-package-config.js",
     "check:input-safety": "node scripts/check-input-safety.mjs",
     "check:ui-scale": "node scripts/check-ui-scale.mjs",
-    "check:ui-constraints": "node scripts/validate-ui-constraints.mjs",
+    "check:lynx-imager-ui": "node scripts/validate-lynx-imager-ui.mjs",
     "gate:startup-visual": "bash scripts/verify-startup-visual",
     "gate:business-logic-ui": "bash scripts/verify-business-logic-ui",
     "gate:ssh-terminal-runtime": "bash scripts/verify-ssh-terminal-runtime",
