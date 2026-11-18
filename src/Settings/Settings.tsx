@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { handleDialogKey } from '../CoreUI/dialogKeys';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppSettings, loadSettings, saveSettings } from './settingsStore';
@@ -79,6 +80,7 @@ export const Settings: React.FC<SettingsProps> = ({
     error?: string;
   } | null>(null);
   const [themeViewerVisible, setThemeViewerVisible] = useState(false);
+  const paletteButton = useRef<HTMLButtonElement>(null);
   const [cloudSync, setCloudSync] = useState<CloudSyncStatus | null>(null);
   const [savedCloudSyncEnabled, setSavedCloudSyncEnabled] = useState(false);
   const [syncingCloud, setSyncingCloud] = useState(false);
@@ -167,8 +169,7 @@ export const Settings: React.FC<SettingsProps> = ({
 
   const handleThemeIdChange = (themeId: string) => {
     setThemeId(themeId, effectiveVariant);
-    handleChange('themeIdDark', effectiveVariant === 'dark' ? themeId : settings!.themeIdDark);
-    handleChange('themeIdLight', effectiveVariant === 'light' ? themeId : settings!.themeIdLight);
+    handleChange(effectiveVariant === 'dark' ? 'themeIdDark' : 'themeIdLight', themeId);
   };
 
   const handleSave = async () => {
@@ -482,14 +483,20 @@ export const Settings: React.FC<SettingsProps> = ({
             <motion.div
               data-testid="settings-panel"
               className="settings-panel"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="imager-settings-title"
+              inert={themeViewerVisible || undefined}
+              onKeyDown={(event) => handleDialogKey(event, handleClose)}
               onClick={(e) => e.stopPropagation()}
               variants={panelVariants}
               transition={transition}
             >
               <div className="settings-header">
-                <h2>{t('settings.title')}</h2>
+                <h2 id="imager-settings-title">{t('settings.title')}</h2>
                 <motion.button
                   data-testid="settings-close"
+                  autoFocus
                   className="settings-close"
                   onClick={handleClose}
                   aria-label={t('settings.close')}
@@ -551,20 +558,13 @@ export const Settings: React.FC<SettingsProps> = ({
                       {t('settings.themeViewer', '主题调色板查看器')}
                     </span>
                     <button
+                      ref={paletteButton}
                       className="settings-btn settings-btn-secondary"
                       onClick={() => setThemeViewerVisible(true)}
                     >
                       {t('settings.themeViewer', '主题调色板查看器')}
                     </button>
                   </div>
-                  <label className="settings-item">
-                    <span className="settings-label">{t('settings.sidebarCollapsed')}</span>
-                    <input
-                      type="checkbox"
-                      checked={settings.sidebarCollapsed}
-                      onChange={(e) => handleChange('sidebarCollapsed', e.target.checked)}
-                    />
-                  </label>
                 </div>
 
                 {/* 烧录设置（legacy Allwinner 烧录相关）已隐藏，需要恢复时去掉此 JSX 注释即可
@@ -983,7 +983,13 @@ export const Settings: React.FC<SettingsProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-      <ThemeViewer visible={themeViewerVisible} onClose={() => setThemeViewerVisible(false)} />
+      <ThemeViewer
+        visible={themeViewerVisible}
+        onClose={() => {
+          setThemeViewerVisible(false);
+          requestAnimationFrame(() => paletteButton.current?.focus());
+        }}
+      />
     </>
   );
 };

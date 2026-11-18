@@ -43,7 +43,8 @@ pub fn digest(app: &tauri::AppHandle, frames: &[&[u8]]) -> Result<String, String
 }
 
 fn installation_key() -> Result<Vec<u8>, String> {
-    let entry = Entry::new(SERVICE, ACCOUNT).map_err(|_| "CONTENT_DIGEST_KEY_UNAVAILABLE")?;
+    let entry = Entry::new(&crate::keyring_service(SERVICE), ACCOUNT)
+        .map_err(|_| "CONTENT_DIGEST_KEY_UNAVAILABLE")?;
     match entry.get_password() {
         Ok(encoded) => hex::decode(encoded).map_err(|_| "CONTENT_DIGEST_KEY_INVALID".to_owned()),
         Err(keyring::Error::NoEntry) => {

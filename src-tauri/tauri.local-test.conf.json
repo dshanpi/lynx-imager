@@ -1,0 +1,15 @@
+{
+  "identifier": "com.dshanpi.lynximager.localtest",
+  "productName": "LYNX Imager Test",
+  "mainBinaryName": "lynx-imager",
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "windows": {
+      "nsis": { "installerHooks": "../scripts/windows-installer-local-test.nsh" }
+    }
+  },
+  "plugins": {
+    "updater": { "endpoints": [] },
+    "deep-link": { "desktop": { "schemes": ["lynx-imager-local"] } }
+  }
+}

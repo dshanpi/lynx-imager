@@ -105,12 +105,12 @@ pub fn resolve(host_id: Option<i64>, supplied: SshCredentials) -> Result<SshCred
 }
 
 fn entry(host_id: i64) -> Result<Entry, String> {
-    Entry::new(SERVICE, &format!("ssh-host-{host_id}"))
+    Entry::new(&crate::keyring_service(SERVICE), &format!("ssh-host-{host_id}"))
         .map_err(|e| format!("CREDENTIALS_KEYRING:{e}"))
 }
 
 fn serial_login_entry(device_id: i64) -> Result<Entry, String> {
-    Entry::new(SERVICE, &format!("serial-login-{device_id}"))
+    Entry::new(&crate::keyring_service(SERVICE), &format!("serial-login-{device_id}"))
         .map_err(|e| format!("SERIAL_LOGIN_KEYRING:{e}"))
 }
 

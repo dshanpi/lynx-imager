@@ -429,9 +429,7 @@ export default function FirmwareFlashPanel({
               <p className="firmware-caption">本地文件即可使用，无需配置远端 SDK</p>
               <div className="firmware-form-columns">
                 <section className="firmware-card">
-                  <h3>
-                    <b>01</b>选择固件
-                  </h3>
+                  <h3>镜像与 Loader</h3>
                   <button
                     ref={uploadRef}
                     className="firmware-drop"
@@ -573,9 +571,31 @@ export default function FirmwareFlashPanel({
                   )}
                 </section>
                 <section className="firmware-card firmware-options-card">
-                  <h3>
-                    <b>02</b>系统类型选择
-                  </h3>
+                  <h3>目标设备</h3>
+                  <dl className="adv-flash-properties">
+                    <div>
+                      <dt>目标板型</dt>
+                      <dd>{board.name}</dd>
+                    </div>
+                    <div>
+                      <dt>设备接口</dt>
+                      <dd>{protocol}</dd>
+                    </div>
+                    <div>
+                      <dt>写入介质</dt>
+                      <dd>
+                        {systemType === 'vendor'
+                          ? '由厂商镜像与配置指定'
+                          : rkRaw || mainlineRoute === 'mainline_emmc'
+                            ? 'eMMC'
+                            : spinor
+                              ? 'SPI NOR'
+                              : mainlineRoute === 'mainline_nand'
+                                ? 'NAND'
+                                : '待选择'}
+                      </dd>
+                    </div>
+                  </dl>
                   <label className="firmware-system-select">
                     <span>系统类型</span>
                     <select
@@ -590,104 +610,109 @@ export default function FirmwareFlashPanel({
                       <option value="mainline">主线 Linux</option>
                     </select>
                   </label>
-                  <div className="firmware-bindings">
-                    <div className="firmware-binding">
-                      <small>USB 设备 · {protocol}</small>
-                      <strong title={board.usbBinding}>{board.usbBinding || '未绑定 USB'}</strong>
-                      <span className={detected ? 'is-connected' : ''}>
-                        {detected
-                          ? '已绑定 · 已检测到'
-                          : board.usbBinding
-                            ? '已绑定 · 未检测到'
-                            : '请先在设备设置中绑定'}
-                      </span>
-                    </div>
-                    <div className="firmware-binding">
-                      <small>启动日志串口</small>
-                      <strong title={board.serialPort}>
-                        {board.serialPort?.replace(/^\/dev\//, '') || '未绑定'}
-                      </strong>
-                      <span>
-                        {board.serialPort
-                          ? `${board.baudRate} · 使用已保存节点`
-                          : '可在设备设置中配置'}
-                      </span>
-                    </div>
-                  </div>
-                  {spinor && (
-                    <label className="firmware-spinor-action">
-                      <span>写入及校验通过后</span>
-                      <select
-                        value={postAction}
-                        disabled={busy}
-                        onChange={(event) => setPostAction(event.target.value as typeof postAction)}
-                      >
-                        <option value="reboot">重启设备</option>
-                        <option value="none">保持当前状态</option>
-                        <option value="poweroff">关闭设备</option>
-                      </select>
-                    </label>
-                  )}
-                  {configurable ? (
-                    <>
-                      <div className="firmware-option-row">
-                        <label>
-                          烧录方式
-                          <select
-                            value={mode}
-                            disabled={busy}
-                            onChange={(event) => setMode(event.target.value as typeof mode)}
-                          >
-                            <option value="full_erase">完整烧录</option>
-                            {board.flasherKind === 'openixcli' && (
-                              <>
-                                <option value="partition">按分区写入</option>
-                                <option value="partition_erase">擦除分区后写入</option>
-                              </>
-                            )}
-                          </select>
-                        </label>
-                        <label>
-                          完成后
-                          <select
-                            data-flash-options="vendor-completion"
-                            value={postAction}
-                            disabled={busy}
-                            onChange={(event) =>
-                              setPostAction(event.target.value as typeof postAction)
-                            }
-                          >
-                            <option value="reboot">重启设备</option>
-                            {(board.flasherKind === 'openixcli' ||
-                              (board.flasherKind === 'openrockcli' &&
-                                navigator.userAgent.toLowerCase().includes('windows'))) && (
-                              <option value="none">保持当前状态</option>
-                            )}
-                            <option value="poweroff">关闭设备</option>
-                          </select>
-                        </label>
+                  <details className="adv-flash-options">
+                    <summary>接口与烧录选项</summary>
+                    <div className="firmware-bindings">
+                      <div className="firmware-binding">
+                        <small>USB 设备 · {protocol}</small>
+                        <strong title={board.usbBinding}>{board.usbBinding || '未绑定 USB'}</strong>
+                        <span className={detected ? 'is-connected' : ''}>
+                          {detected
+                            ? '已绑定 · 已检测到'
+                            : board.usbBinding
+                              ? '已绑定 · 未检测到'
+                              : '请先在设备设置中绑定'}
+                        </span>
                       </div>
-                      <label className="firmware-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={rkRaw || verify}
-                          disabled={busy || rkRaw}
-                          onChange={(event) => setVerify(event.target.checked)}
-                        />
-                        写入后校验
+                      <div className="firmware-binding">
+                        <small>启动日志串口</small>
+                        <strong title={board.serialPort}>
+                          {board.serialPort?.replace(/^\/dev\//, '') || '未绑定'}
+                        </strong>
+                        <span>
+                          {board.serialPort
+                            ? `${board.baudRate} · 使用已保存节点`
+                            : '可在设备设置中配置'}
+                        </span>
+                      </div>
+                    </div>
+                    {spinor && (
+                      <label className="firmware-spinor-action">
+                        <span>写入及校验通过后</span>
+                        <select
+                          value={postAction}
+                          disabled={busy}
+                          onChange={(event) =>
+                            setPostAction(event.target.value as typeof postAction)
+                          }
+                        >
+                          <option value="reboot">重启设备</option>
+                          <option value="none">保持当前状态</option>
+                          <option value="poweroff">关闭设备</option>
+                        </select>
                       </label>
-                    </>
-                  ) : (
-                    <p className="firmware-caption">
-                      {systemType === 'mainline'
-                        ? board.chipVendor === 'allwinner'
-                          ? spinor
-                            ? '写入与校验成功后执行所选动作；动作结果与启动验收分别显示。'
-                            : '使用上方选择的 FES Loader，沿用现有主线烧录流程。'
-                          : '沿用当前单板的专用烧录配置。'
-                        : '沿用当前单板的专用烧录配置。'}
-                    </p>
-                  )}
+                    )}
+                    {configurable ? (
+                      <>
+                        <div className="firmware-option-row">
+                          <label>
+                            烧录方式
+                            <select
+                              value={mode}
+                              disabled={busy}
+                              onChange={(event) => setMode(event.target.value as typeof mode)}
+                            >
+                              <option value="full_erase">完整烧录</option>
+                              {board.flasherKind === 'openixcli' && (
+                                <>
+                                  <option value="partition">按分区写入</option>
+                                  <option value="partition_erase">擦除分区后写入</option>
+                                </>
+                              )}
+                            </select>
+                          </label>
+                          <label>
+                            完成后
+                            <select
+                              data-flash-options="vendor-completion"
+                              value={postAction}
+                              disabled={busy}
+                              onChange={(event) =>
+                                setPostAction(event.target.value as typeof postAction)
+                              }
+                            >
+                              <option value="reboot">重启设备</option>
+                              {(board.flasherKind === 'openixcli' ||
+                                (board.flasherKind === 'openrockcli' &&
+                                  navigator.userAgent.toLowerCase().includes('windows'))) && (
+                                <option value="none">保持当前状态</option>
+                              )}
+                              <option value="poweroff">关闭设备</option>
+                            </select>
+                          </label>
+                        </div>
+                        <label className="firmware-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={rkRaw || verify}
+                            disabled={busy || rkRaw}
+                            onChange={(event) => setVerify(event.target.checked)}
+                          />
+                          写入后校验
+                        </label>
+                      </>
+                    ) : (
+                      <p className="firmware-caption">
+                        {systemType === 'mainline'
+                          ? board.chipVendor === 'allwinner'
+                            ? spinor
+                              ? '写入与校验成功后执行所选动作；动作结果与启动验收分别显示。'
+                              : '使用上方选择的 FES Loader，沿用现有主线烧录流程。'
+                            : '沿用当前单板的专用烧录配置。'
+                          : '沿用当前单板的专用烧录配置。'}
+                      </p>
+                    )}
+                  </details>
                   {needsLoader && (
                     <p className="firmware-error" role="alert">
                       {rkRaw
@@ -703,6 +728,76 @@ export default function FirmwareFlashPanel({
                   </div>
                 </section>
               </div>
+              <section className="adv-preflight">
+                <h3>烧录预检</h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>核对项目</th>
+                      <th>检查内容</th>
+                      <th>结果</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>目标接口</td>
+                      <td>{board.usbBinding || '尚未绑定'}</td>
+                      <td>{detected && board.usbBinding ? '已匹配' : '待连接'}</td>
+                    </tr>
+                    <tr>
+                      <td>系统镜像</td>
+                      <td>{name || '尚未选择'}</td>
+                      <td>
+                        {checking
+                          ? '读取中'
+                          : fileError
+                            ? '读取失败'
+                            : fileInfo
+                              ? '已读取'
+                              : '待选择'}
+                      </td>
+                    </tr>
+                    {requiresLoader && (
+                      <tr>
+                        <td>{loaderLabel}</td>
+                        <td>{loaderPath || '尚未选择'}</td>
+                        <td>
+                          {loaderChecking
+                            ? '读取中'
+                            : loaderError
+                              ? '读取失败'
+                              : loaderReadable
+                                ? '已读取'
+                                : '待选择'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                <div className="adv-preflight-actions">
+                  <button
+                    disabled={busy || checking || loaderChecking}
+                    onClick={() => {
+                      setFileInfo(null);
+                      setLoaderReadable(false);
+                      setFileRevision((n) => n + 1);
+                      setLoaderRevision((n) => n + 1);
+                      setMessage(
+                        '已请求重新检查已选文件。接口状态来自当前扫描结果；擦写前由后端执行设备端预检。'
+                      );
+                    }}
+                  >
+                    运行预检
+                  </button>
+                  <button
+                    className="firmware-start"
+                    disabled={!canStart}
+                    onClick={() => void startFlash()}
+                  >
+                    {busy ? '任务进行中…' : '确认写入…'}
+                  </button>
+                </div>
+              </section>
             </div>
           ) : (
             <div role="tabpanel" id="firmware-ai" aria-labelledby="firmware-ai-tab">
@@ -849,15 +944,7 @@ export default function FirmwareFlashPanel({
                   </>
                 )}
               </p>
-              {tab === 'offline' ? (
-                <button
-                  className="firmware-start"
-                  disabled={!canStart}
-                  onClick={() => void startFlash()}
-                >
-                  {busy ? '任务进行中…' : '开始烧录'}
-                </button>
-              ) : (
+              {tab === 'ai' && (
                 <p className="firmware-caption">
                   由已连接的 AI 客户端发起 MCP 烧录任务，此处同步展示执行结果。
                 </p>

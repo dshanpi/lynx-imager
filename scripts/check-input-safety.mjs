@@ -38,6 +38,14 @@ const reviewedFocusCounts = new Map([
   ['src/Components/ADBExplorer/Hooks/useNewFolder.ts', 2],
   ['src/Components/SerialTool/Components/SerialMonitor.tsx', 1],
   ['src/Components/SPITool/Components/SPIMasterTab.tsx', 1],
+  // Settings opens on click. Its close button receives initial focus, and the
+  // palette and settings return focus to their respective openers on dismissal.
+  ['src/Settings/Settings.tsx', 2],
+  ['src/Themes/Components/ThemeViewer.tsx', 1],
+  ['src/main.tsx', 1],
+  // Explicit Tab at a modal boundary and an explicit clipboard copy fallback.
+  ['src/CoreUI/dialogKeys.ts', 1],
+  ['src/Components/Imager/imagerAIControls.tsx', 1],
 ]);
 
 const violations = [];

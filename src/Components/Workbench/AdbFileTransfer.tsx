@@ -1,15 +1,20 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { confirm, open, save } from '@tauri-apps/plugin-dialog';
 import { LynxIcon } from '../../CoreUI';
 import { invokeCommand, subscribeEvent } from '../../Platform/IPC';
 import type { AdbTransferSnapshot, WorkbenchDevice } from '../../Platform/IPC/Commands';
 import { formatErrorMessage } from '../../Utils';
 import './AdbFileTransfer.css';
+import { listDirectory } from '../../Library/ADB/AdbLibrary';
+import type { AdbDirectoryListing } from '../../Library/ADB/types';
 
 interface Props {
   device: WorkbenchDevice;
   isActive: boolean;
   compact?: boolean;
+  online?: boolean;
+  onOpenSettings?: () => void;
+  onDetect?: () => void;
 }
 
 function fileName(path: string) {
@@ -35,13 +40,51 @@ function statusLabel(status: string) {
   );
 }
 
-export const AdbFileTransfer: React.FC<Props> = ({ device, isActive, compact = false }) => {
+export const AdbFileTransfer: React.FC<Props> = ({
+  device,
+  isActive,
+  compact = false,
+  online,
+  onOpenSettings,
+  onDetect,
+}) => {
   const [uploadLocal, setUploadLocal] = useState('');
   const [uploadRemote, setUploadRemote] = useState('/data/local/tmp/');
   const [downloadRemote, setDownloadRemote] = useState('');
   const [overwrite, setOverwrite] = useState(false);
   const [tasks, setTasks] = useState<AdbTransferSnapshot[]>([]);
   const [error, setError] = useState('');
+  const [path, setPath] = useState('/');
+  const [listing, setListing] = useState<AdbDirectoryListing | null>(null);
+  const [listError, setListError] = useState('');
+  const [revision, setRevision] = useState(0);
+  const [transferForm, setTransferForm] = useState<'upload' | 'download' | null>(null);
+  const transferPending = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  useEffect(() => {
+    let cancelled = false;
+    setListing(null);
+    setListError('');
+    if (online && isActive && device.adbSerial) {
+      void listDirectory(device.adbSerial, path)
+        .then((result) => {
+          if (!cancelled) setListing(result);
+        })
+        .catch((cause) => {
+          if (!cancelled) setListError(formatErrorMessage(cause));
+        });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [device.adbSerial, isActive, online, path, revision]);
 
   const refresh = useCallback(async () => {
     if (!device.id) return;
@@ -83,19 +126,31 @@ export const AdbFileTransfer: React.FC<Props> = ({ device, isActive, compact = f
 
   const chooseUpload = async () => {
     const selected = await open({ multiple: false, directory: false, title: '选择要上传的文件' });
-    if (typeof selected !== 'string') return;
+    if (typeof selected !== 'string' || !mounted.current) return;
     setUploadLocal(selected);
     if (uploadRemote.endsWith('/')) setUploadRemote(`${uploadRemote}${fileName(selected)}`);
   };
 
   const start = async (direction: 'upload' | 'download', localPath: string, remotePath: string) => {
-    if (!device.id || !device.adbSerial || running) return;
+    if (
+      !device.id ||
+      !device.adbSerial ||
+      online === false ||
+      running ||
+      transferPending.current ||
+      !mounted.current
+    )
+      return;
+    transferPending.current = true;
+    setSubmitting(true);
     setError('');
     try {
       const snapshot = await invokeCommand('adb_transfer_start', {
         request: { deviceId: device.id, direction, localPath, remotePath, overwrite },
       });
-      setTasks((current) => [snapshot, ...current]);
+      setTasks((current) =>
+        current.some((t) => t.taskId === snapshot.taskId) ? current : [snapshot, ...current]
+      );
     } catch (value) {
       const detail = formatErrorMessage(value);
       if (/ADB_(REMOTE|LOCAL)_EXISTS/.test(detail) && !overwrite) {
@@ -103,13 +158,14 @@ export const AdbFileTransfer: React.FC<Props> = ({ device, isActive, compact = f
           title: '确认覆盖文件',
           kind: 'warning',
         });
-        if (approved) {
-          setOverwrite(true);
+        if (approved && mounted.current) {
           try {
             const snapshot = await invokeCommand('adb_transfer_start', {
               request: { deviceId: device.id, direction, localPath, remotePath, overwrite: true },
             });
-            setTasks((current) => [snapshot, ...current]);
+            setTasks((current) =>
+              current.some((t) => t.taskId === snapshot.taskId) ? current : [snapshot, ...current]
+            );
             return;
           } catch (retryError) {
             setError(formatErrorMessage(retryError));
@@ -118,6 +174,9 @@ export const AdbFileTransfer: React.FC<Props> = ({ device, isActive, compact = f
         }
       }
       setError(detail);
+    } finally {
+      transferPending.current = false;
+      if (mounted.current) setSubmitting(false);
     }
   };
 
@@ -129,6 +188,230 @@ export const AdbFileTransfer: React.FC<Props> = ({ device, isActive, compact = f
     });
     if (target) await start('download', target, downloadRemote.trim());
   };
+
+  if (online !== undefined) {
+    const blocked = !online || !device.adbSerial || running || submitting;
+    const crumbs = [
+      '/',
+      ...path
+        .split('/')
+        .filter(Boolean)
+        .map((_, index, folders) => '/' + folders.slice(0, index + 1).join('/')),
+    ];
+    const browse = (next: string) => {
+      setPath(next);
+      setDownloadRemote('');
+    };
+    const run = (action: () => Promise<void>) => {
+      void action().catch((e) => setError(formatErrorMessage(e)));
+    };
+    return (
+      <section className="adv-files" data-testid="adb-file-transfer" data-device-id={device.id}>
+        <div className="adv-page-heading">
+          <h2>文件传输</h2>
+          <span>{device.name} · ADB</span>
+        </div>
+        <h3>ADB 文件传输</h3>
+        {!online && (
+          <div className="adv-warning" role="status">
+            {device.adbSerial ? `未检测到已绑定设备 ${device.adbSerial}` : '尚未绑定 ADB 设备。'}
+            {device.adbSerial ? (
+              <button onClick={onDetect}>重新检测接口</button>
+            ) : (
+              <button onClick={onOpenSettings}>设备设置</button>
+            )}
+          </div>
+        )}
+        <div className="adv-file-buttons">
+          <button
+            className="adv-primary"
+            disabled={blocked}
+            onClick={() => {
+              setTransferForm('upload');
+              setUploadLocal('');
+              setUploadRemote(path.replace(/\/?$/, '/'));
+            }}
+          >
+            发送文件至设备
+          </button>
+          <button disabled={blocked} onClick={() => setTransferForm('download')}>
+            从设备接收
+          </button>
+          <button disabled={!online} onClick={() => setRevision((n) => n + 1)}>
+            刷新目录
+          </button>
+        </div>
+        {transferForm && (
+          <form
+            className="adv-transfer-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              run(
+                transferForm === 'upload'
+                  ? () => start('upload', uploadLocal, uploadRemote.trim())
+                  : chooseDownload
+              );
+            }}
+          >
+            {transferForm === 'upload' ? (
+              <>
+                <label>
+                  本机文件{' '}
+                  <button type="button" disabled={blocked} onClick={() => run(chooseUpload)}>
+                    {uploadLocal || '选择文件'}
+                  </button>
+                </label>
+                <label>
+                  设备保存路径{' '}
+                  <input value={uploadRemote} onChange={(e) => setUploadRemote(e.target.value)} />
+                </label>
+              </>
+            ) : (
+              <label>
+                设备文件路径{' '}
+                <input
+                  value={downloadRemote}
+                  onChange={(e) => setDownloadRemote(e.target.value)}
+                  placeholder="/var/log/boot.log"
+                />
+              </label>
+            )}
+            <label>
+              <input
+                type="checkbox"
+                checked={overwrite}
+                onChange={(e) => setOverwrite(e.target.checked)}
+              />
+              允许覆盖目标文件
+            </label>
+            <div>
+              <button
+                className="adv-primary"
+                disabled={
+                  blocked ||
+                  (transferForm === 'upload'
+                    ? !uploadLocal || !uploadRemote.trim()
+                    : !downloadRemote.trim())
+                }
+              >
+                {' '}
+                {transferForm === 'upload' ? '确认发送' : '选择保存位置并接收'}
+              </button>
+              <button type="button" onClick={() => setTransferForm(null)}>
+                收起
+              </button>
+            </div>
+          </form>
+        )}
+        {online && (
+          <div className="adv-directory">
+            <nav aria-label="目录路径">
+              {crumbs.map((folder, i) => (
+                <button
+                  key={folder}
+                  aria-current={folder === path ? 'location' : undefined}
+                  onClick={() => browse(folder)}
+                  style={{ paddingInlineStart: Math.min(i, 6) * 8 + 8 + 'px' }}
+                >
+                  <LynxIcon name="folder" size={16} />
+                  {fileName(folder) || '/'}
+                </button>
+              ))}
+            </nav>
+            <div>
+              <h3>{path}</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>文件名</th>
+                    <th>大小</th>
+                    <th>修改时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {listing?.items.map((item) => (
+                    <tr key={item.path}>
+                      <td>
+                        <button
+                          type="button"
+                          aria-pressed={!item.is_directory && downloadRemote === item.path}
+                          onClick={() => {
+                            if (item.is_directory) browse(item.path);
+                            else {
+                              setDownloadRemote(item.path);
+                              setTransferForm('download');
+                            }
+                          }}
+                        >
+                          <LynxIcon name={item.is_directory ? 'folder' : 'document'} size={16} />
+                          {item.name}
+                        </button>
+                      </td>
+                      <td>{item.is_directory ? '—' : bytes(item.size)}</td>
+                      <td>
+                        {item.modified_time
+                          ? new Date(item.modified_time * 1000).toLocaleString()
+                          : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {listError ? (
+                <p role="alert">{listError}</p>
+              ) : !listing || !listing.items.length ? (
+                <p>{listing ? '目录为空。' : '正在读取目录…'}</p>
+              ) : null}
+            </div>
+          </div>
+        )}
+        <h3>传输队列</h3>
+        {error && (
+          <p className="adv-warning" role="alert">
+            {error}
+          </p>
+        )}
+        <table>
+          <thead>
+            <tr>
+              <th>方向</th>
+              <th>文件</th>
+              <th>大小</th>
+              <th>进度</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleTasks.map((task) => (
+              <tr key={task.taskId}>
+                <td>{task.direction === 'upload' ? '本机 → 设备' : '设备 → 本机'}</td>
+                <td>{task.fileName}</td>
+                <td>
+                  {bytes(task.transferredBytes)}
+                  {task.totalBytes != null && ' / ' + bytes(task.totalBytes)}
+                </td>
+                <td>
+                  {statusLabel(task.status)} {task.errorCode}
+                  {(task.status === 'queued' || task.status === 'running') && (
+                    <button
+                      onClick={() =>
+                        run(async () => {
+                          await invokeCommand('adb_transfer_cancel', { taskId: task.taskId });
+                          await refresh();
+                        })
+                      }
+                    >
+                      取消
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!visibleTasks.length && <p className="adv-empty-message">当前设备暂无传输记录。</p>}
+      </section>
+    );
+  }
 
   return (
     <section

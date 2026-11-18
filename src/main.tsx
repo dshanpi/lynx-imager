@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
-import { motion } from 'framer-motion';
+import { LynxIcon } from './CoreUI/LynxIcon/LynxIcon';
 import { Popup } from './CoreUI';
 import { WorkbenchPage } from './Components/Workbench';
-import { AISupervisorPage, type AISupervisorSection } from './Components/AISupervisor';
+import { ImagerAIWorkspace } from './Components/Imager/ImagerAIWorkspace';
+import { TaskRecords } from './Components/Imager/TaskRecords';
 import { ImagerPage } from './Components/Imager/ImagerPage';
 import { Settings, loadSettings } from './Settings';
 import { authService, AuthUserInfo } from './Services';
@@ -25,17 +26,12 @@ import { installDiagnosticReporter } from './Services/DiagnosticReporter';
 import { invokeCommand, subscribeEvent } from './Platform/IPC';
 import './Components/Imager/ImagerShell.css';
 
-const SUPERVISOR_SECTIONS: Record<string, AISupervisorSection> = {
-  'ai-supervisor-overview': 'overview',
-  'ai-supervisor-config': 'config',
-  'ai-supervisor-automatic': 'automatic',
-  'ai-supervisor-runtime': 'runtime',
-  // Compatibility aliases for persisted navigation IDs from v0.3 previews.
-  'ai-supervisor-providers': 'config',
-  'ai-supervisor-policies': 'config',
-  'ai-supervisor-permissions': 'config',
-  'ai-supervisor-human': 'runtime',
-  'ai-supervisor-audit': 'runtime',
+type Workspace = 'basic' | 'advanced' | 'ai';
+type WorkspaceStatus = { target: string; task: string };
+const workspaceNames: Record<Workspace, string> = {
+  basic: '基础烧录',
+  advanced: '高级烧录',
+  ai: '连接 AI',
 };
 
 /**
@@ -64,8 +60,66 @@ async function showAppWindow() {
  * - Settings visibility
  */
 const AppContent: React.FC = () => {
-  const { setThemeMode } = useTheme();
-  const [activeTool, setActiveTool] = useState('lynx-imager');
+  const { setThemeMode, isDark, currentThemeId, currentColors } = useTheme();
+  const [activeTool, setActiveTool] = useState<Workspace>('basic');
+  const [visited, setVisited] = useState<Workspace[]>(['basic']);
+  const [flashTarget, setFlashTarget] = useState<{ deviceId: number; sequence: number }>();
+  const [recordsOpen, setRecordsOpen] = useState(false);
+  const [statuses, setStatuses] = useState<Partial<Record<Workspace, WorkspaceStatus>>>({});
+  const rememberStatus = useCallback((workspace: Workspace, next: WorkspaceStatus) => {
+    setStatuses((old) =>
+      old[workspace]?.target === next.target && old[workspace]?.task === next.task
+        ? old
+        : { ...old, [workspace]: next }
+    );
+  }, []);
+  const basicStatus = useCallback(
+    (s: WorkspaceStatus) => rememberStatus('basic', s),
+    [rememberStatus]
+  );
+  const advancedStatus = useCallback(
+    (s: WorkspaceStatus) => rememberStatus('advanced', s),
+    [rememberStatus]
+  );
+  const aiStatus = useCallback((s: WorkspaceStatus) => rememberStatus('ai', s), [rememberStatus]);
+  const activate = useCallback((key: Workspace) => {
+    setVisited((keys) => (keys.includes(key) ? keys : [...keys, key]));
+    setActiveTool(key);
+  }, []);
+  const openFlash = useCallback(
+    (deviceId: number) => {
+      setFlashTarget((old) => ({ deviceId, sequence: (old?.sequence ?? 0) + 1 }));
+      activate('advanced');
+    },
+    [activate]
+  );
+  const openRecords = useCallback(() => setRecordsOpen(true), []);
+  const settingsTrigger = useRef<HTMLElement | null>(null);
+  const displayedStatus = statuses[activeTool];
+  const alternateStyle = currentThemeId.startsWith('lynx-')
+    ? undefined
+    : ({
+        '--color-background': currentColors.base,
+        '--color-surface': currentColors.mantle,
+        '--color-sidebar': currentColors.mantle,
+        '--color-subtle': currentColors.crust,
+        '--color-text': currentColors.text,
+        '--color-muted': currentColors.subtext0,
+        '--color-brand': currentColors.accent,
+        '--color-primary': currentColors.accent,
+        '--color-on-primary': currentColors.accentText,
+        '--color-selected': currentColors.interactiveActive,
+        '--color-selection-line': currentColors.accent,
+        '--color-focus': currentColors.accent,
+        '--color-border': currentColors.border,
+        '--color-divider': currentColors.surface1,
+        '--color-control-border': currentColors.overlay1,
+        '--color-connected': currentColors.success,
+        '--color-error': currentColors.error,
+        '--color-warning': currentColors.warning,
+        '--color-chart-cpu': currentColors.accent,
+        '--color-chart-memory': currentColors.subtext0,
+      } as React.CSSProperties);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [hardwareBlockMessage, setHardwareBlockMessage] = useState('');
   // 当前登录用户（null 表示未登录）。登录结果经 auth-login-result 事件回传。
@@ -192,156 +246,110 @@ const AppContent: React.FC = () => {
   }, [authUser, clearExpiredAuthentication]);
 
   const handleSettingsClick = useCallback(() => {
-    authService
-      .getUser()
-      .then((user) => setAuthUser(user))
-      .catch(() => {
-        clearExpiredAuthentication();
-        alert('登录已过期，请重新登录');
-      })
-      .finally(() => setSettingsVisible(true));
-  }, [clearExpiredAuthentication]);
-
-  /** Page fade animation variants */
-  const pageVariants = {
-    visible: { opacity: 1 },
-    hidden: { opacity: 0 },
-  };
-
-  /** Page transition duration */
-  const pageTransition = {
-    duration: 0.15,
-  };
-
-  /**
-   * Renders all tool panels.
-   *
-   * Uses visibility toggling with opacity animations for smooth
-   * transitions between tools. All panels exist in DOM for state
-   * preservation, but only active one is visible and interactive.
-   */
-  const renderAllTools = () => (
-    <div className="tool-panels-container">
-      <motion.div
-        className="tool-panel"
-        variants={pageVariants}
-        animate={activeTool === 'lynx-imager' ? 'visible' : 'hidden'}
-        transition={pageTransition}
-        style={{
-          pointerEvents: activeTool === 'lynx-imager' ? 'auto' : 'none',
-          visibility: activeTool === 'lynx-imager' ? 'visible' : 'hidden',
-          zIndex: activeTool === 'lynx-imager' ? 1 : 0,
-        }}
-      >
-        <ImagerPage onOpenAdvancedWorkbench={() => setActiveTool('workbench')} />
-      </motion.div>
-      <motion.div
-        className="tool-panel"
-        variants={pageVariants}
-        animate={SUPERVISOR_SECTIONS[activeTool] ? 'visible' : 'hidden'}
-        transition={pageTransition}
-        style={{
-          pointerEvents: SUPERVISOR_SECTIONS[activeTool] ? 'auto' : 'none',
-          visibility: SUPERVISOR_SECTIONS[activeTool] ? 'visible' : 'hidden',
-          zIndex: SUPERVISOR_SECTIONS[activeTool] ? 1 : 0,
-        }}
-      >
-        <AISupervisorPage
-          section={SUPERVISOR_SECTIONS[activeTool] ?? 'overview'}
-          isActive={Boolean(SUPERVISOR_SECTIONS[activeTool])}
-        />
-      </motion.div>
-      <motion.div
-        className="tool-panel"
-        variants={pageVariants}
-        data-active-workbench={activeTool === 'workbench'}
-        animate={activeTool === 'workbench' ? 'visible' : 'hidden'}
-        transition={pageTransition}
-        style={{
-          pointerEvents: activeTool === 'workbench' ? 'auto' : 'none',
-          visibility: activeTool === 'workbench' ? 'visible' : 'hidden',
-          zIndex: activeTool === 'workbench' ? 1 : 0,
-        }}
-      >
-        <WorkbenchPage isActive={activeTool === 'workbench'} />
-      </motion.div>
-      {/* {activeTool === 'dram-tunning' && (
-        <motion.div
-          className="tool-panel active"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={pageTransition}
-        >
-          <DRAMTunningPage isActive={true} />
-        </motion.div>
-      )} */}
-    </div>
-  );
-
+    settingsTrigger.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setSettingsVisible(true);
+  }, []);
+  const closeSettings = useCallback(() => {
+    setSettingsVisible(false);
+    requestAnimationFrame(() => settingsTrigger.current?.focus());
+  }, []);
+  const shared = { onOpenSettings: handleSettingsClick, onOpenRecords: openRecords };
   return (
-    <>
-      <div className="imager-app-shell">
+    <div className="imager-themed" data-theme={isDark ? 'dark' : 'light'} style={alternateStyle}>
+      <div className="imager-app-shell" inert={settingsVisible || undefined}>
         <header className="imager-app-header">
-          <div className="imager-brand" aria-label="LYNX Imager">
-            <span className="imager-brand-mark" aria-hidden="true">L</span>
+          <div className="imager-brand">
+            <svg aria-hidden="true" viewBox="0 0 25 25">
+              <path fill="currentColor" d="M5 3h7L8.8 16.5H22l-1.3 5.5H.5z" />
+              <path fill="currentColor" opacity=".45" d="M14.4 3h5l-1.5 6.5h-5z" />
+            </svg>
             <strong>LYNX Imager</strong>
           </div>
           <nav className="imager-app-tabs" aria-label="工作区">
-            <button
-              className={activeTool === 'lynx-imager' ? 'is-active' : ''}
-              onClick={() => setActiveTool('lynx-imager')}
-            >
-              基础烧录
-            </button>
-            <button
-              className={activeTool === 'workbench' ? 'is-active' : ''}
-              onClick={() => setActiveTool('workbench')}
-            >
-              高级烧录
-            </button>
-            <button
-              className={SUPERVISOR_SECTIONS[activeTool] ? 'is-active' : ''}
-              onClick={() => setActiveTool('ai-supervisor-config')}
-            >
-              连接 AI
-            </button>
+            {(Object.keys(workspaceNames) as Workspace[]).map((key) => (
+              <button
+                key={key}
+                type="button"
+                aria-current={activeTool === key ? 'page' : undefined}
+                className={activeTool === key ? 'is-active' : ''}
+                onClick={() => activate(key)}
+              >
+                {workspaceNames[key]}
+              </button>
+            ))}
           </nav>
           <div className="imager-app-actions">
             <button
               type="button"
-              title="帮助"
-              aria-label="帮助"
-              onClick={() => void openUrl('https://github.com/dshanpi/lynx-imager')}
+              onClick={() =>
+                void openUrl('https://github.com/dshanpi/lynx-imager').catch((e) =>
+                  setHardwareBlockMessage(String(e))
+                )
+              }
             >
-              ?
+              <LynxIcon name="info" size={16} />
+              使用帮助
             </button>
-            <button type="button" title="设置" aria-label="设置" onClick={handleSettingsClick}>
-              ⚙
+            <button type="button" onClick={handleSettingsClick}>
+              <LynxIcon name="settings" size={16} />
+              设置
             </button>
           </div>
         </header>
-        <main className="imager-app-main">{renderAllTools()}</main>
+        <main className="imager-app-main">
+          <div className="imager-screen" hidden={activeTool !== 'basic'}>
+            <ImagerPage
+              {...shared}
+              onStatusChange={basicStatus}
+              onOpenAdvancedWorkbench={() => activate('advanced')}
+            />
+          </div>
+          {visited.includes('advanced') && (
+            <div className="imager-screen" hidden={activeTool !== 'advanced'}>
+              <WorkbenchPage
+                {...shared}
+                flashTarget={flashTarget}
+                onStatusChange={advancedStatus}
+                isActive={activeTool === 'advanced'}
+              />
+            </div>
+          )}
+          {visited.includes('ai') && (
+            <div className="imager-screen" hidden={activeTool !== 'ai'}>
+              <ImagerAIWorkspace
+                {...shared}
+                onOpenFlash={openFlash}
+                onStatusChange={aiStatus}
+                isActive={activeTool === 'ai'}
+              />
+            </div>
+          )}
+        </main>
         <footer className="imager-app-status">
-          <span>开源版 · 专注系统烧录与 AI 接管</span>
-          <span>LYNX Imager</span>
+          <LynxIcon name="board" size={16} />
+          <span>{displayedStatus?.target || workspaceNames[activeTool]}</span>
+          {displayedStatus?.task && <span>{displayedStatus.task}</span>}
         </footer>
       </div>
-      <Settings
-        visible={settingsVisible}
-        authenticated={Boolean(authUser)}
-        onAuthExpired={clearExpiredAuthentication}
-        onClose={() => setSettingsVisible(false)}
-        onSettingsChange={() => undefined}
-      />
+      {recordsOpen && <TaskRecords onClose={() => setRecordsOpen(false)} />}
+      {settingsVisible && (
+        <Settings
+          visible
+          authenticated={Boolean(authUser)}
+          onAuthExpired={clearExpiredAuthentication}
+          onClose={closeSettings}
+          onSettingsChange={() => undefined}
+        />
+      )}
       <Popup
         visible={Boolean(hardwareBlockMessage)}
         type="warning"
-        title="硬件任务保护"
+        title="工作台提示"
         message={hardwareBlockMessage}
         onClose={() => setHardwareBlockMessage('')}
       />
-    </>
+    </div>
   );
 };
 

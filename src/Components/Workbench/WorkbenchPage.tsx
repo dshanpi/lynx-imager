@@ -1,15 +1,13 @@
 import React from 'react';
-import { Workbench } from './Workbench';
+import { Workbench, type WorkbenchProps } from './Workbench';
 
-interface WorkbenchPageProps {
-  isActive?: boolean;
-}
+type WorkbenchPageProps = Omit<WorkbenchProps, 'isActive'> & { isActive?: boolean };
 
 /** Top-level page for remote build, transfer, flash, and device validation. */
-export const WorkbenchPage: React.FC<WorkbenchPageProps> = ({ isActive = true }) => {
+export const WorkbenchPage: React.FC<WorkbenchPageProps> = ({ isActive = true, ...actions }) => {
   return (
     <div className="device-workbench-page">
-      <Workbench isActive={isActive} />
+      <Workbench isActive={isActive} {...actions} />
     </div>
   );
 };

@@ -255,6 +255,7 @@ pub fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Syn
         crate::file::extract_file_chunked,
         crate::file::extract_files_batch,
         crate::file::get_file_size,
+        crate::file::imager_file_identity,
         crate::firmware::commands::firmware_parse_image,
         crate::firmware::commands::firmware_read_entry_by_filename,
         crate::firmware::commands::firmware_read_entry_by_maintype_subtype,

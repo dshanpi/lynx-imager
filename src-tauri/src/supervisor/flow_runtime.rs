@@ -911,7 +911,7 @@ fn serial_login(
         ));
     };
     debug_assert_eq!(next_stage, SerialLoginStage::Password);
-    let password = keyring::Entry::new("dshanpi-lynx-device-flow", reference)
+    let password = keyring::Entry::new(&crate::keyring_service("dshanpi-lynx-device-flow"), reference)
         .map_err(|_| "SUPERVISOR_DEVICE_FLOW_CREDENTIAL_UNAVAILABLE".to_owned())?
         .get_password()
         .map_err(|_| "SUPERVISOR_DEVICE_FLOW_CREDENTIAL_UNAVAILABLE".to_owned())?;

@@ -357,7 +357,8 @@ impl AuthState {
 
 fn session_entry() -> Result<Entry, String> {
     let service = session_service();
-    Entry::new(&service, AUTH_KEYRING_ACCOUNT).map_err(|error| format!("AUTH_KEYRING:{error}"))
+    Entry::new(&crate::keyring_service(&service), AUTH_KEYRING_ACCOUNT)
+        .map_err(|error| format!("AUTH_KEYRING:{error}"))
 }
 
 fn session_service() -> String {

@@ -95,7 +95,7 @@ function getDefaultSettings(): AppSettings {
 }
 
 /** Settings directory name in home folder */
-const SETTINGS_DIR = '.lynx';
+const SETTINGS_DIR = import.meta.env.VITE_LYNX_LOCAL_BUILD === '1' ? '.lynx-imager-local' : '.lynx';
 
 /** Settings file name */
 const SETTINGS_FILE = 'settings.json';
@@ -103,32 +103,13 @@ const SETTINGS_FILE = 'settings.json';
 /** Queue for serializing save operations */
 let saveQueue: Promise<void> = Promise.resolve();
 
-/** Settings pending delayed save */
-let pendingSettings: AppSettings | null = null;
-
-/** Timer for delayed save debounce */
-let saveTimer: ReturnType<typeof setTimeout> | null = null;
-
-/** Delay before saving settings (ms) */
-const SAVE_DELAY_MS = 1000;
-
 /**
  * Ensures settings directory exists.
  *
  * Creates .lynx directory in user home if it doesn't exist.
  */
 async function ensureSettingsDir(): Promise<void> {
-  try {
-    const dirExists = await exists(SETTINGS_DIR, { baseDir: BaseDirectory.Home });
-    if (!dirExists) {
-      await mkdir(SETTINGS_DIR, {
-        baseDir: BaseDirectory.Home,
-        recursive: true,
-      });
-    }
-  } catch (error) {
-    console.error('Failed to create settings directory:', error);
-  }
+  await mkdir(SETTINGS_DIR, { baseDir: BaseDirectory.Home, recursive: true });
 }
 
 /**
@@ -192,6 +173,7 @@ function migrateSettings(parsed: Record<string, unknown>): AppSettings {
  */
 export async function loadSettings(): Promise<AppSettings> {
   try {
+    await saveQueue;
     const fileExists = await exists(`${SETTINGS_DIR}/${SETTINGS_FILE}`, {
       baseDir: BaseDirectory.Home,
     });
@@ -244,49 +226,18 @@ export async function loadSettings(): Promise<AppSettings> {
   }
 }
 
-/**
- * Saves settings to file with debounce.
- *
- * Writes settings to .lynx/settings.json after a delay
- * to prevent excessive writes during rapid changes. Uses a
- * queue to serialize save operations.
- *
- * Also updates localStorage theme settings immediately.
- *
- * @param settings - AppSettings to save
- */
-export async function saveSettings(settings: AppSettings): Promise<void> {
-  localStorage.setItem('app-theme', settings.themeMode);
-  localStorage.setItem('app-theme-id-dark', settings.themeIdDark);
-  localStorage.setItem('app-theme-id-light', settings.themeIdLight);
-
-  pendingSettings = settings;
-
-  if (saveTimer) {
-    clearTimeout(saveTimer);
-  }
-
-  saveTimer = setTimeout(() => {
-    const settingsToSave = pendingSettings;
-    pendingSettings = null;
-    saveTimer = null;
-
-    if (settingsToSave) {
-      const settingsJson = JSON.stringify(settingsToSave, null, 2);
-      saveQueue = saveQueue
-        .then(async () => {
-          try {
-            await ensureSettingsDir();
-            await writeTextFile(`${SETTINGS_DIR}/${SETTINGS_FILE}`, settingsJson, {
-              baseDir: BaseDirectory.Home,
-            });
-          } catch (error) {
-            console.error('Failed to save settings:', error);
-          }
-        })
-        .catch((error) => {
-          console.error('Save queue error:', error);
-        });
-    }
-  }, SAVE_DELAY_MS);
+/** Resolve only after the selected settings have been written to disk. */
+export function saveSettings(settings: AppSettings): Promise<void> {
+  const contents = JSON.stringify(settings, null, 2);
+  const write = saveQueue.then(async () => {
+    await ensureSettingsDir();
+    await writeTextFile(`${SETTINGS_DIR}/${SETTINGS_FILE}`, contents, {
+      baseDir: BaseDirectory.Home,
+    });
+    localStorage.setItem('app-theme', settings.themeMode);
+    localStorage.setItem('app-theme-id-dark', settings.themeIdDark);
+    localStorage.setItem('app-theme-id-light', settings.themeIdLight);
+  });
+  saveQueue = write.catch((error) => console.error('Failed to save settings:', error));
+  return write;
 }

@@ -41,6 +41,14 @@ mod workbench;
 
 pub use app_error::IpcErrorContract;
 
+pub(crate) fn keyring_service(service: &str) -> std::borrow::Cow<'_, str> {
+    if option_env!("VITE_LYNX_LOCAL_BUILD") == Some("1") {
+        format!("{service}.imager-local").into()
+    } else {
+        service.into()
+    }
+}
+
 use tauri_plugin_log::{Target, TargetKind};
 
 pub(crate) fn isolated_test_instance() -> bool {

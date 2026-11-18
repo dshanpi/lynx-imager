@@ -1,3 +1,7 @@
+interface ImportMeta {
+  readonly env: { readonly VITE_LYNX_LOCAL_BUILD?: string };
+}
+
 declare module '*.css' {
   const content: { [className: string]: string };
   export default content;

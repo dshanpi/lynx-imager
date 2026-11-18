@@ -1,4 +1,5 @@
 import React from 'react';
+import { handleDialogKey } from '../../CoreUI/dialogKeys';
 import { useTheme } from '../ThemeProvider';
 import { useTranslation } from 'react-i18next';
 import './ThemeViewer.css';
@@ -18,12 +19,24 @@ const ThemeViewer: React.FC<ThemeViewerProps> = ({ visible, onClose }) => {
 
   return (
     <div className="theme-viewer-overlay" onClick={onClose}>
-      <div className="theme-viewer-panel" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="theme-viewer-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="imager-theme-viewer-title"
+        onKeyDown={(event) => handleDialogKey(event, onClose)}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="theme-viewer-header">
-          <h2>
+          <h2 id="imager-theme-viewer-title">
             {t('themeViewer.title')} - {currentTheme.name} ({currentTheme.variantName})
           </h2>
-          <button className="theme-viewer-close" onClick={onClose}>
+          <button
+            className="theme-viewer-close"
+            aria-label={t('settings.close')}
+            autoFocus
+            onClick={onClose}
+          >
             ×
           </button>
         </div>

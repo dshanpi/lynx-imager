@@ -217,7 +217,7 @@ const TerminalSurface = forwardRef<TerminalHandle, TerminalSurfaceProps>(
       terminalRef.current = terminal;
       if (initialData.length) {
         enqueueTerminalWrite(new Uint8Array(initialData.slice(-TERMINAL_HISTORY_BYTES)));
-      } else terminal.writeln(`\x1b[90m${placeholder}\x1b[0m`);
+      } else terminal.writeln(placeholder);
       const dataSubscription = terminal.onData((data) => onDataRef.current(data));
       let fitFrame = 0;
       const scheduleFit = () => {
@@ -388,6 +388,7 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
   const terminalAppearance = isDark ? 'dark' : 'light';
   const [runtimes, setRuntimes] = useState<Record<string, BoardRuntime>>({});
   const [serialInputNotice, setSerialInputNotice] = useState('');
+  const [serialCommand, setSerialCommand] = useState('');
   const boardsRef = useRef<WorkbenchDevice[]>([]);
   const selectedDeviceRef = useRef<WorkbenchDevice | undefined>(selectedDevice);
   const flashTargetRef = useRef('');
@@ -436,6 +437,7 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
 
   useEffect(() => {
     setSerialInputNotice('');
+    setSerialCommand('');
   }, [selectedId]);
 
   const updateRuntime = useCallback(
@@ -1400,7 +1402,6 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
               <div className="board-terminal-heading">
                 <i className={serialDetected ? 'is-online' : ''} />
                 <div>
-                  <small>SERIAL TERMINAL</small>
                   <strong>串口终端</strong>
                 </div>
               </div>
@@ -1493,6 +1494,25 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
               variant="serial"
               onData={sendSerial}
             />
+            <form
+              className="adv-serial-input"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!serialReady || !serialCommand.trim()) return;
+                sendSerial(serialCommand + '\r');
+                setSerialCommand('');
+              }}
+            >
+              <label htmlFor="advanced-serial-input">终端输入</label>
+              <input
+                id="advanced-serial-input"
+                value={serialCommand}
+                disabled={!serialReady}
+                onChange={(event) => setSerialCommand(event.target.value)}
+                placeholder="输入命令"
+              />
+              <button disabled={!serialReady || !serialCommand.trim()}>发送</button>
+            </form>
           </div>
         )}
         {view === 'flash' && (

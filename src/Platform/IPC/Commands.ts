@@ -571,7 +571,8 @@ export interface IpcCommandMap
   extract_files_batch: IpcCommandSpec;
 
   /** Get file size in bytes */
-  get_file_size: IpcCommandSpec<{ filePath: string }, number>;
+  get_file_size: IpcCommandSpec<{ path: string }, number>;
+  imager_file_identity: IpcCommandSpec<{ path: string }, { sizeBytes: number; sha256: string }>;
 
   /** Start flash operation */
   flash_start: IpcCommandSpec<

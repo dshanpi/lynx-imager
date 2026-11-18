@@ -57,6 +57,9 @@ export function getUpdateAssetSize(update: {
 }
 
 export async function checkForUpdate(forceFull = false) {
+  if (import.meta.env.VITE_LYNX_LOCAL_BUILD === '1') {
+    throw new Error('此安装包用于本地验收，未连接发布更新通道。');
+  }
   // The configured GitHub-only feed always serves signed full packages.
   // Static hosting cannot select a different artifact from X-Update-Mode.
   const proxy = await getSystemProxy();
@@ -105,6 +108,7 @@ async function offerFullFallback(failure: DeltaUpdateFailure): Promise<void> {
  * version prompt. Tauri verifies the updater signature before installation.
  */
 export function scheduleAutomaticUpdateCheck(): () => void {
+  if (import.meta.env.VITE_LYNX_LOCAL_BUILD === '1') return () => {};
   let cancelled = false;
 
   const timer = window.setTimeout(async () => {

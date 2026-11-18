@@ -22,7 +22,9 @@ Var LynxPreviousInstallDir
   !insertmacro LynxRejectRunning "lynx-imager.exe"
   ; Keep the legacy process guard so a v0.1.0 process cannot keep using the
   ; old UI while a renamed executable is being installed beside it.
-  !insertmacro LynxRejectRunning "lynx-app.exe"
+  !ifndef LYNX_IMAGER_LOCAL_TEST
+    !insertmacro LynxRejectRunning "lynx-app.exe"
+  !endif
   !insertmacro LynxRejectRunning "openixcli.exe"
   !insertmacro LynxRejectRunning "openrockcli.exe"
   !insertmacro LynxRejectRunning "uuu.exe"
@@ -59,6 +61,9 @@ Var LynxPreviousInstallDir
 !macroend
 
 !macro NSIS_HOOK_PREINSTALL
+  !ifdef LYNX_IMAGER_LOCAL_TEST
+    !insertmacro LynxRequireIdleProcesses
+  !else
   SetShellVarContext current
   ReadRegStr $LynxPreviousInstallDir SHCTX "${MANUPRODUCTKEY}" ""
 
@@ -70,9 +75,11 @@ Var LynxPreviousInstallDir
   System::Call 'kernel32::GetTickCount() i .r0'
   StrCpy $INSTDIR "$LOCALAPPDATA\DshanPI\LYNX\app-${VERSION}-$0"
   SetOutPath $INSTDIR
+  !endif
 !macroend
 
 !macro NSIS_HOOK_POSTINSTALL
+  !ifndef LYNX_IMAGER_LOCAL_TEST
   ; Remove only a path previously registered by LYNX. Locked legacy helpers
   ; are deferred with /REBOOTOK and cannot roll back the completed install.
   StrCmp $LynxPreviousInstallDir "" lynx_previous_cleanup_done
@@ -85,4 +92,5 @@ Var LynxPreviousInstallDir
   lynx_previous_cleanup_allowed:
     RMDir /r /REBOOTOK "$LynxPreviousInstallDir"
   lynx_previous_cleanup_done:
+  !endif
 !macroend

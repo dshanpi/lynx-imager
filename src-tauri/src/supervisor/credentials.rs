@@ -29,12 +29,12 @@ fn service() -> Result<String, String> {
 }
 
 fn entry(provider_id: i64) -> Result<Entry, String> {
-    Entry::new(&service()?, &format!("ai-provider-{provider_id}"))
+    Entry::new(&crate::keyring_service(&service()?), &format!("ai-provider-{provider_id}"))
         .map_err(|error| format!("AI_CREDENTIAL_KEYRING:{error}"))
 }
 
 fn webhook_entry(task_id: i64) -> Result<Entry, String> {
-    Entry::new(&service()?, &format!("automatic-webhook-{task_id}"))
+    Entry::new(&crate::keyring_service(&service()?), &format!("automatic-webhook-{task_id}"))
         .map_err(|error| format!("SUPERVISOR_WEBHOOK_KEYRING:{error}"))
 }
 

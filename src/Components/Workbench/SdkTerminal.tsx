@@ -693,9 +693,7 @@ export default function SdkTerminal({
                 <LynxIcon name="terminal" filled size={20} />
               </span>
               <div>
-                <small>REMOTE DEVELOPMENT</small>
                 <h3>SSH 终端</h3>
-                <p>项目范围内的交互式远程开发会话</p>
               </div>
             </div>
             <div className="sdk-terminal-target">
@@ -775,43 +773,45 @@ export default function SdkTerminal({
             </div>
           </div>
 
-          <div className="sdk-terminal-visibility" data-testid="sdk-terminal-visibility-boundary">
-            <LynxIcon name="info" size={20} />
-            <div>
-              <strong>Lynx 托管会话</strong>
-              <span>
-                从本页启动的 Shell、Codex、Claude 和 DeepSeek Harness 均使用同一套可见 SSH
-                PTY，输入与输出会实时显示并保留；在其他终端单独启动的进程不会被镜像到这里。
-              </span>
+          <details className="adv-ssh-scope">
+            <summary>会话范围与 AI 工具配置</summary>
+            <div className="sdk-terminal-visibility" data-testid="sdk-terminal-visibility-boundary">
+              <LynxIcon name="info" size={20} />
+              <div>
+                <strong>Lynx 托管会话</strong>
+                <span>
+                  从本页启动的 Shell、Codex、Claude 和 DeepSeek Harness 均使用同一套可见 SSH
+                  PTY，输入与输出会实时显示并保留；在其他终端单独启动的进程不会被镜像到这里。
+                </span>
+              </div>
+              <em className={active?.state === 'connected' ? 'is-live' : ''}>
+                {active?.state === 'connected' ? 'LIVE' : 'IDLE'}
+              </em>
             </div>
-            <em className={active?.state === 'connected' ? 'is-live' : ''}>
-              {active?.state === 'connected' ? 'LIVE' : 'IDLE'}
-            </em>
-          </div>
 
-          <div className="sdk-terminal-mcp-scope" data-testid="sdk-terminal-mcp-scope">
-            <LynxIcon name="link" size={20} />
-            <div>
-              <strong>MCP 自动选择：{project?.mcpServerName || '尚未配置'}</strong>
-              <span>
-                当前终端固定到 {project?.name || '当前单板 SDK'} · {board.name}；AI 使用 Skills
-                时依次调用
-                <code>lynx_skills_search → lynx_skills_get → lynx_skills_read</code>。 Skills
-                只提供指导，实际动作仍经过当前 Linux MCP 的作用域和硬件门禁。
-              </span>
+            <div className="sdk-terminal-mcp-scope" data-testid="sdk-terminal-mcp-scope">
+              <LynxIcon name="link" size={20} />
+              <div>
+                <strong>MCP 自动选择：{project?.mcpServerName || '尚未配置'}</strong>
+                <span>
+                  当前终端固定到 {project?.name || '当前单板 SDK'} · {board.name}；AI 使用 Skills
+                  时依次调用
+                  <code>lynx_skills_search → lynx_skills_get → lynx_skills_read</code>。 Skills
+                  只提供指导，实际动作仍经过当前 Linux MCP 的作用域和硬件门禁。
+                </span>
+              </div>
+              <button type="button" onClick={() => void copySkillsPrompt()}>
+                复制调用提示
+              </button>
+              <button
+                type="button"
+                disabled={busy || !project?.id}
+                onClick={() => void syncNativeSkills()}
+              >
+                同步到 AI 工具
+              </button>
             </div>
-            <button type="button" onClick={() => void copySkillsPrompt()}>
-              复制调用提示
-            </button>
-            <button
-              type="button"
-              disabled={busy || !project?.id}
-              onClick={() => void syncNativeSkills()}
-            >
-              同步到 AI 工具
-            </button>
-          </div>
-
+          </details>
           <div className="sdk-terminal-shell">
             <div className="sdk-terminal-tabs">
               {sessions.map((session) => (

@@ -18,22 +18,18 @@ import { formatErrorMessage } from '../../Utils';
 import BoardConsole from './BoardConsole';
 import AdbFileTransfer from './AdbFileTransfer';
 import SdkTerminal from './SdkTerminal';
-import { BoardThumbnail } from './BoardThumbnail';
+import AdvancedOverview, { recordOverview, type MonitorSample } from './AdvancedOverview';
 import { DeviceAiChannel } from '../DeviceAiChannel';
 import {
   EMPTY_LINUX_DEVICE as emptyDevice,
   EMPTY_WORKBENCH_HOST as emptyHost,
   EMPTY_WORKBENCH_PROJECT as emptyProject,
   LINUX_CHIP_VENDORS as CHIP_VENDORS,
-  formatLinuxBytes as formatBytes,
   formatUsbBinding,
-  formatLinuxUptime as formatUptime,
-  linuxBoardSpecs,
   linuxFlashProtocolLabel as flashProtocolLabel,
   linuxUsedPercent as usedPercent,
   linuxVendorHintFromName as vendorHintFromName,
   linuxVendorLabel as vendorLabel,
-  linuxVendorMark as vendorMark,
   readK230Medium as k230Medium,
   readAllwinnerFlashOptions as allwinnerFlashOptions,
   readStm32DfuOptions as stm32DfuOptions,
@@ -45,12 +41,17 @@ import { displaySshFingerprint, testAndConfirmSshHost } from './sshHostTrust';
 import { localMcpConnection, remoteMcpConnection } from './mcpConnections';
 import { buildMcpClientConfig, MCP_CLIENTS, type McpClientId } from './mcpClientProfiles';
 import './Workbench.css';
+import './AdvancedWorkbench.css';
 
-interface WorkbenchProps {
+export interface WorkbenchProps {
   isActive: boolean;
+  onOpenSettings?: () => void;
+  onOpenRecords?: () => void;
+  flashTarget?: { deviceId: number; sequence: number };
+  onStatusChange?: (status: { target: string; task: string }) => void;
 }
 
-type LinuxDeviceView = 'overview' | 'serial' | 'sdk' | 'flash' | 'ai' | 'workspace';
+type LinuxDeviceView = 'overview' | 'serial' | 'sdk' | 'flash' | 'files' | 'ai' | 'workspace';
 type HeaderPowerState = 'on' | 'off' | 'unknown';
 
 type SerialPort = Awaited<ReturnType<typeof listSerialPorts>>[number];
@@ -370,7 +371,13 @@ function isAdbOnline(board: WorkbenchDevice, adbDevices: AdbDevice[]) {
   );
 }
 
-export const Workbench: React.FC<WorkbenchProps> = ({ isActive }) => {
+export const Workbench: React.FC<WorkbenchProps> = ({
+  isActive,
+  onOpenRecords,
+  onOpenSettings,
+  onStatusChange,
+  flashTarget,
+}) => {
   const [devices, setDevices] = useState<WorkbenchDevice[]>([]);
   const [hosts, setHosts] = useState<WorkbenchHost[]>([]);
   const [projects, setProjects] = useState<WorkbenchProject[]>([]);
@@ -432,6 +439,37 @@ export const Workbench: React.FC<WorkbenchProps> = ({ isActive }) => {
       window.removeEventListener('lynx:firmware-serial', serial);
     };
   }, [isActive, device.id]);
+  const handledFlashRequest = useRef<number | null>(null);
+  const [navigationError, setNavigationError] = useState('');
+  useEffect(() => {
+    if (!isActive || !flashTarget || handledFlashRequest.current === flashTarget.sequence) return;
+    let current = true;
+    setNavigationError('');
+    void invokeCommand('workbench_list_devices', undefined, { timeoutMs: 8000 })
+      .then((saved) => {
+        if (!current) return;
+        handledFlashRequest.current = flashTarget.sequence;
+        const target = saved.find((item) => item.id === flashTarget.deviceId);
+        if (!target) {
+          setNavigationError(`未找到设备 #${flashTarget.deviceId}，请检查保存的单板配置。`);
+          return;
+        }
+        creatingBoardRef.current = false;
+        setDevices(saved);
+        setDevice(target);
+        setActiveView('flash');
+      })
+      .catch((cause) => {
+        if (!current) return;
+        handledFlashRequest.current = flashTarget.sequence;
+        setNavigationError(
+          `无法读取烧录目标 #${flashTarget.deviceId}：${formatErrorMessage(cause)}`
+        );
+      });
+    return () => {
+      current = false;
+    };
+  }, [isActive, flashTarget]);
   const [sshOpenRequestId, setSshOpenRequestId] = useState(0);
   const [workspacePrimarySshOnline, setWorkspacePrimarySshOnline] = useState(false);
 
@@ -472,7 +510,8 @@ export const Workbench: React.FC<WorkbenchProps> = ({ isActive }) => {
   });
   const selectedDeviceIdRef = useRef(initialSelectedDeviceId);
   const overviewDeviceIdRef = useRef<number | null>(device.id);
-  const transferSectionRef = useRef<HTMLDivElement>(null);
+  const [monitorSamples, setMonitorSamples] = useState<Record<number, MonitorSample[]>>({});
+  const overviewRequests = useRef(new Set<number>());
   overviewDeviceIdRef.current = device.id;
   const scanningRef = useRef(false);
   const isActiveRef = useRef(isActive);
@@ -1399,6 +1438,16 @@ export const Workbench: React.FC<WorkbenchProps> = ({ isActive }) => {
             ? '最近主线启动失败'
             : '最近烧录失败'
           : '当前无烧录任务';
+  const activeTask = taskHistory.find(
+    (task) => task.deviceId === device.id && ['queued', 'running'].includes(task.status)
+  );
+  const taskLabel = activeTask
+    ? `${activeTask.kind} · ${activeTask.phase || activeTask.status}`
+    : '任务空闲';
+  useEffect(() => {
+    if (isActive)
+      onStatusChange?.({ target: device.id ? device.name : '未选择设备', task: taskLabel });
+  }, [device.id, device.name, isActive, onStatusChange, taskLabel]);
   const flashConnectionText = !device.usbBinding ? '未绑定' : currentUsbOnline ? '在线' : '离线';
 
   useEffect(() => {
@@ -1431,52 +1480,48 @@ export const Workbench: React.FC<WorkbenchProps> = ({ isActive }) => {
       setLinuxOverviewError('请先连接 ADB，或打开该单板的串口并登录目标 Shell。');
       return;
     }
+    const id = device.id;
+    if (overviewRequests.current.has(id)) return;
+    overviewRequests.current.add(id);
     setLinuxOverviewLoading(true);
     try {
-      const next = await invokeCommand('workbench_linux_device_overview', {
-        deviceId: device.id,
-      });
-      setLinuxOverview((current) =>
-        next.deviceId === overviewDeviceIdRef.current ? next : current
-      );
+      const next = await invokeCommand('workbench_linux_device_overview', { deviceId: id });
+      if (next.deviceId !== id) return;
+      setMonitorSamples((current) => ({
+        ...current,
+        [id]: recordOverview(current[id] ?? [], {
+          time: next.collectedAtMs,
+          cpu: next.cpuUsagePct,
+          memory: usedPercent(next.memoryTotalBytes, next.memoryAvailableBytes),
+        }),
+      }));
+      if (overviewDeviceIdRef.current !== id) return;
+      setLinuxOverview(next);
       setLinuxOverviewError('');
     } catch (value) {
-      setLinuxOverviewError(linuxOverviewErrorText(value));
+      if (overviewDeviceIdRef.current === id) setLinuxOverviewError(linuxOverviewErrorText(value));
     } finally {
-      setLinuxOverviewLoading(false);
+      overviewRequests.current.delete(id);
+      if (overviewDeviceIdRef.current === id) setLinuxOverviewLoading(false);
     }
   }, [currentAdbOnline, currentSerialOnline, device.id]);
 
   useEffect(() => {
     setLinuxOverview((current) => (current?.deviceId === device.id ? current : null));
+    setLinuxOverviewLoading(device.id != null && overviewRequests.current.has(device.id));
     setLinuxOverviewError('');
   }, [device.id]);
 
+  const hasSerialSnapshot =
+    linuxOverview?.deviceId === device.id && linuxOverview?.transport === 'serial';
   useEffect(() => {
-    if (!isActive || activeView !== 'overview' || !device.id) return;
-    if (linuxOverview?.deviceId === device.id && linuxOverview.transport === 'serial') return;
+    if (!isActive || activeView !== 'overview' || !device.id || hasSerialSnapshot) return;
     void refreshLinuxOverview();
     const timer = window.setInterval(() => void refreshLinuxOverview(), 10000);
     return () => window.clearInterval(timer);
-  }, [
-    activeView,
-    device.id,
-    isActive,
-    linuxOverview?.deviceId,
-    linuxOverview?.transport,
-    refreshLinuxOverview,
-  ]);
+  }, [activeView, device.id, isActive, hasSerialSnapshot, refreshLinuxOverview]);
 
   const currentLinuxOverview = linuxOverview?.deviceId === device.id ? linuxOverview : null;
-  const memoryUsedPct = usedPercent(
-    currentLinuxOverview?.memoryTotalBytes ?? null,
-    currentLinuxOverview?.memoryAvailableBytes ?? null
-  );
-  const storageUsedPct = usedPercent(
-    currentLinuxOverview?.storageTotalBytes ?? null,
-    currentLinuxOverview?.storageAvailableBytes ?? null
-  );
-
   const selectedPowerType = (() => {
     try {
       return (JSON.parse(device.powerProfileJson) as { type?: string }).type === 'ch347_gpio'
@@ -1553,118 +1598,144 @@ export const Workbench: React.FC<WorkbenchProps> = ({ isActive }) => {
     await powerAction('power_on');
   };
 
+  const createDevice = () => {
+    creatingBoardRef.current = true;
+    setDevice({ ...emptyDevice });
+    setHost({ ...emptyHost });
+    setCredentials({});
+    setProject({
+      ...emptyProject,
+      hostId: 0,
+      name: '新单板 SDK',
+      mcpServerName: mcpName('新单板 SDK'),
+      remoteForwardPort: nextPort(
+        projects.map((item) => item.remoteForwardPort),
+        project.deviceId ? project.remoteForwardPort : undefined,
+        18765
+      ),
+      localGatewayPort: nextPort(
+        projects.map((item) => item.localGatewayPort),
+        project.deviceId ? project.localGatewayPort : undefined,
+        8765
+      ),
+    });
+    openSettings();
+  };
+  const visibleDevices = devices.filter((item) =>
+    `${item.name} ${vendorLabel(item.chipVendor)} ${item.serialPort}`
+      .toLowerCase()
+      .includes(boardSearch.trim().toLowerCase())
+  );
+  const tools: ReadonlyArray<readonly [LinuxDeviceView, string, LynxIconName]> = [
+    ['overview', '概览', 'overview'],
+    ['serial', '串口', 'plug'],
+    ['sdk', 'SSH', 'terminal'],
+    ['flash', '固件烧录', 'download'],
+    ['files', '文件传输', 'folder'],
+    ['ai', 'SDK 通道', 'link'],
+  ];
   return (
-    <div className="board-workbench">
-      <aside className="board-list workbench-card">
-        <div className="device-board-rail-heading">
-          <span>
-            <h3>Linux 单板</h3>
-            <b>{devices.length}</b>
-          </span>
+    <div className="board-workbench advanced-workbench">
+      <aside className="adv-rail" aria-label="设备">
+        <header>
+          <h2>
+            设备 <small>{devices.length}</small>
+          </h2>
           <button
             data-testid="linux-new-board"
-            onClick={() => {
-              creatingBoardRef.current = true;
-              setDevice({ ...emptyDevice });
-              setHost({ ...emptyHost });
-              setCredentials({});
-              setProject({
-                ...emptyProject,
-                hostId: 0,
-                name: '新单板 SDK',
-                mcpServerName: mcpName('新单板 SDK'),
-                remoteForwardPort: nextPort(
-                  projects.map((item) => item.remoteForwardPort),
-                  project.deviceId ? project.remoteForwardPort : undefined,
-                  18765
-                ),
-                localGatewayPort: nextPort(
-                  projects.map((item) => item.localGatewayPort),
-                  project.deviceId ? project.localGatewayPort : undefined,
-                  8765
-                ),
-              });
-              openSettings();
-            }}
+            aria-label="添加设备"
+            title="添加设备"
+            onClick={createDevice}
           >
-            <LynxIcon name="add" size={16} /> 新建
+            <LynxIcon name="add" size={16} />
           </button>
-        </div>
-        <label className="device-board-search">
+        </header>
+        <label className="adv-search">
           <LynxIcon name="search" size={16} />
           <input
+            aria-label="查找设备"
+            placeholder="查找设备"
             value={boardSearch}
-            placeholder="搜索单板"
-            onChange={(event) => setBoardSearch(event.target.value)}
+            onChange={(e) => setBoardSearch(e.target.value)}
           />
         </label>
-        <div className="board-items">
-          {devices
-            .filter((item) =>
-              `${item.name} ${vendorLabel(item.chipVendor)}`
-                .toLowerCase()
-                .includes(boardSearch.trim().toLowerCase())
-            )
-            .map((item) => {
-              const online =
-                isSerialOnline(item, serialPorts) ||
-                isUsbOnline(item, usbDevices) ||
-                isAdbOnline(item, adbDevices);
-              const specs = linuxBoardSpecs(item);
-              return (
-                <div
-                  key={item.id}
-                  className={`board-item is-${item.chipVendor} ${item.id === device.id ? 'is-active' : ''}`}
-                >
-                  <button
-                    className="board-item-select device-board-card-select"
-                    onClick={() => {
-                      creatingBoardRef.current = false;
-                      setDevice(item);
-                    }}
-                  >
-                    <BoardThumbnail
-                      imagePath={item.boardImagePath}
-                      marker={vendorMark(item.chipVendor)}
-                      tone={item.chipVendor}
-                    />
-                    <span className="device-board-copy">
-                      <span className="device-board-name-row">
-                        <strong>{item.name}</strong>
-                        <span className={`board-live-row ${online ? 'is-online' : ''}`}>
-                          <i /> {online ? '在线' : '离线'}
+        <div className="adv-device-list">
+          {CHIP_VENDORS.map((platform) => {
+            const members = visibleDevices.filter((item) => item.chipVendor === platform.value);
+            return (
+              members.length > 0 && (
+                <section key={platform.value}>
+                  <h3>{platform.label}</h3>
+                  {members.map((item) => {
+                    const flashMode = isUsbOnline(item, usbDevices);
+                    const connected =
+                      isAdbOnline(item, adbDevices) || isSerialOnline(item, serialPorts);
+                    return (
+                      <button
+                        type="button"
+                        key={item.id}
+                        className="adv-device"
+                        aria-pressed={item.id === device.id}
+                        onClick={() => {
+                          creatingBoardRef.current = false;
+                          setNavigationError('');
+                          setDevice(item);
+                        }}
+                      >
+                        <LynxIcon name="board" size={16} />
+                        <span>
+                          <strong>{item.name}</strong>
+                          <small>{item.serialPort || platform.protocol}</small>
                         </span>
-                      </span>
-                      <small>{vendorLabel(item.chipVendor)}</small>
-                      <span className="device-board-specs">
-                        <b>{specs[0]}</b>
-                        <em>{specs[1]}</em>
-                      </span>
-                    </span>
-                  </button>
-                </div>
-              );
-            })}
-          {!devices.length && <div className="board-empty">点击“新建”添加第一块单板</div>}
+                        <em className={flashMode || connected ? 'connected' : ''}>
+                          {flashMode ? '烧录模式' : connected ? '已检测' : '未连接'}
+                        </em>
+                      </button>
+                    );
+                  })}
+                </section>
+              )
+            );
+          })}
+          {!visibleDevices.length && (
+            <p>{devices.length ? '没有匹配的设备。' : '尚未添加设备。'}</p>
+          )}
         </div>
+        {(onOpenRecords || onOpenSettings) && (
+          <footer>
+            {onOpenRecords && (
+              <button onClick={onOpenRecords}>
+                <LynxIcon name="history" size={16} />
+                任务记录
+              </button>
+            )}
+            {onOpenSettings && (
+              <button onClick={onOpenSettings}>
+                <LynxIcon name="settings" size={16} />
+                应用设置
+              </button>
+            )}
+          </footer>
+        )}
       </aside>
-
-      <main className="board-main">
+      <main className="adv-main">
+        {!settingsOpen && error && (
+          <p className="adv-navigation-error" role="alert">
+            {error}
+          </p>
+        )}
+        {navigationError && (
+          <p className="adv-navigation-error" role="alert">
+            {navigationError}
+          </p>
+        )}
         {device.id ? (
           <>
-            <header className="device-workbench-header workbench-card">
-              <div className="device-workbench-identity">
-                <span className="device-header-icon">
-                  <LynxIcon name="board" filled size={20} />
-                </span>
-                <div>
-                  <span className="device-workbench-kicker">LINUX / SOC BOARD</span>
-                  <h2>{device.name}</h2>
-                  <p>
-                    {vendorLabel(device.chipVendor)} · 串口绑定 {device.serialPort || '未绑定'} ·
-                    USB 绑定 {formatUsbBinding(device.usbBinding)}
-                  </p>
-                </div>
+            <header className="adv-context">
+              <div className="adv-identity">
+                <LynxIcon name="board" size={16} />
+                <strong>{device.name}</strong>
+                <span>{vendorLabel(device.chipVendor)}</span>
               </div>
               <div className="device-header-actions">
                 <button
@@ -1752,478 +1823,154 @@ export const Workbench: React.FC<WorkbenchProps> = ({ isActive }) => {
               </div>
             </header>
 
-            <nav className="device-workbench-tabs" aria-label="Linux 单板功能">
-              {(
-                [
-                  ['overview', '设备概览', 'board'],
-                  ['serial', '串口终端', 'terminal'],
-                  ['sdk', 'SSH 终端', 'terminal'],
-                  ['flash', '固件烧录', 'download'],
-                  ['ai', 'AI 通道', 'agent'],
-                ] as ReadonlyArray<readonly [LinuxDeviceView, string, LynxIconName]>
-              ).map(([id, label, icon]) => (
+            <nav className="adv-tabs" aria-label="设备工具">
+              {tools.map(([id, label, icon]) => (
                 <button
+                  type="button"
                   key={id}
                   data-testid={`linux-tab-${id}`}
-                  className={activeView === id ? 'is-active' : ''}
+                  aria-current={activeView === id ? 'page' : undefined}
                   onClick={() => setActiveView(id)}
                 >
-                  <span className="device-tab-icon">
-                    <LynxIcon name={icon} filled={activeView === id} size={20} />
-                    <i
-                      className={
-                        (id === 'ai' && tunnelStatus?.state === 'connected') ||
-                        (id === 'sdk' && tunnelStatus?.state === 'connected') ||
-                        (id === 'serial' && currentSerialOnline) ||
-                        (id === 'flash' && currentUsbOnline)
-                          ? 'is-online'
-                          : ''
-                      }
-                    />
-                  </span>
-                  <span>{label}</span>
+                  <LynxIcon name={icon} size={16} />
+                  {label}
                 </button>
               ))}
             </nav>
-
-            {activeView === 'overview' && (
-              <section className="linux-engineering-overview">
-                <section className="engineering-panel linux-overview-telemetry">
-                  <header>
-                    <div>
-                      <small>TARGET TELEMETRY</small>
-                      <h3>Linux 目标机</h3>
-                    </div>
-                    <div className="linux-telemetry-refresh">
-                      <span className={linuxOverviewError ? 'is-warning' : 'is-online'}>
-                        {linuxOverviewLoading
-                          ? '正在读取目标机'
-                          : linuxOverviewError
-                            ? '遥测刷新受阻'
-                            : currentLinuxOverview
-                              ? `更新于 ${new Date(currentLinuxOverview.collectedAtMs).toLocaleTimeString()}`
-                              : '等待目标机数据'}
-                      </span>
-                      <button
-                        disabled={linuxOverviewLoading}
-                        onClick={() => void refreshLinuxOverview()}
-                      >
-                        {linuxOverviewLoading ? '读取中' : '刷新'}
-                      </button>
-                    </div>
-                  </header>
-                  <div className="linux-overview-telemetry-body">
-                    <div className="linux-telemetry-identity">
-                      <div>
-                        <span
-                          className={currentAdbOnline || currentSerialOnline ? 'is-online' : ''}
-                        />
-                        <div>
-                          <strong>{currentLinuxOverview?.hostname || device.name}</strong>
-                          <small>
-                            {currentLinuxOverview?.osName || '等待读取目标机操作系统'}
-                            {currentLinuxOverview
-                              ? ` · ${currentLinuxOverview.transport === 'serial' ? '串口 Shell' : 'ADB'}`
-                              : ''}
-                          </small>
-                        </div>
-                      </div>
-                      <dl>
-                        <div>
-                          <dt>内核</dt>
-                          <dd>{currentLinuxOverview?.kernel || '—'}</dd>
-                        </div>
-                        <div>
-                          <dt>架构</dt>
-                          <dd>{currentLinuxOverview?.architecture || '—'}</dd>
-                        </div>
-                        <div>
-                          <dt>处理器</dt>
-                          <dd>{currentLinuxOverview?.cpuModel || '—'}</dd>
-                        </div>
-                        <div>
-                          <dt>IP 地址</dt>
-                          <dd>{currentLinuxOverview?.ipAddresses.join(' · ') || '—'}</dd>
-                        </div>
-                        <div>
-                          <dt>运行时间</dt>
-                          <dd>{formatUptime(currentLinuxOverview?.uptimeSeconds ?? null)}</dd>
-                        </div>
-                      </dl>
-                    </div>
-                    <div className="linux-telemetry-metrics">
-                      {[
-                        {
-                          label: 'CPU',
-                          value:
-                            currentLinuxOverview?.cpuUsagePct == null
-                              ? '—'
-                              : `${currentLinuxOverview.cpuUsagePct.toFixed(1)}%`,
-                          percent: currentLinuxOverview?.cpuUsagePct ?? null,
-                          detail: `${currentLinuxOverview?.cpuCores ?? '—'} 核 · Load ${currentLinuxOverview?.loadOne?.toFixed(2) ?? '—'}`,
-                        },
-                        {
-                          label: '内存',
-                          value: memoryUsedPct == null ? '—' : `${memoryUsedPct.toFixed(1)}%`,
-                          percent: memoryUsedPct,
-                          detail: `${formatBytes(
-                            currentLinuxOverview?.memoryTotalBytes != null &&
-                              currentLinuxOverview.memoryAvailableBytes != null
-                              ? currentLinuxOverview.memoryTotalBytes -
-                                  currentLinuxOverview.memoryAvailableBytes
-                              : null
-                          )} / ${formatBytes(currentLinuxOverview?.memoryTotalBytes ?? null)}`,
-                        },
-                        {
-                          label: '根分区',
-                          value: storageUsedPct == null ? '—' : `${storageUsedPct.toFixed(1)}%`,
-                          percent: storageUsedPct,
-                          detail: `${formatBytes(
-                            currentLinuxOverview?.storageTotalBytes != null &&
-                              currentLinuxOverview.storageAvailableBytes != null
-                              ? currentLinuxOverview.storageTotalBytes -
-                                  currentLinuxOverview.storageAvailableBytes
-                              : null
-                          )} / ${formatBytes(currentLinuxOverview?.storageTotalBytes ?? null)}`,
-                        },
-                        {
-                          label: '温度',
-                          value:
-                            currentLinuxOverview?.temperatureCelsius == null
-                              ? '—'
-                              : `${currentLinuxOverview.temperatureCelsius.toFixed(1)}°C`,
-                          percent:
-                            currentLinuxOverview?.temperatureCelsius == null
-                              ? null
-                              : Math.min(100, currentLinuxOverview.temperatureCelsius),
-                          detail: '目标机 thermal zone',
-                        },
-                      ].map((metric) => {
-                        const ringPercent = Math.max(0, Math.min(100, metric.percent ?? 0));
-                        return (
-                          <article
-                            key={metric.label}
-                            className={`${metric.percent == null ? 'is-empty' : ''} ${metric.label === '温度' ? 'is-temperature' : ''}`}
-                          >
-                            <span>{metric.label}</span>
-                            <div
-                              className="linux-telemetry-ring"
-                              style={
-                                {
-                                  '--metric-percent': `${ringPercent * 3.6}deg`,
-                                } as React.CSSProperties
-                              }
-                            >
-                              <strong>{metric.value}</strong>
-                            </div>
-                            <small>{metric.detail}</small>
-                          </article>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  {linuxOverviewError && (
-                    <p className="linux-telemetry-error">{linuxOverviewError}</p>
-                  )}
-                </section>
-
-                <div className="linux-overview-transfer" ref={transferSectionRef}>
-                  <AdbFileTransfer
-                    device={device}
-                    isActive={isActive && activeView === 'overview'}
-                  />
-                </div>
-
-                <section className="engineering-panel linux-overview-system">
-                  <header>
-                    <div>
-                      <small>SDK &amp; CHANNELS</small>
-                      <h3>开发链路</h3>
-                    </div>
-                    <span>当前单板的真实配置与发现状态</span>
-                  </header>
-                  <div className="linux-overview-system-grid">
-                    <dl>
-                      <div>
-                        <dt>芯片平台</dt>
-                        <dd>{vendorLabel(device.chipVendor)}</dd>
-                      </div>
-                      <div>
-                        <dt>SDK 主机</dt>
-                        <dd>{host.address || '未配置'}</dd>
-                      </div>
-                      <div>
-                        <dt>SDK 目录</dt>
-                        <dd>{project.sdkDir || '未配置'}</dd>
-                      </div>
-                      <div>
-                        <dt>ADB 设备</dt>
-                        <dd>{device.adbSerial || '未绑定'}</dd>
-                      </div>
-                    </dl>
-                    <div className="linux-overview-signals">
-                      {[
-                        [
-                          '串口',
-                          currentSerialOnline,
-                          currentSerialPort?.name || device.serialPort || '未绑定',
-                        ],
-                        ['ADB', currentAdbOnline, device.adbSerial || '未绑定'],
-                        ['USB', currentUsbOnline, formatUsbBinding(device.usbBinding)],
-                        [
-                          'MCP',
-                          tunnelStatus?.state === 'connected',
-                          project.mcpServerName || '未配置',
-                        ],
-                      ].map(([label, online, detail]) => (
-                        <div key={String(label)} className={online ? 'is-online' : ''}>
-                          <span>{label}</span>
-                          <strong>{online ? '在线' : '离线'}</strong>
-                          <small>{detail}</small>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </section>
-
-                <aside className="engineering-panel linux-overview-connection">
-                  <header>
-                    <div>
-                      <small>CONNECTION STATUS</small>
-                      <h3>连接状态</h3>
-                    </div>
-                  </header>
-                  <dl>
-                    <div>
-                      <dt>串口绑定</dt>
-                      <dd>{device.serialPort || '未绑定'}</dd>
-                    </div>
-                    <div>
-                      <dt>串口检测</dt>
-                      <dd className={currentSerialOnline ? 'is-online' : 'is-warning'}>
-                        {currentSerialOnline
-                          ? currentSerialPort?.name || '在线'
-                          : device.serialPort
-                            ? '未检测到已绑定串口'
-                            : '未绑定'}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>串口波特率</dt>
-                      <dd>{device.baudRate}</dd>
-                    </div>
-                    <div>
-                      <dt>USB 绑定</dt>
-                      <dd>{formatUsbBinding(device.usbBinding)}</dd>
-                    </div>
-                    <div>
-                      <dt>USB 检测</dt>
-                      <dd className={currentUsbOnline ? 'is-online' : 'is-warning'}>
-                        {currentUsbOnline
-                          ? '在线'
-                          : device.usbBinding
-                            ? '未检测到已绑定接口'
-                            : '未绑定'}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>ADB 状态</dt>
-                      <dd className={currentAdbOnline ? 'is-online' : 'is-warning'}>
-                        {currentAdbOnline ? '在线' : '离线'}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>MCP 通道</dt>
-                      <dd className={tunnelStatus?.state === 'connected' ? 'is-online' : ''}>
-                        {tunnelStatusText}
-                      </dd>
-                    </div>
-                  </dl>
-                </aside>
-
-                <section className="engineering-panel linux-overview-topology">
-                  <header>
-                    <div>
-                      <small>DEVICE PATH</small>
-                      <h3>连接拓扑</h3>
-                    </div>
-                  </header>
-                  <div>
-                    {[
-                      ['LYNX 本机', `127.0.0.1:${project.localGatewayPort || '—'}`, true],
-                      ['SDK 主机', host.address || '未配置', tunnelStatus?.state === 'connected'],
-                      [
-                        '串口设备',
-                        currentSerialPort?.name || device.serialPort || '未绑定',
-                        currentSerialOnline,
-                      ],
-                      [
-                        '当前单板',
-                        device.name,
-                        currentSerialOnline || currentUsbOnline || currentAdbOnline,
-                      ],
-                      [
-                        'MCP 通道',
-                        project.mcpServerName || '未配置',
-                        tunnelStatus?.state === 'connected',
-                      ],
-                    ].map(([label, value, online], index) => (
-                      <React.Fragment key={String(label)}>
-                        {index > 0 && <i className={online ? 'is-online' : ''} />}
-                        <span className={online ? 'is-online' : ''}>
-                          <strong>{label}</strong>
-                          <small>{value}</small>
-                        </span>
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </section>
-
-                <aside className="engineering-panel linux-overview-actions">
-                  <header>
-                    <div>
-                      <small>QUICK ACCESS</small>
-                      <h3>快捷入口</h3>
-                    </div>
-                  </header>
-                  <div>
-                    <button onClick={() => setActiveView('serial')}>打开串口终端</button>
-                    <button
-                      onClick={() =>
-                        transferSectionRef.current?.scrollIntoView({
-                          behavior: 'smooth',
-                          block: 'center',
-                        })
-                      }
-                    >
-                      定位文件传输
-                    </button>
-                    <button onClick={() => setActiveView('sdk')}>打开 SSH 终端</button>
-                    <button onClick={() => setActiveView('flash')}>查看固件烧录</button>
-                    <button onClick={() => setActiveView('ai')}>查看 AI 通道</button>
-                  </div>
-                </aside>
-
-                <aside className="engineering-panel linux-overview-activity">
-                  <header>
-                    <div>
-                      <small>RECENT ACTIVITY</small>
-                      <h3>最近活动</h3>
-                    </div>
-                  </header>
-                  <div>
-                    {taskHistory
-                      .filter((task) => task.deviceId === device.id)
-                      .slice(0, 5)
-                      .map((task) => (
-                        <span key={task.taskId}>
-                          <i className={task.status === 'success' ? 'is-online' : ''} />
-                          <strong>{task.kind}</strong>
-                          <small>{task.status}</small>
-                        </span>
-                      ))}
-                    {!taskHistory.some((task) => task.deviceId === device.id) && (
-                      <p>当前单板还没有任务记录。</p>
-                    )}
-                  </div>
-                </aside>
-              </section>
-            )}
-
-            {(['serial', 'flash', 'workspace'] as LinuxDeviceView[]).includes(activeView) && (
-              <div className="device-console-view is-visible">
-                <BoardConsole
-                  applicationCandidateId={
-                    firmwareHandoff?.deviceId === device.id
-                      ? firmwareHandoff.candidateId
-                      : undefined
-                  }
-                  view={
-                    activeView === 'workspace'
-                      ? 'workspace'
-                      : activeView === 'flash'
-                        ? 'flash'
-                        : 'serial'
-                  }
-                  devices={consoleDevices}
-                  selectedDevice={consoleDevice}
-                  isActive={
-                    isActive &&
-                    (['serial', 'flash', 'workspace'] as LinuxDeviceView[]).includes(activeView)
-                  }
-                  taskHistory={taskHistory}
-                  serialDetected={currentSerialOnline}
-                  adbDetected={currentAdbOnline}
-                  flashDetected={currentUsbOnline}
-                  flashBound={!!device.usbBinding}
-                  savedSerialPort={device.serialPort}
-                  flashProtocol={flashProtocolLabel(device.chipVendor)}
-                  onOpenSettings={openSettings}
-                  aiChannel={
-                    <DeviceAiChannel
-                      kind="linux"
-                      boardId={device.id}
-                      board={device}
-                      project={project.id ? project : undefined}
-                      host={host.id ? host : undefined}
-                      tunnel={tunnelStatus}
-                      onOpenSettings={openSettings}
-                    />
-                  }
-                  workspace={{
-                    projectName: project.id ? project.name : '',
-                    hostLabel: host.id ? `${host.username}@${host.address}` : '',
-                    primaryTerminalOnline: workspacePrimarySshOnline,
-                    overview: currentLinuxOverview ?? undefined,
-                    onRequestExit: () => setActiveView(viewBeforeWorkspaceRef.current),
-                    primaryTerminal: (
-                      <SdkTerminal
-                        isActive={isActive && activeView === 'workspace'}
-                        board={device}
-                        project={project.id ? project : undefined}
-                        host={host.id ? host : undefined}
-                        tunnel={tunnelStatus}
-                        onOpenSettings={openSettings}
-                        variant="workspace"
-                        sessionIndex={0}
-                        workspaceRole="primary"
-                        onWorkspaceOnlineChange={handlePrimaryWorkspaceOnline}
-                      />
-                    ),
-                  }}
+            <div className="adv-content">
+              {activeView === 'overview' && (
+                <AdvancedOverview
+                  device={device}
+                  snapshot={currentLinuxOverview}
+                  samples={monitorSamples[device.id] ?? []}
+                  history={taskHistory}
+                  error={linuxOverviewError}
+                  loading={linuxOverviewLoading}
+                  serial={currentSerialPort?.name || device.serialPort}
+                  sdk={host.address}
+                  tunnel={tunnelStatusText}
+                  usb={currentUsbOnline}
+                  adb={currentAdbOnline}
+                  serialOnline={currentSerialOnline}
+                  onRefresh={() => void refreshLinuxOverview()}
+                  onOpenRecords={onOpenRecords}
                 />
+              )}
+              {activeView === 'files' && (
+                <AdbFileTransfer
+                  key={device.id}
+                  device={device}
+                  isActive={isActive}
+                  online={currentAdbOnline}
+                  onOpenSettings={openSettings}
+                  onDetect={() => void scanInterfaces()}
+                />
+              )}
+              <div className="layout adv-hardware-tools">
+                {(['serial', 'flash', 'workspace'] as LinuxDeviceView[]).includes(activeView) && (
+                  <div className="device-console-view is-visible">
+                    <BoardConsole
+                      applicationCandidateId={
+                        firmwareHandoff?.deviceId === device.id
+                          ? firmwareHandoff.candidateId
+                          : undefined
+                      }
+                      view={
+                        activeView === 'workspace'
+                          ? 'workspace'
+                          : activeView === 'flash'
+                            ? 'flash'
+                            : 'serial'
+                      }
+                      devices={consoleDevices}
+                      selectedDevice={consoleDevice}
+                      isActive={
+                        isActive &&
+                        (['serial', 'flash', 'workspace'] as LinuxDeviceView[]).includes(activeView)
+                      }
+                      taskHistory={taskHistory}
+                      serialDetected={currentSerialOnline}
+                      adbDetected={currentAdbOnline}
+                      flashDetected={currentUsbOnline}
+                      flashBound={!!device.usbBinding}
+                      savedSerialPort={device.serialPort}
+                      flashProtocol={flashProtocolLabel(device.chipVendor)}
+                      onOpenSettings={openSettings}
+                      aiChannel={
+                        <DeviceAiChannel
+                          kind="linux"
+                          boardId={device.id}
+                          board={device}
+                          project={project.id ? project : undefined}
+                          host={host.id ? host : undefined}
+                          tunnel={tunnelStatus}
+                          onOpenSettings={openSettings}
+                        />
+                      }
+                      workspace={{
+                        projectName: project.id ? project.name : '',
+                        hostLabel: host.id ? `${host.username}@${host.address}` : '',
+                        primaryTerminalOnline: workspacePrimarySshOnline,
+                        overview: currentLinuxOverview ?? undefined,
+                        onRequestExit: () => setActiveView(viewBeforeWorkspaceRef.current),
+                        primaryTerminal: (
+                          <SdkTerminal
+                            isActive={isActive && activeView === 'workspace'}
+                            board={device}
+                            project={project.id ? project : undefined}
+                            host={host.id ? host : undefined}
+                            tunnel={tunnelStatus}
+                            onOpenSettings={openSettings}
+                            variant="workspace"
+                            sessionIndex={0}
+                            workspaceRole="primary"
+                            onWorkspaceOnlineChange={handlePrimaryWorkspaceOnline}
+                          />
+                        ),
+                      }}
+                    />
+                  </div>
+                )}
+
+                {activeView === 'sdk' && (
+                  <SdkTerminal
+                    isActive={isActive}
+                    board={device}
+                    project={project.id ? project : undefined}
+                    host={host.id ? host : undefined}
+                    tunnel={tunnelStatus}
+                    onOpenSettings={openSettings}
+                    openRequestId={sshOpenRequestId}
+                    onOpenRequestHandled={handleSshOpenRequest}
+                  />
+                )}
+
+                {activeView === 'ai' && (
+                  <DeviceAiChannel
+                    kind="linux"
+                    boardId={device.id}
+                    board={device}
+                    project={project.id ? project : undefined}
+                    host={host.id ? host : undefined}
+                    tunnel={tunnelStatus}
+                    onOpenSettings={openSettings}
+                  />
+                )}
               </div>
-            )}
-
-            {activeView === 'sdk' && (
-              <SdkTerminal
-                isActive={isActive}
-                board={device}
-                project={project.id ? project : undefined}
-                host={host.id ? host : undefined}
-                tunnel={tunnelStatus}
-                onOpenSettings={openSettings}
-                openRequestId={sshOpenRequestId}
-                onOpenRequestHandled={handleSshOpenRequest}
-              />
-            )}
-
-            {activeView === 'ai' && (
-              <DeviceAiChannel
-                kind="linux"
-                boardId={device.id}
-                board={device}
-                project={project.id ? project : undefined}
-                host={host.id ? host : undefined}
-                tunnel={tunnelStatus}
-                onOpenSettings={openSettings}
-              />
-            )}
+            </div>
           </>
         ) : (
-          <section className="workbench-card device-workbench-empty">
-            <strong>请选择或新建一块 Linux 单板</strong>
-            <span>保存单板后可使用终端、烧录和设备级 AI 通道。</span>
+          <section className="adv-no-target">
+            <LynxIcon name="board" size={24} />
+            <h2>{devices.length ? '请选择设备' : '添加开发板'}</h2>
+            <p>
+              {devices.length
+                ? '从左侧选择设备以打开工具。'
+                : '先保存开发板型号和接口，再使用串口、SSH、固件烧录和文件传输。'}
+            </p>
+            <button className="adv-primary" onClick={createDevice}>
+              添加设备
+            </button>
           </section>
         )}
 

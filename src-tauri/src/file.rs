@@ -1,10 +1,50 @@
 use log::{debug, error, warn};
+use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::PathBuf;
 use tauri::command;
 
 const CHUNK_SIZE: usize = 256 * 1024 * 1024;
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImagerFileIdentity {
+    pub size_bytes: u64,
+    pub sha256: String,
+}
+
+pub(crate) fn hash_reader(reader: &mut impl Read) -> std::io::Result<ImagerFileIdentity> {
+    let mut hasher = Sha256::new();
+    let size_bytes = std::io::copy(reader, &mut hasher)?;
+    Ok(ImagerFileIdentity {
+        size_bytes,
+        sha256: hex::encode(hasher.finalize()),
+    })
+}
+
+#[command]
+pub async fn imager_file_identity(path: String) -> Result<ImagerFileIdentity, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let metadata = std::fs::metadata(&path).map_err(|e| e.to_string())?;
+        if !metadata.is_file() {
+            return Err("请选择普通镜像文件".to_string());
+        }
+        let mut file = File::open(path).map_err(|e| e.to_string())?;
+        let before = file.metadata().map_err(|e| e.to_string())?;
+        if !before.is_file() {
+            return Err("请选择普通镜像文件".to_string());
+        }
+        let identity = hash_reader(&mut file).map_err(|e| e.to_string())?;
+        let after = file.metadata().map_err(|e| e.to_string())?;
+        if identity.size_bytes != before.len() || identity.size_bytes != after.len()
+            || before.modified().ok() != after.modified().ok()
+        {
+            return Err("文件读取期间发生变化，请重新选择".to_string());
+        }
+        Ok(identity)
+    }).await.map_err(|e| e.to_string())?
+}
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ExtractResult {

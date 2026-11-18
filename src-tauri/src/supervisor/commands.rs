@@ -1018,7 +1018,7 @@ pub fn supervisor_save_device_flow_credential(
     password: Option<String>,
 ) -> Result<(), String> {
     let reference = validate_device_flow_credential_reference(&reference)?;
-    let entry = keyring::Entry::new("dshanpi-lynx-device-flow", reference)
+    let entry = keyring::Entry::new(&crate::keyring_service("dshanpi-lynx-device-flow"), reference)
         .map_err(|_| "SUPERVISOR_DEVICE_FLOW_CREDENTIAL_UNAVAILABLE".to_owned())?;
     let operation = if password.as_ref().is_some_and(|value| !value.is_empty()) {
         "update"

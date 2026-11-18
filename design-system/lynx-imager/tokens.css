@@ -1,0 +1,89 @@
+/* Source palette: src/Themes/configs/lynx.json and src/Themes/tokens.css. */
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --color-brand: #087FF5;
+  --color-background: #F5F8FC;
+  --color-sidebar: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-subtle: #F0F5FB;
+  --color-text: #0D1830;
+  --color-selected: #E6F2FF;
+  --color-selection-line: #087FF5;
+  --color-focus: #087FF5;
+  --color-primary: #006DDE;
+  --color-on-primary: #FFFFFF;
+  --color-border: #D9E3EF;
+  --color-divider: #E5EBF2;
+  --color-success-mark: #16A34A;
+  --color-warning-mark: #D97706;
+  --color-error-mark: #DC2626;
+  --color-chart-cpu: #087FF5;
+  --color-chart-memory: #64748B;
+  --color-console: #0B1422;
+  --color-console-text: #D5DEEA;
+  --color-halo: #CEE5FD;
+  --color-muted: #5B6B82;
+  --color-connected: #137942;
+  --color-warning: #9C5B13;
+  --color-error: #D22527;
+  --color-control-border: #78879D;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-brand: #2F8CFF;
+  --color-background: #08090B;
+  --color-sidebar: #111316;
+  --color-surface: #111316;
+  --color-subtle: #050607;
+  --color-text: #F0F2F5;
+  --color-selected: #1B2027;
+  --color-selection-line: #2F8CFF;
+  --color-focus: #2F8CFF;
+  --color-primary: #2F8CFF;
+  --color-on-primary: #050607;
+  --color-border: #25282D;
+  --color-divider: #1C1F23;
+  --color-success-mark: #35C46A;
+  --color-warning-mark: #F2AD4B;
+  --color-error-mark: #FF5F69;
+  --color-chart-cpu: #2F8CFF;
+  --color-chart-memory: #A8AFB8;
+  --color-console: #030405;
+  --color-console-text: #E2E6EB;
+  --color-halo: #193253;
+  --color-muted: #A8AFB8;
+  --color-connected: #35C46A;
+  --color-warning: #F2AD4B;
+  --color-error: #FF5F69;
+  --color-control-border: #737B86;
+}
+
+:root {
+  --size-titlebar: 44px;
+  --size-context: 40px;
+  --size-tabs: 36px;
+  --size-statusbar: 24px;
+  --size-rail: 208px;
+  --size-row: 32px;
+  --size-control: 32px;
+  --size-icon: 16px;
+  --size-target: 24px;
+  --size-gutter: 16px;
+  --size-actions: 52px;
+  --size-focus: 2px;
+  --size-radius: 4px;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+
+  --font-ui: "Segoe UI", "Microsoft YaHei UI", "Noto Sans CJK SC", system-ui, sans-serif;
+  --font-mono: "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
+  --font-caption: 12px;
+  --font-body: 14px;
+  --font-section: 16px;
+  --font-title: 20px;
+}
