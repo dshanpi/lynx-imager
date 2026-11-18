@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 const root = path.resolve(import.meta.dirname, '..');
-const binary = path.join(root, 'src-tauri', 'target', 'debug', 'lynx-app');
+const binary = path.join(root, 'src-tauri', 'target', 'debug', 'lynx-imager');
 const isolatedRoot = await mkdtemp(path.join(os.tmpdir(), 'lynx-ai-runtime-'));
 const evidenceRoot = path.join(root, 'artifacts', 'ai-supervisor-runtime-gate', 'linux');
 const port = Number(process.env.LYNX_AI_RUNTIME_DRIVER_PORT || 4466);

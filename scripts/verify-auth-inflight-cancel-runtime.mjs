@@ -20,7 +20,7 @@ const nativePort = Number(process.env.LYNX_AUTH_INFLIGHT_NATIVE_PORT || 4487);
 const callbackPort = Number(process.env.LYNX_AUTH_INFLIGHT_CALLBACK_PORT || 48936);
 const apiPort = Number(process.env.LYNX_AUTH_INFLIGHT_API_PORT || 48937);
 assert.equal(new Set([driverPort, nativePort, callbackPort, apiPort]).size, 4);
-const binary = process.env.LYNX_AUTH_INFLIGHT_BINARY || path.join(root, 'src-tauri/target/debug/lynx-app');
+const binary = process.env.LYNX_AUTH_INFLIGHT_BINARY || path.join(root, 'src-tauri/target/debug/lynx-imager');
 const tokenDelayMs = Number(process.env.LYNX_AUTH_INFLIGHT_TOKEN_DELAY_MS || 2500);
 const cancelLimitMs = Number(process.env.LYNX_AUTH_INFLIGHT_CANCEL_LIMIT_MS || 1000);
 const oauthHttpTimeoutMs = Number(process.env.LYNX_AUTH_INFLIGHT_HTTP_TIMEOUT_MS || 350);

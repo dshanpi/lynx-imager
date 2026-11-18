@@ -99,7 +99,6 @@ function verifyWindowsInstaller(path) {
   run('7z', ['t', path]);
   const listing = run('7z', ['l', '-ba', path]).replaceAll('\\', '/').toLowerCase();
   const required = [
-    'lynx-app.exe',
     'libusb-1.0.dll',
     'ch347dlla64.dll',
     'bin/openixcli.exe',
@@ -114,6 +113,13 @@ function verifyWindowsInstaller(path) {
   for (const name of required) {
     requireValue(installerListingHasPath(listing, name), `Windows installer is missing ${name}.`);
   }
+  const appExecutable = installerListingHasPath(listing, 'lynx-imager.exe')
+    ? 'lynx-imager.exe'
+    : 'lynx-app.exe';
+  requireValue(
+    installerListingHasPath(listing, appExecutable),
+    'Windows installer is missing a LYNX application executable.'
+  );
   requireValue(
     !listing.includes('cmsis-packs/'),
     'Windows installer contains forbidden RA6M5 offline resources.'
@@ -141,8 +147,8 @@ function verifyWindowsInstaller(path) {
   );
   const temporary = mkdtempSync(join(tmpdir(), 'lynx-nsis-'));
   try {
-    run('7z', ['x', '-y', `-o${temporary}`, path, 'lynx-app.exe']);
-    const application = readFileSync(join(temporary, 'lynx-app.exe'));
+    run('7z', ['x', '-y', `-o${temporary}`, path, appExecutable]);
+    const application = readFileSync(join(temporary, appExecutable));
     requireValue(
       binaryKind(application.subarray(0, 1024)) === 'pe-x86_64',
       'Bundled LYNX application is not PE32+ x86-64.'

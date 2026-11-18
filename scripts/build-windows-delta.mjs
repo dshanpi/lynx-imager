@@ -84,7 +84,6 @@ function extractInstaller(installer, destination) {
     '-x!Uninstall.exe',
   ]);
   for (const required of [
-    'lynx-app.exe',
     'libusb-1.0.dll',
     'CH347DLLA64.dll',
     'bin/openixcli.exe',
@@ -94,6 +93,10 @@ function extractInstaller(installer, destination) {
       `${basename(installer)} does not contain ${required}`
     );
   }
+  requireValue(
+    ['lynx-imager.exe', 'lynx-app.exe'].some((name) => existsSync(join(destination, name))),
+    `${basename(installer)} does not contain a LYNX application executable`
+  );
 }
 
 export function buildWindowsDelta({ fromInstaller, toInstaller, fromVersion, toVersion, output }) {

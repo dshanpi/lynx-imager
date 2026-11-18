@@ -24,12 +24,12 @@ function Get-InstalledDirectory([string]$Version) {
   if ($directory -notmatch "app-$([regex]::Escape($Version))-\d+$") {
     throw "Incorrect versioned install directory: $directory"
   }
-  if (-not (Test-Path (Join-Path $directory 'lynx-app.exe'))) { throw 'Installed executable missing.' }
+  if (-not (Test-Path (Join-Path $directory 'lynx-imager.exe'))) { throw 'Installed executable missing.' }
   return $directory
 }
 
 function Test-Application([string]$Directory) {
-  $application = Start-Process -FilePath (Join-Path $Directory 'lynx-app.exe') -PassThru
+  $application = Start-Process -FilePath (Join-Path $Directory 'lynx-imager.exe') -PassThru
   Start-Sleep -Seconds 10
   if ($application.HasExited) { throw "Installed LYNX exited early with $($application.ExitCode)." }
   # Normal close goes through LYNX's hardware/task shutdown guard.
@@ -53,7 +53,7 @@ $directory = Get-InstalledDirectory $expectedVersion
 Test-Application $directory
 Invoke-Installer (Join-Path $directory 'uninstall.exe') @('/S')
 $deadline = (Get-Date).AddSeconds(30)
-while ((Test-Path (Join-Path $directory 'lynx-app.exe')) -and (Get-Date) -lt $deadline) {
+while ((Test-Path (Join-Path $directory 'lynx-imager.exe')) -and (Get-Date) -lt $deadline) {
   Start-Sleep -Milliseconds 250
 }
-if (Test-Path (Join-Path $directory 'lynx-app.exe')) { throw 'Uninstall left the application executable behind.' }
+if (Test-Path (Join-Path $directory 'lynx-imager.exe')) { throw 'Uninstall left the application executable behind.' }

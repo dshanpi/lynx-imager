@@ -1,0 +1,160 @@
+.imager-app-shell {
+  display: grid;
+  grid-template-rows: 72px minmax(0, 1fr) 34px;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #fbfcff;
+  color: #182033;
+}
+
+.imager-app-header {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  padding: 0 30px;
+  border-bottom: 1px solid #d9deea;
+  background: #fff;
+}
+
+.imager-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 210px;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+.imager-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #3154e8;
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+  transform: skew(-10deg);
+}
+
+.imager-app-tabs {
+  display: flex;
+  align-self: stretch;
+  gap: 8px;
+}
+
+.imager-app-tabs button {
+  position: relative;
+  min-width: 112px;
+  padding: 0 18px;
+  border: 0;
+  background: transparent;
+  color: #4f586b;
+  font: 650 15px inherit;
+  cursor: pointer;
+}
+
+.imager-app-tabs button::after {
+  position: absolute;
+  right: 18px;
+  bottom: 0;
+  left: 18px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: transparent;
+  content: '';
+}
+
+.imager-app-tabs button:hover,
+.imager-app-tabs button.is-active {
+  color: #3154e8;
+}
+
+.imager-app-tabs button.is-active::after {
+  background: #3154e8;
+}
+
+.imager-app-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.imager-app-actions button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #4f586b;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.imager-app-actions button:hover {
+  background: #eef1ff;
+  color: #3154e8;
+}
+
+.imager-app-main {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.imager-app-main .tool-panels-container {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.imager-app-main .tool-panel {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+}
+
+.imager-app-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-top: 1px solid #d9deea;
+  background: #fff;
+  color: #737d91;
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .imager-app-header {
+    gap: 10px;
+    padding: 0 14px;
+  }
+
+  .imager-brand {
+    min-width: auto;
+  }
+
+  .imager-brand strong {
+    display: none;
+  }
+
+  .imager-app-tabs {
+    flex: 1;
+  }
+
+  .imager-app-tabs button {
+    min-width: 0;
+    flex: 1;
+    padding: 0 8px;
+    font-size: 13px;
+  }
+
+  .imager-app-tabs button::after {
+    right: 8px;
+    left: 8px;
+  }
+}

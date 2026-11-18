@@ -24,7 +24,7 @@ for (const p of [port, nativePort, callbackPort])
   assert.ok(Number.isInteger(p) && p > 1024 && p < 65536);
 assert.equal(new Set([port, nativePort, callbackPort]).size, 3);
 const binary =
-  process.env.LYNX_AUTH_TEST_BINARY || path.join(root, 'src-tauri/target/debug/lynx-app');
+  process.env.LYNX_AUTH_TEST_BINARY || path.join(root, 'src-tauri/target/debug/lynx-imager');
 await mkdir(out, { recursive: true });
 const profile = await mkdtemp(path.join(out, 'profile-'));
 const result = {

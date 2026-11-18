@@ -7,6 +7,7 @@
       "resources/binaries/openrockcli": "bin/openrockcli",
       "resources/binaries/openrockcli-LICENSE": "bin/openrockcli-LICENSE",
       "resources/binaries/uuu": "bin/uuu",
+      "resources/binaries/dfu-util": "bin/dfu-util",
       "resources/binaries/libusb-1.0.so.0": "bin/libusb-1.0.so.0"
     },
     "linux": {

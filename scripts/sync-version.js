@@ -35,9 +35,9 @@ writeIfChanged(cargoTomlPath, cargoToml, 'Cargo.toml');
 
 const cargoLockPath = join(__dirname, '..', 'src-tauri', 'Cargo.lock');
 const cargoLock = readFileSync(cargoLockPath, 'utf-8');
-const rootPackage = /(\[\[package\]\]\r?\nname = "lynx-app"\r?\nversion = ")[^"]+("\r?\n)/g;
+const rootPackage = /(\[\[package\]\]\r?\nname = "lynx-imager"\r?\nversion = ")[^"]+("\r?\n)/g;
 if ([...cargoLock.matchAll(rootPackage)].length !== 1) {
-  throw new Error('Cargo.lock must contain exactly one lynx-app package');
+  throw new Error('Cargo.lock must contain exactly one lynx-imager package');
 }
 writeIfChanged(
   cargoLockPath,

@@ -67,8 +67,8 @@ Function RelaunchPrevious
   StrLen $2 $1
   StrCpy $3 $PreviousInstallDir $2
   StrCmp $3 $1 0 relaunch_previous_done
-  IfFileExists "$PreviousInstallDir\lynx-app.exe" 0 relaunch_previous_done
-  Exec '"$PreviousInstallDir\lynx-app.exe"'
+  IfFileExists "$PreviousInstallDir\lynx-imager.exe" 0 relaunch_previous_done
+  Exec '"$PreviousInstallDir\lynx-imager.exe"'
   relaunch_previous_done:
 FunctionEnd
 
@@ -122,7 +122,7 @@ Function .onInit
   StrCpy $3 $PreviousInstallDir $2
   StrCmp $3 $1 previous_path_ok precondition_failed
   previous_path_ok:
-    IfFileExists "$PreviousInstallDir\lynx-app.exe" 0 precondition_failed
+    IfFileExists "$PreviousInstallDir\lynx-imager.exe" 0 precondition_failed
     System::Call 'kernel32::GetTickCount() i .r0'
     StrCpy $INSTDIR "$LOCALAPPDATA\DshanPI\LYNX\app-${PRODUCT_VERSION}-$0"
     Return
@@ -175,7 +175,7 @@ Section "LYNX delta update" SEC_MAIN
     Call FailPatch
   delta_patch_ok:
 
-  IfFileExists "$INSTDIR\lynx-app.exe" 0 delta_self_test_failed
+  IfFileExists "$INSTDIR\lynx-imager.exe" 0 delta_self_test_failed
   IfFileExists "$INSTDIR\bin\openixcli.exe" 0 delta_self_test_failed
   nsExec::ExecToStack '"$INSTDIR\bin\openixcli.exe" --version'
   Pop $0
@@ -193,7 +193,7 @@ Section "LYNX delta update" SEC_MAIN
   WriteUninstaller "$INSTDIR\uninstall.exe"
 
   ; Stop hardware helpers only after the fresh tree has passed every check.
-  nsExec::ExecToLog 'taskkill /F /T /IM lynx-app.exe'
+  nsExec::ExecToLog 'taskkill /F /T /IM lynx-imager.exe'
   nsExec::ExecToLog 'taskkill /F /T /IM openixcli.exe'
   nsExec::ExecToLog 'taskkill /F /T /IM openrockcli.exe'
   nsExec::ExecToLog 'taskkill /F /T /IM uuu.exe'
@@ -202,8 +202,8 @@ Section "LYNX delta update" SEC_MAIN
   Delete "$DESKTOP\LYNX.lnk"
   Delete "$SMPROGRAMS\LYNX.lnk"
   Delete "$SMPROGRAMS\DshanPI\LYNX.lnk"
-  CreateShortcut "$SMPROGRAMS\LYNX.lnk" "$INSTDIR\lynx-app.exe"
-  CreateShortcut "$DESKTOP\LYNX.lnk" "$INSTDIR\lynx-app.exe"
+  CreateShortcut "$SMPROGRAMS\LYNX.lnk" "$INSTDIR\lynx-imager.exe"
+  CreateShortcut "$DESKTOP\LYNX.lnk" "$INSTDIR\lynx-imager.exe"
 
   WriteRegStr HKCU "${PRODUCT_LOCATION_KEY}" "" "$INSTDIR"
   WriteRegStr HKCU "${PRODUCT_LOCATION_KEY}" "PreviousInstallDir" "$PreviousInstallDir"
@@ -211,19 +211,19 @@ Section "LYNX delta update" SEC_MAIN
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "InstallLocation" "$INSTDIR"
-  WriteRegStr HKCU "${PRODUCT_REG_KEY}" "DisplayIcon" "$INSTDIR\lynx-app.exe"
+  WriteRegStr HKCU "${PRODUCT_REG_KEY}" "DisplayIcon" "$INSTDIR\lynx-imager.exe"
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
-  WriteRegStr HKCU "${PRODUCT_REG_KEY}" "MainBinaryName" "lynx-app.exe"
+  WriteRegStr HKCU "${PRODUCT_REG_KEY}" "MainBinaryName" "lynx-imager.exe"
   WriteRegDWORD HKCU "${PRODUCT_REG_KEY}" "NoModify" 1
   WriteRegDWORD HKCU "${PRODUCT_REG_KEY}" "NoRepair" 1
   WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}" "" "URL:LYNX Learning Protocol"
   WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}" "URL Protocol" ""
-  WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}\DefaultIcon" "" "$INSTDIR\lynx-app.exe,0"
-  WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}\shell\open\command" "" '"$INSTDIR\lynx-app.exe" "%1"'
+  WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}\DefaultIcon" "" "$INSTDIR\lynx-imager.exe,0"
+  WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}\shell\open\command" "" '"$INSTDIR\lynx-imager.exe" "%1"'
 
   Call TryRemovePreviousInstall
   Delete "${FAILURE_MARKER}"
-  Exec '"$INSTDIR\lynx-app.exe"'
+  Exec '"$INSTDIR\lynx-imager.exe"'
   SetErrorLevel 0
 SectionEnd
 

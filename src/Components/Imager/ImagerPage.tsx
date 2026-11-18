@@ -3,7 +3,6 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { invokeCommand, subscribeEvent, type WorkbenchDevice } from '../../Platform/IPC';
 import './ImagerPage.css';
 
-type ImagerWorkspace = 'basic' | 'advanced' | 'ai';
 type BasicStep = 1 | 2 | 3 | 4;
 
 type BoardPreset = {
@@ -13,8 +12,14 @@ type BoardPreset = {
   chip: string;
   storage: string;
   mode: string;
-  route: 'vendor' | 'mainline_nand' | 'mainline_emmc' | 'mainline_spinor';
+  route:
+    | 'vendor'
+    | 'mainline_nand'
+    | 'mainline_emmc'
+    | 'mainline_spinor'
+    | 'rockchip_raw_emmc';
   needsLoader: boolean;
+  loaderLabel?: string;
 };
 
 const BOARD_PRESETS: BoardPreset[] = [
@@ -45,8 +50,39 @@ const BOARD_PRESETS: BoardPreset[] = [
     chip: '瑞芯微 · RK3588',
     storage: 'eMMC',
     mode: 'Maskrom / Loader',
-    route: 'mainline_emmc',
+    route: 'rockchip_raw_emmc',
     needsLoader: true,
+    loaderLabel: 'Rockchip Loader',
+  },
+  {
+    id: 'nxp-imx',
+    name: 'i.MX 系列',
+    chipVendor: 'nxp',
+    chip: 'NXP · i.MX 8 / 9',
+    storage: 'eMMC / SD',
+    mode: 'SDP / Fastboot',
+    route: 'vendor',
+    needsLoader: false,
+  },
+  {
+    id: 'stm32mp1',
+    name: 'STM32MP1 系列',
+    chipVendor: 'st',
+    chip: 'ST · STM32MP1',
+    storage: 'eMMC / SD',
+    mode: 'USB DFU / DfuSe',
+    route: 'vendor',
+    needsLoader: false,
+  },
+  {
+    id: 'canaan-k230',
+    name: 'K230 系列',
+    chipVendor: 'kendryte',
+    chip: 'Canaan · Kendryte K230',
+    storage: 'eMMC / SD',
+    mode: 'BROM / U-Boot',
+    route: 'vendor',
+    needsLoader: false,
   },
 ];
 
@@ -57,10 +93,43 @@ const STEPS: Array<{ id: BasicStep; label: string; hint: string }> = [
   { id: 4, label: '烧写系统', hint: '预检、确认、写入和校验' },
 ];
 
+const BOARD_FILTERS: Array<{ id: BoardPreset['chipVendor'] | 'all'; label: string }> = [
+  { id: 'all', label: '全部' },
+  { id: 'allwinner', label: '全志' },
+  { id: 'rockchip', label: '瑞芯微' },
+  { id: 'nxp', label: 'NXP' },
+  { id: 'st', label: 'ST' },
+  { id: 'kendryte', label: 'K230' },
+];
+
 export interface ImagerPageProps {
-  onOpenAdvanced: () => void;
-  onOpenAi: () => void;
-  onOpenLegacyWorkbench: () => void;
+  onOpenAdvancedWorkbench: () => void;
+}
+
+function BoardGlyph({ board, large = false }: { board: BoardPreset; large?: boolean }) {
+  return (
+    <svg
+      className={`imager-board-glyph ${large ? 'is-large' : ''}`}
+      viewBox="0 0 160 92"
+      role="img"
+      aria-label={`${board.name} 示意图`}
+    >
+      <rect x="10" y="12" width="140" height="68" rx="8" />
+      <circle cx="20" cy="22" r="4" />
+      <circle cx="140" cy="22" r="4" />
+      <circle cx="20" cy="70" r="4" />
+      <circle cx="140" cy="70" r="4" />
+      <rect className="imager-board-glyph-chip" x="62" y="28" width="36" height="30" rx="4" />
+      <rect x="30" y="28" width="18" height="8" rx="2" />
+      <rect x="108" y="30" width="20" height="8" rx="2" />
+      <rect x="34" y="50" width="13" height="8" rx="2" />
+      <rect x="105" y="50" width="17" height="8" rx="2" />
+      {board.chipVendor === 'rockchip' && <path d="M122 42h12v22h-12z" />}
+      {board.chipVendor === 'nxp' && <rect x="48" y="62" width="26" height="7" rx="2" />}
+      {board.chipVendor === 'st' && <path d="M112 19v12m6-12v12m6-12v12" />}
+      {board.chipVendor === 'kendryte' && <rect x="28" y="40" width="12" height="12" rx="2" />}
+    </svg>
+  );
 }
 
 function deviceMatchesBoard(device: WorkbenchDevice, board: BoardPreset) {
@@ -68,13 +137,12 @@ function deviceMatchesBoard(device: WorkbenchDevice, board: BoardPreset) {
 }
 
 export const ImagerPage: React.FC<ImagerPageProps> = ({
-  onOpenAdvanced,
-  onOpenAi,
-  onOpenLegacyWorkbench,
+  onOpenAdvancedWorkbench,
 }) => {
-  const [workspace, setWorkspace] = useState<ImagerWorkspace>('basic');
   const [step, setStep] = useState<BasicStep>(1);
   const [boardId, setBoardId] = useState('f101');
+  const [boardSearch, setBoardSearch] = useState('');
+  const [boardFilter, setBoardFilter] = useState<BoardPreset['chipVendor'] | 'all'>('all');
   const [imagePath, setImagePath] = useState('');
   const [loaderPath, setLoaderPath] = useState('');
   const [devices, setDevices] = useState<WorkbenchDevice[]>([]);
@@ -90,6 +158,17 @@ export const ImagerPage: React.FC<ImagerPageProps> = ({
     () => BOARD_PRESETS.find((candidate) => candidate.id === boardId) ?? BOARD_PRESETS[0],
     [boardId]
   );
+
+  const visibleBoards = useMemo(() => {
+    const query = boardSearch.trim().toLowerCase();
+    return BOARD_PRESETS.filter((candidate) => {
+      const matchesFilter = boardFilter === 'all' || candidate.chipVendor === boardFilter;
+      const matchesQuery =
+        !query ||
+        `${candidate.name} ${candidate.chip} ${candidate.storage}`.toLowerCase().includes(query);
+      return matchesFilter && matchesQuery;
+    });
+  }, [boardFilter, boardSearch]);
 
   const loadSavedDevices = useCallback(async () => {
     setBusy(true);
@@ -166,17 +245,20 @@ export const ImagerPage: React.FC<ImagerPageProps> = ({
     setError('');
     setNotice('正在提交烧录任务，后端会在擦写前再次执行安全预检…');
     try {
+      const usesSavedVendorRecipe = board.route === 'vendor' && board.chipVendor !== 'allwinner';
       const started = await invokeCommand('workbench_start_flash', {
         deviceId: selectedDeviceId,
         firmwarePath: imagePath,
-        options: {
-          systemType: board.route === 'vendor' ? 'vendor' : 'mainline',
-          loaderPath: loaderPath || undefined,
-          mainlineRoute: board.route === 'vendor' ? undefined : board.route,
-          mode: 'full_erase',
-          verify: true,
-          postFlashAction: 'reboot',
-        },
+        options: usesSavedVendorRecipe
+          ? { systemType: 'vendor' }
+          : {
+              systemType: board.route === 'vendor' ? 'vendor' : 'mainline',
+              loaderPath: loaderPath || undefined,
+              mainlineRoute: board.route === 'vendor' ? undefined : board.route,
+              mode: 'full_erase',
+              verify: true,
+              postFlashAction: 'reboot',
+            },
       });
       setTaskId(started);
       setTaskStatus('任务已创建，等待后端事件');
@@ -188,50 +270,9 @@ export const ImagerPage: React.FC<ImagerPageProps> = ({
     }
   }, [board.route, confirmChecked, imagePath, loaderPath, selectedDeviceId]);
 
-  const openWorkspace = (next: ImagerWorkspace) => {
-    setWorkspace(next);
-    if (next === 'advanced') onOpenAdvanced();
-    if (next === 'ai') onOpenAi();
-  };
-
   return (
     <section className="imager-page" aria-label="LYNX Imager">
-      <header className="imager-header">
-        <div>
-          <div className="imager-kicker">LYNX IMAGER</div>
-          <h1>系统镜像烧录</h1>
-          <p>把适配的系统镜像安全写入你的开发板。</p>
-        </div>
-        <div className="imager-workspaces" role="tablist" aria-label="工作区">
-          <button
-            className={workspace === 'basic' ? 'is-active' : ''}
-            onClick={() => setWorkspace('basic')}
-            role="tab"
-            aria-selected={workspace === 'basic'}
-          >
-            基础烧录
-          </button>
-          <button
-            className={workspace === 'advanced' ? 'is-active' : ''}
-            onClick={() => openWorkspace('advanced')}
-            role="tab"
-            aria-selected={workspace === 'advanced'}
-          >
-            高级功能
-          </button>
-          <button
-            className={workspace === 'ai' ? 'is-active' : ''}
-            onClick={() => openWorkspace('ai')}
-            role="tab"
-            aria-selected={workspace === 'ai'}
-          >
-            连接 AI
-          </button>
-        </div>
-      </header>
-
-      {workspace === 'basic' ? (
-        <div className="imager-basic-layout">
+      <div className="imager-basic-layout">
           <aside className="imager-stepper" aria-label="烧录步骤">
             <div className="imager-stepper-title">基础烧录</div>
             <div className="imager-stepper-subtitle">四步完成系统写入</div>
@@ -268,40 +309,68 @@ export const ImagerPage: React.FC<ImagerPageProps> = ({
                   <h2>选择你的开发板</h2>
                   <p>先选择型号，LYNX 会显示对应的存储介质和连接方式。</p>
                 </div>
-                <div className="imager-board-grid">
-                  {BOARD_PRESETS.map((candidate) => (
+                <label className="imager-board-search">
+                  <span aria-hidden="true">⌕</span>
+                  <input
+                    value={boardSearch}
+                    onChange={(event) => setBoardSearch(event.target.value)}
+                    placeholder="搜索板型、芯片或厂商"
+                    aria-label="搜索板型、芯片或厂商"
+                  />
+                  <kbd>Ctrl</kbd><kbd>K</kbd>
+                </label>
+                <div className="imager-board-filters" role="tablist" aria-label="板型厂商筛选">
+                  {BOARD_FILTERS.map((filter) => (
                     <button
-                      key={candidate.id}
-                      className={`imager-board-card ${board.id === candidate.id ? 'is-selected' : ''}`}
-                      onClick={() => {
-                        setBoardId(candidate.id);
-                        setStep(1);
-                        setDevices([]);
-                        setSelectedDeviceId(null);
-                      }}
+                      key={filter.id}
+                      type="button"
+                      className={boardFilter === filter.id ? 'is-active' : ''}
+                      onClick={() => setBoardFilter(filter.id)}
+                      role="tab"
+                      aria-selected={boardFilter === filter.id}
                     >
-                      <span className="imager-board-mark">
-                        {candidate.chipVendor === 'rockchip' ? 'RK' : 'AW'}
-                      </span>
-                      <span className="imager-board-name">{candidate.name}</span>
-                      <span className="imager-board-meta">
-                        {candidate.chip} · {candidate.storage}
-                      </span>
-                      <span className="imager-board-meta">{candidate.mode}</span>
-                      {board.id === candidate.id && (
-                        <span className="imager-selected-label">已选择</span>
-                      )}
+                      {filter.label}
                     </button>
                   ))}
                 </div>
-                <div className="imager-info-card">
-                  <strong>{board.name}</strong>
-                  <span>
-                    {board.needsLoader
-                      ? '该路线需要匹配板型的 RAM Loader。'
-                      : '可直接使用厂家镜像路线。'}
-                  </span>
-                  <button onClick={onOpenLegacyWorkbench}>查看原有工作台</button>
+                <div className="imager-board-picker">
+                  <div className="imager-board-list">
+                    {visibleBoards.length ? visibleBoards.map((candidate) => (
+                      <button
+                        key={candidate.id}
+                        className={`imager-board-row ${board.id === candidate.id ? 'is-selected' : ''}`}
+                        onClick={() => {
+                          setBoardId(candidate.id);
+                          setStep(1);
+                          setDevices([]);
+                          setSelectedDeviceId(null);
+                        }}
+                      >
+                        <BoardGlyph board={candidate} />
+                        <span className="imager-board-row-copy">
+                          <strong>{candidate.name}</strong>
+                          <small>{candidate.chip} · {candidate.storage}</small>
+                        </span>
+                        <span className="imager-board-row-check" aria-hidden="true">
+                          {board.id === candidate.id ? '✓' : ''}
+                        </span>
+                      </button>
+                    )) : (
+                      <div className="imager-board-no-results">没有匹配的板型</div>
+                    )}
+                    <div className="imager-supported-link">未找到板型？ <button type="button" onClick={onOpenAdvancedWorkbench}>查看支持列表 ↗</button></div>
+                  </div>
+                  <aside className="imager-board-detail">
+                    <span className="imager-detail-label">已选板型</span>
+                    <h3>{board.name}</h3>
+                    <BoardGlyph board={board} large />
+                    <dl>
+                      <div><dt>平台</dt><dd>{board.chipVendor === 'allwinner' ? '全志' : board.chipVendor === 'rockchip' ? '瑞芯微' : board.chipVendor.toUpperCase()}</dd></div>
+                      <div><dt>连接</dt><dd>{board.mode}</dd></div>
+                      <div><dt>存储</dt><dd>{board.storage}</dd></div>
+                    </dl>
+                    <button type="button" className="imager-detail-link" onClick={() => setStep(2)}>查看板型说明 ↗</button>
+                  </aside>
                 </div>
               </div>
             )}
@@ -331,11 +400,11 @@ export const ImagerPage: React.FC<ImagerPageProps> = ({
                       <input
                         value={loaderPath}
                         onChange={(event) => setLoaderPath(event.target.value)}
-                        placeholder="F101: fes1.fex；RK: 对应 SPL/Loader"
+                        placeholder="选择与板型匹配的 Loader 文件"
                       />
                       <button onClick={() => void pickPath('loader')}>选择文件</button>
                     </div>
-                    <small>Loader 不匹配时，后端预检会拒绝擦写。</small>
+                    <small>Loader 不匹配或设备未进入正确模式时，后端预检会拒绝擦写。</small>
                   </label>
                 )}
                 <div className="imager-check-list">
@@ -343,6 +412,11 @@ export const ImagerPage: React.FC<ImagerPageProps> = ({
                   <div>✓ 目标介质：{board.storage}</div>
                   <div>✓ 烧录模式：{board.mode}</div>
                 </div>
+                {board.route === 'vendor' && board.chipVendor !== 'allwinner' && (
+                  <div className="imager-route-note">
+                    {board.name} 使用已保存设备配置中的专用烧录脚本和参数。请在“配置接口”中选择对应设备，向导不会覆盖其厂商参数。
+                  </div>
+                )}
               </div>
             )}
 
@@ -386,7 +460,7 @@ export const ImagerPage: React.FC<ImagerPageProps> = ({
                     <div className="imager-empty-state">
                       <strong>还没有可用的已保存设备</strong>
                       <span>请先在原有工作台中保存板卡与 USB/FEL 或 Maskrom 绑定。</span>
-                      <button onClick={onOpenLegacyWorkbench}>打开设备设置</button>
+                      <button onClick={onOpenAdvancedWorkbench}>打开高级烧录</button>
                     </div>
                   )}
                 </div>
@@ -484,50 +558,7 @@ export const ImagerPage: React.FC<ImagerPageProps> = ({
               </div>
             </footer>
           </main>
-        </div>
-      ) : (
-        <div className="imager-special-workspace">
-          <div className="imager-special-hero">
-            <span className="imager-kicker">
-              {workspace === 'advanced' ? 'ADVANCED WORKSPACE' : 'AI CONNECTOR'}
-            </span>
-            <h2>{workspace === 'advanced' ? '专业烧录工作台' : '连接 AI 工具'}</h2>
-            <p>
-              {workspace === 'advanced'
-                ? '继续使用现有 OpenixCLI、FEL/FES、SPI NOR、NAND 和 eMMC 后端；这里负责更细的路线、Loader、校验和结束动作。'
-                : 'AI 只负责提出请求，LYNX 负责设备作用域、策略、确认和确定性结果。'}
-            </p>
-            <div className="imager-special-actions">
-              <button
-                className="imager-primary-button"
-                onClick={workspace === 'advanced' ? onOpenAdvanced : onOpenAi}
-              >
-                {workspace === 'advanced' ? '打开专业工作台' : '打开 AI 配置中心'}
-              </button>
-              <button className="imager-secondary-button" onClick={() => setWorkspace('basic')}>
-                返回基础烧录
-              </button>
-            </div>
-          </div>
-          <div className="imager-special-grid">
-            <div>
-              <span>现有后端</span>
-              <strong>OpenixCLI / Tauri IPC</strong>
-              <small>不重写烧录协议，所有高风险动作仍经过后端门禁。</small>
-            </div>
-            <div>
-              <span>安全原则</span>
-              <strong>设备作用域 + 明确确认</strong>
-              <small>AI 请求不能绕过板卡绑定、预检和人工确认。</small>
-            </div>
-            <div>
-              <span>结果报告</span>
-              <strong>写入 · 校验 · 重启 · 启动</strong>
-              <small>四个状态分别记录，不用 100% 进度冒充启动成功。</small>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </section>
   );
 };

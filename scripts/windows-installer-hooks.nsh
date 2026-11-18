@@ -19,6 +19,9 @@ Var LynxPreviousInstallDir
 !macroend
 
 !macro LynxRequireIdleProcesses
+  !insertmacro LynxRejectRunning "lynx-imager.exe"
+  ; Keep the legacy process guard so a v0.1.0 process cannot keep using the
+  ; old UI while a renamed executable is being installed beside it.
   !insertmacro LynxRejectRunning "lynx-app.exe"
   !insertmacro LynxRejectRunning "openixcli.exe"
   !insertmacro LynxRejectRunning "openrockcli.exe"

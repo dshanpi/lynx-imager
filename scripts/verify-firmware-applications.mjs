@@ -12,7 +12,7 @@ const out = process.env.LYNX_FWAPP_EVIDENCE;
 assert.ok(out && path.isAbsolute(out));
 await mkdir(out, { recursive: true });
 const data = await mkdtemp(path.join(os.tmpdir(), 'lynx-fwapp-test-'));
-const binary = path.join(root, 'src-tauri/target/debug/lynx-app');
+const binary = path.join(root, 'src-tauri/target/debug/lynx-imager');
 const result = {
   platform: 'Ubuntu native Tauri',
   binarySha256: createHash('sha256')

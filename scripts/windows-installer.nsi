@@ -11,10 +11,10 @@ Unicode true
 !endif
 
 !ifndef PRODUCT_NAME
-  !define PRODUCT_NAME "LYNX"
+  !define PRODUCT_NAME "LYNX Imager"
 !endif
 !ifndef PRODUCT_BRAND
-  !define PRODUCT_BRAND "DshanPI LYNX｜芯桥"
+  !define PRODUCT_BRAND "DshanPI LYNX Imager"
 !endif
 !ifndef PRODUCT_VERSION
   !define PRODUCT_VERSION "0.1.0"
@@ -26,7 +26,6 @@ Unicode true
   !define PRODUCT_PUBLISHER "DshanPI"
 !endif
 !define PRODUCT_REG_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\DshanPI.LYNX"
-!define LYNX_PROTOCOL_REG_KEY "Software\Classes\lynx"
 
 Var PreviousInstallDir
 
@@ -51,8 +50,8 @@ VIAddVersionKey /LANG=1033 "ProductVersion" "${PRODUCT_VERSION}"
 !define MUI_ABORTWARNING
 !define MUI_ICON "..\src-tauri\icons\icon.ico"
 !define MUI_UNICON "..\src-tauri\icons\icon.ico"
-!define MUI_FINISHPAGE_RUN "$INSTDIR\lynx-app.exe"
-!define MUI_FINISHPAGE_RUN_TEXT "启动 LYNX"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\lynx-imager.exe"
+!define MUI_FINISHPAGE_RUN_TEXT "启动 LYNX Imager"
 !define MUI_FINISHPAGE_RUN_NOTCHECKED false
 
 !insertmacro MUI_PAGE_WELCOME
@@ -95,7 +94,7 @@ Section "LYNX" SEC_MAIN
   ; Stop both the current package and legacy Tauri installations before
   ; replacing the executable. This prevents an old running v0.1.6 process
   ; from surviving an otherwise successful v0.1.0 reinstall.
-  nsExec::ExecToLog 'taskkill /F /T /IM lynx-app.exe'
+  nsExec::ExecToLog 'taskkill /F /T /IM lynx-imager.exe'
   nsExec::ExecToLog 'taskkill /F /T /IM openixcli.exe'
   nsExec::ExecToLog 'taskkill /F /T /IM openrockcli.exe'
   nsExec::ExecToLog 'taskkill /F /T /IM uuu.exe'
@@ -112,7 +111,7 @@ Section "LYNX" SEC_MAIN
   ; instance is complete and self-tested before shortcuts/registry are switched.
   SetOutPath "$INSTDIR"
 
-  File "${SOURCE_DIR}\lynx-app.exe"
+  File "${SOURCE_DIR}\lynx-imager.exe"
   File "${SOURCE_DIR}\WebView2Loader.dll"
   File "${SOURCE_DIR}\libusb-1.0.dll"
   File "${SOURCE_DIR}\CH347DLLA64.dll"
@@ -150,27 +149,20 @@ Section "LYNX" SEC_MAIN
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
   CreateDirectory "$SMPROGRAMS\DshanPI"
-  CreateShortcut "$SMPROGRAMS\DshanPI\LYNX.lnk" "$INSTDIR\lynx-app.exe"
-  CreateShortcut "$DESKTOP\LYNX.lnk" "$INSTDIR\lynx-app.exe"
+  CreateShortcut "$SMPROGRAMS\DshanPI\LYNX.lnk" "$INSTDIR\lynx-imager.exe"
+  CreateShortcut "$DESKTOP\LYNX.lnk" "$INSTDIR\lynx-imager.exe"
 
   WriteRegStr HKCU "Software\DshanPI\LYNX" "InstallDir" "$INSTDIR"
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "DisplayName" "${PRODUCT_BRAND}"
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "InstallLocation" "$INSTDIR"
-  WriteRegStr HKCU "${PRODUCT_REG_KEY}" "DisplayIcon" "$INSTDIR\lynx-app.exe"
+  WriteRegStr HKCU "${PRODUCT_REG_KEY}" "DisplayIcon" "$INSTDIR\lynx-imager.exe"
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
   WriteRegDWORD HKCU "${PRODUCT_REG_KEY}" "NoModify" 1
   WriteRegDWORD HKCU "${PRODUCT_REG_KEY}" "NoRepair" 1
   WriteRegStr HKCU "Software\DshanPI\LYNX" "PreviousInstallDir" "$PreviousInstallDir"
 
-  ; Register the learning-center deep link for the current Windows user.
-  ; URLs contain stable course/lab identifiers only; LYNX still performs its
-  ; own parser, login, entitlement and package-signature checks after launch.
-  WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}" "" "URL:LYNX Learning Protocol"
-  WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}" "URL Protocol" ""
-  WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}\DefaultIcon" "" "$INSTDIR\lynx-app.exe,0"
-  WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}\shell\open\command" "" '"$INSTDIR\lynx-app.exe" "%1"'
   Call TryRemovePreviousInstall
 SectionEnd
 
@@ -185,7 +177,6 @@ Section "Uninstall"
     Delete "$SMPROGRAMS\DshanPI\LYNX.lnk"
     RMDir "$SMPROGRAMS\DshanPI"
     DeleteRegKey HKCU "${PRODUCT_REG_KEY}"
-    DeleteRegKey HKCU "${LYNX_PROTOCOL_REG_KEY}"
     DeleteRegKey HKCU "Software\DshanPI\LYNX"
   uninstall_instance:
   RMDir /r "$INSTDIR"

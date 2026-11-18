@@ -14,7 +14,7 @@ upstream binary archive; macOS ARM64 uses the Homebrew build. Its GPLv2 license
 is bundled as `dfu-util-COPYING`.
 
 The Windows release workflow also copies `libusb-1.0.dll` into
-`resources/windows/`. Tauri installs that copy beside `lynx-app.exe`, while the
+`resources/windows/`. Tauri installs that copy beside `lynx-imager.exe`, while the
 copy in this directory is installed beside the OpenixCLI/OpenRockCLI sidecars.
 The official Windows UUU release is statically linked and does not require that
 DLL.

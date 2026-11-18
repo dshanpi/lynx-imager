@@ -24,7 +24,7 @@ assert.ok(out && path.isAbsolute(out));
 await mkdir(out, { recursive: true });
 const data = await mkdtemp(path.join(os.tmpdir(), 'lynx-device-settings-'));
 const binary = await realpath(
-  process.env.LYNX_DEVICE_SETTINGS_BINARY || path.join(root, 'src-tauri/target/debug/lynx-app')
+  process.env.LYNX_DEVICE_SETTINGS_BINARY || path.join(root, 'src-tauri/target/debug/lynx-imager')
 );
 const result = {
   sourceHead: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),

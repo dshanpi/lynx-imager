@@ -16,7 +16,7 @@ const binary = process.env.LYNX_BUSINESS_BINARY
       'src-tauri',
       'target',
       'debug',
-      process.platform === 'win32' ? 'lynx-app.exe' : 'lynx-app'
+      process.platform === 'win32' ? 'lynx-imager.exe' : 'lynx-imager'
     );
 const nativeWindowsDriver =
   process.platform === 'win32' && process.env.LYNX_BUSINESS_NATIVE_DRIVER_PATH;

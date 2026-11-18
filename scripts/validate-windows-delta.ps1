@@ -30,7 +30,7 @@ function Invoke-Installer([string]$Path, [string[]]$Arguments, [string]$Stage) {
 }
 
 function Stop-LynxProcesses {
-  @('lynx-app', 'openixcli', 'openrockcli', 'uuu', 'dfu-util') | ForEach-Object {
+  @('lynx-imager', 'openixcli', 'openrockcli', 'uuu', 'dfu-util') | ForEach-Object {
     Stop-Process -Name $_ -Force -ErrorAction SilentlyContinue
   }
 }
@@ -66,7 +66,7 @@ function Assert-InstalledVersion([string]$ExpectedVersion) {
   Assert-True ($directory -match "app-$([regex]::Escape($ExpectedVersion))-\d+$") `
     "Unexpected versioned install directory: $directory"
   foreach ($relative in @(
-    'lynx-app.exe',
+    'lynx-imager.exe',
     'bin\openixcli.exe',
     'bin\openrockcli.exe',
     'bin\uuu.exe',
@@ -95,7 +95,7 @@ try {
     "Failed to install LYNX $FromVersion"
   $oldDirectory = Assert-InstalledVersion $FromVersion
   Stop-LynxProcesses
-  $oldHash = (Get-FileHash -LiteralPath (Join-Path $oldDirectory 'lynx-app.exe') -Algorithm SHA256).Hash
+  $oldHash = (Get-FileHash -LiteralPath (Join-Path $oldDirectory 'lynx-imager.exe') -Algorithm SHA256).Hash
   Set-ItemProperty -LiteralPath $uninstallKey -Name DisplayVersion -Value '0.0.0-invalid'
   $deltaExit = Invoke-Installer $deltaInstaller[0].FullName @('/S') 'Run mismatched delta'
   Assert-True ($deltaExit -eq 20) "Delta precondition exit was $deltaExit, expected 20"
@@ -103,7 +103,7 @@ try {
   Assert-True ((Get-Content -LiteralPath $failureMarker -First 1).Trim() -eq 'PRECONDITION') `
     'Delta failure marker is not PRECONDITION.'
   Assert-True ((Get-InstallDirectory) -eq $oldDirectory) 'Failed delta changed the registered install directory.'
-  Assert-True ((Get-FileHash -LiteralPath (Join-Path $oldDirectory 'lynx-app.exe') -Algorithm SHA256).Hash -eq $oldHash) `
+  Assert-True ((Get-FileHash -LiteralPath (Join-Path $oldDirectory 'lynx-imager.exe') -Algorithm SHA256).Hash -eq $oldHash) `
     'Failed delta changed the installed application.'
 
   # The signed full package is the mandatory recovery path after a delta failure.
@@ -115,7 +115,7 @@ try {
   Stop-LynxProcesses
   Assert-True ((Invoke-Installer (Join-Path $fallbackDirectory 'uninstall.exe') @('/S') 'Uninstall full fallback') -eq 0) `
     'Full fallback uninstall failed.'
-  Wait-PathAbsent (Join-Path $fallbackDirectory 'lynx-app.exe') 'Full fallback uninstall'
+  Wait-PathAbsent (Join-Path $fallbackDirectory 'lynx-imager.exe') 'Full fallback uninstall'
 
   # Success path: reinstall the exact public base and execute the Draft delta.
   Reset-LynxInstall
@@ -128,13 +128,13 @@ try {
   Start-Sleep -Seconds 5
   $deltaDirectory = Assert-InstalledVersion $ToVersion
   Assert-True ($deltaDirectory -ne $oldDirectory) 'Delta reused the previous program directory.'
-  Assert-True (-not (Test-Path -LiteralPath (Join-Path $oldDirectory 'lynx-app.exe'))) `
+  Assert-True (-not (Test-Path -LiteralPath (Join-Path $oldDirectory 'lynx-imager.exe'))) `
     'Delta left the previous application executable behind.'
   Assert-True (-not (Test-Path -LiteralPath $failureMarker)) 'Successful delta left a failure marker.'
   Stop-LynxProcesses
   Assert-True ((Invoke-Installer (Join-Path $deltaDirectory 'uninstall.exe') @('/S') 'Uninstall delta result') -eq 0) `
     'Delta-installed version uninstall failed.'
-  Wait-PathAbsent (Join-Path $deltaDirectory 'lynx-app.exe') 'Delta-result uninstall'
+  Wait-PathAbsent (Join-Path $deltaDirectory 'lynx-imager.exe') 'Delta-result uninstall'
 
   Write-Host "Windows delta acceptance passed: $FromVersion -> $ToVersion"
 } finally {

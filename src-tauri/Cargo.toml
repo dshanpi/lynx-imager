@@ -1,5 +1,5 @@
 [package]
-name = "lynx-app"
+name = "lynx-imager"
 version = "0.1.0"
 description = "DshanPI LYNX embedded development and production tool."
 authors = ["DshanPI"]

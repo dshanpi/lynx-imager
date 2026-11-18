@@ -3,7 +3,7 @@ import net from 'node:net';
 import path from 'node:path';
 
 const root = path.resolve(import.meta.dirname, '..');
-const binary = path.join(root, 'src-tauri', 'target', 'debug', 'lynx-app');
+const binary = path.join(root, 'src-tauri', 'target', 'debug', 'lynx-imager');
 let driver;
 let frontend;
 let sessionId = '';

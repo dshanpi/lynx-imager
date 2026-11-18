@@ -23,7 +23,7 @@ const cargoToml = readFileSync(join(repoRoot, 'src-tauri', 'Cargo.toml'), 'utf8'
 const cargoVersion = cargoToml.match(/^version\s*=\s*"([^"]+)"/m)?.[1];
 const cargoLock = readFileSync(join(repoRoot, 'src-tauri', 'Cargo.lock'), 'utf8');
 const cargoLockVersion = cargoLock.match(
-  /\[\[package\]\]\r?\nname = "lynx-app"\r?\nversion = "([^"]+)"/
+  /\[\[package\]\]\r?\nname = "lynx-imager"\r?\nversion = "([^"]+)"/
 )?.[1];
 const installer = readFileSync(join(repoRoot, 'scripts', 'windows-installer.nsi'), 'utf8');
 const installerVersion = installer.match(/!define PRODUCT_VERSION "([^"]+)"/)?.[1];

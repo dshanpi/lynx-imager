@@ -3,7 +3,7 @@ $ErrorActionPreference='Stop'
 if ($Width -lt 1090 -or $Height -lt 720 -or $Width -gt 3840 -or $Height -gt 2160) {throw 'Unexpected isolated test window size'}
 function Get-OwnedHash([string]$File) { $stream=[System.IO.File]::OpenRead($File);try { $sha=[System.Security.Cryptography.SHA256]::Create();try { return [System.BitConverter]::ToString($sha.ComputeHash($stream)) } finally {$sha.Dispose()} } finally {$stream.Dispose()} }
 $expected=Get-OwnedHash $Executable
-$candidates=@(Get-Process -Name lynx-app -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -eq 'LYNX isolated UI acceptance' -and $_.MainWindowHandle -ne 0 })
+$candidates=@(Get-Process -Name lynx-imager -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -eq 'LYNX isolated UI acceptance' -and $_.MainWindowHandle -ne 0 })
 if ($candidates.Count -ne 1) {throw 'Expected one isolated test application window'}
 $owned=$candidates[0]
 if ((Get-OwnedHash $owned.Path) -ne $expected) {throw 'Isolated test executable mismatch'}

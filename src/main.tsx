@@ -1,18 +1,12 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ReactDOM from 'react-dom/client';
-import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Layout, Popup, ToolItem, UserProfileDialog } from './CoreUI';
+import { Popup } from './CoreUI';
 import { WorkbenchPage } from './Components/Workbench';
 import { AISupervisorPage, type AISupervisorSection } from './Components/AISupervisor';
-import { MCUWorkbenchPage } from './Components/MCUWorkbench';
-import { RecordCenterPage } from './Components/RecordCenter';
-import { LearningCenterPage, type LearningSection } from './Components/LearningCenter';
-import { HardwareMonitorPage } from './Components/HardwareMonitor';
 import { ImagerPage } from './Components/Imager/ImagerPage';
-import { Settings, AppSettings, loadSettings } from './Settings';
+import { Settings, loadSettings } from './Settings';
 import { authService, AuthUserInfo } from './Services';
-import { flashManager } from './FlashManager';
 import { efexService } from './Services';
 import { ThemeProvider, useTheme, ThemeMode } from './Themes';
 import './i18n';
@@ -28,7 +22,8 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { scheduleAutomaticUpdateCheck } from './Services/AutoUpdater';
 import { installDiagnosticReporter } from './Services/DiagnosticReporter';
-import { invokeCommand, subscribeEvent, type LearningDeepLinkTarget } from './Platform/IPC';
+import { invokeCommand, subscribeEvent } from './Platform/IPC';
+import './Components/Imager/ImagerShell.css';
 
 const SUPERVISOR_SECTIONS: Record<string, AISupervisorSection> = {
   'ai-supervisor-overview': 'overview',
@@ -41,14 +36,6 @@ const SUPERVISOR_SECTIONS: Record<string, AISupervisorSection> = {
   'ai-supervisor-permissions': 'config',
   'ai-supervisor-human': 'runtime',
   'ai-supervisor-audit': 'runtime',
-};
-
-const LEARNING_SECTIONS: Record<string, LearningSection> = {
-  'learning-home': 'home',
-  'learning-hardware': 'hardware',
-  'learning-courses': 'courses',
-  'learning-labs': 'labs',
-  'learning-history': 'history',
 };
 
 /**
@@ -77,164 +64,19 @@ async function showAppWindow() {
  * - Settings visibility
  */
 const AppContent: React.FC = () => {
-  const { t } = useTranslation();
   const { setThemeMode } = useTheme();
   const [activeTool, setActiveTool] = useState('lynx-imager');
-  const [boardPublicationView, setBoardPublicationView] = useState(false);
-  useEffect(() => {
-    const update = (event: Event) =>
-      setBoardPublicationView(
-        (event as CustomEvent<{ publication?: boolean }>).detail?.publication === true
-      );
-    window.addEventListener('lynx:firmware-navigation', update);
-    return () => window.removeEventListener('lynx:firmware-navigation', update);
-  }, []);
-
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false);
-  const [isWorking, setIsWorking] = useState(false);
   const [hardwareBlockMessage, setHardwareBlockMessage] = useState('');
   // 当前登录用户（null 表示未登录）。登录结果经 auth-login-result 事件回传。
   const [authUser, setAuthUser] = useState<AuthUserInfo | null>(null);
-  const [loginPending, setLoginPending] = useState(false);
-  const loginAttempt = useRef(0);
-  const loginLocked = useRef(false);
-  // 用户信息弹窗是否显示（点击用户名按钮打开）。
-  const [profileVisible, setProfileVisible] = useState(false);
-  const [learningDeepLink, setLearningDeepLink] = useState<LearningDeepLinkTarget | null>(null);
-
   const clearExpiredAuthentication = useCallback(() => {
     setAuthUser(null);
-    setProfileVisible(false);
   }, []);
-
-  /**
-   * Tool items configuration for sidebar.
-   *
-   * Defines all available tools with their IDs, names,
-   * icons, and descriptions for sidebar navigation.
-   */
-  const tools: ToolItem[] = useMemo(
-    () => [
-      {
-        id: 'lynx-imager',
-        name: '系统烧录',
-        icon: 'download',
-        description: '基础烧录向导、专业路线和 AI 连接入口',
-      },
-      {
-        id: 'development-workbenches',
-        name: '嵌入式开发工作台',
-        icon: 'workbench',
-        description: 'Linux 与 MCU 开发板工作台',
-        children: [
-          {
-            id: 'workbench',
-            name: 'Linux 工作台',
-            icon: 'server',
-            description: t('workbench.description'),
-          },
-          {
-            id: 'mcu-workbench',
-            name: 'MCU 工作台',
-            icon: 'board',
-            description: '使用 ST-Link、DAPLink 接管 MCU 烧写、复位与启动测试',
-          },
-        ],
-      },
-      {
-        id: 'learning-center',
-        name: '学习中心',
-        icon: 'learning',
-        description: '课程、实验与学习记录',
-        children: [
-          {
-            id: 'learning-home',
-            name: '学习指南',
-            icon: 'learning',
-            description: '继续学习与待处理事项',
-          },
-          {
-            id: 'learning-hardware',
-            name: '我的硬件',
-            icon: 'box',
-            description: '订单兑换、已绑定设备与资料引导',
-          },
-          {
-            id: 'learning-courses',
-            name: '我的课程',
-            icon: 'courses',
-            description: '查看已拥有的官网课程',
-          },
-          {
-            id: 'learning-labs',
-            name: '实验中心',
-            icon: 'lab',
-            description: '启动、恢复与检查课程实验',
-          },
-          {
-            id: 'learning-history',
-            name: '学习记录',
-            icon: 'history',
-            description: '实验历史、报告与同步状态',
-          },
-        ],
-      },
-      {
-        id: 'ai-channel',
-        name: t('tools.aiGateway.name', 'AI 通道'),
-        icon: 'agent',
-        description: t('tools.aiGateway.description', '连接 Codex、Claude Code 与硬件工具'),
-        children: [
-          {
-            id: 'ai-supervisor-runtime',
-            name: '运行中心',
-            icon: 'runtime',
-            description: '统一处理运行、人工介入与审计证据',
-          },
-          {
-            id: 'ai-supervisor-config',
-            name: '配置中心',
-            icon: 'settings',
-            description: '统一配置 AI 服务、策略、预算与动作权限',
-          },
-          {
-            id: 'ai-supervisor-automatic',
-            name: '创建任务',
-            icon: 'task',
-            description: '配置定时、Webhook 和设备事件任务',
-          },
-          {
-            id: 'ai-supervisor-overview',
-            name: '监督总览',
-            icon: 'overview',
-            description: 'AI 服务、恢复预算与监督状态',
-          },
-        ],
-      },
-      {
-        id: 'hardware-monitor',
-        name: t('tools.hardwareMonitor.name', '硬件监视'),
-        icon: 'lab',
-        description: t(
-          'tools.hardwareMonitor.description',
-          'CH347 四路电源、SPI 显示与 AI 通道实时监视'
-        ),
-      },
-      {
-        id: 'record-center',
-        name: '记录中心',
-        icon: 'records',
-        description: '统一追踪事件、会话、反馈与本地备份',
-      },
-    ],
-    [t]
-  );
 
   // Load saved settings on mount
   useEffect(() => {
     loadSettings().then(async (loadedSettings) => {
-      setSidebarCollapsed(loadedSettings.sidebarCollapsed);
       if (loadedSettings.language) {
         i18n.changeLanguage(loadedSettings.language);
       }
@@ -275,21 +117,6 @@ const AppContent: React.FC = () => {
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
-    const openLearningTarget = (target: LearningDeepLinkTarget) => {
-      setLearningDeepLink({ ...target });
-      setActiveTool(target.labKey ? 'learning-labs' : 'learning-courses');
-    };
-    void subscribeEvent('learning-deep-link', openLearningTarget).then((value) => {
-      unlisten = value;
-      void invokeCommand('learning_take_pending_deep_link').then((pending) => {
-        if (pending) openLearningTarget(pending);
-      });
-    });
-    return () => unlisten?.();
-  }, []);
-
-  useEffect(() => {
-    let unlisten: (() => void) | undefined;
     void subscribeEvent('hardware-close-blocked', (activities) => {
       setHardwareBlockMessage(
         `检测到运行中的硬件任务，LYNX 已保持运行且未触碰设备：${activities.join('；')}`
@@ -300,27 +127,11 @@ const AppContent: React.FC = () => {
     return () => unlisten?.();
   }, []);
 
-  // Track flash manager working state
-  useEffect(() => {
-    const unsubWorkingChange = flashManager.onWorkingChange((working) => {
-      setIsWorking(working);
-    });
-
-    setIsWorking(flashManager.getIsFlashing());
-
-    return () => {
-      unsubWorkingChange();
-    };
-  }, []);
-
   // 订阅登录结果事件，并查询已有登录态（重启后从后端会话恢复）。
   useEffect(() => {
     let unreg: (() => void) | undefined;
     authService
       .onLoginResult((success, user, error) => {
-        loginAttempt.current++;
-        loginLocked.current = false;
-        setLoginPending(false);
         if (success && user) {
           setAuthUser(user);
           void invokeCommand('diagnostics_set_enabled', { enabled: true })
@@ -380,96 +191,6 @@ const AppContent: React.FC = () => {
     };
   }, [authUser, clearExpiredAuthentication]);
 
-  /**
-   * Handles settings changes from Settings modal.
-   *
-   * @param newSettings - Updated AppSettings
-   */
-  const handleSettingsChange = (newSettings: AppSettings) => {
-    setSidebarCollapsed(newSettings.sidebarCollapsed);
-  };
-
-  /**
-   * Handles tool selection from sidebar.
-   *
-   * @param toolId - Selected tool ID
-   */
-  const handleToolSelect = useCallback((toolId: string) => {
-    setActiveTool(toolId);
-  }, []);
-
-  /**
-   * Handles sidebar collapse toggle.
-   */
-  const handleToggleSidebar = useCallback(() => {
-    setSidebarCollapsed((prev) => !prev);
-  }, []);
-
-  /**
-   * Handles login button click.
-   *
-   * 未登录 → 启动 100ask.net OAuth2 登录（后端起本机回调服务并打开浏览器授权），
-   *   登录结果经 auth-login-result 事件回传并更新 authUser；
-   * 已登录 → 打开用户信息弹窗（在弹窗底部退出登录）。
-   */
-  const handleLoginClick = useCallback(() => {
-    if (authUser) {
-      authService
-        .getUser()
-        .then((user) => {
-          setAuthUser(user);
-          setProfileVisible(Boolean(user));
-        })
-        .catch(() => {
-          clearExpiredAuthentication();
-          alert('登录已过期，请重新登录');
-        });
-      return;
-    }
-    if (loginLocked.current) return;
-    loginLocked.current = true;
-    const attempt = ++loginAttempt.current;
-    setLoginPending(true);
-    authService
-      .login()
-      .then(async ({ authorizeUrl }) => {
-        if (attempt !== loginAttempt.current) return;
-        try {
-          await openUrl(authorizeUrl);
-          // The learning prompt keeps its explicit waiting/cancel state. Other
-          // existing login entries may still restart an abandoned browser flow.
-          if (attempt === loginAttempt.current) loginLocked.current = false;
-        } catch (error) {
-          if (attempt !== loginAttempt.current) return;
-          // 浏览器没有成功打开时立即释放回调端口和 pending，允许用户直接重试。
-          await authService.cancelLogin().catch(() => undefined);
-          throw error;
-        }
-      })
-      .catch((e) => {
-        if (attempt !== loginAttempt.current) return;
-        loginLocked.current = false;
-        setLoginPending(false);
-        console.error('启动登录失败:', e);
-        alert(typeof e === 'string' ? e : ((e as { message?: string })?.message ?? '启动登录失败'));
-      });
-  }, [authUser, clearExpiredAuthentication]);
-
-  const handleCancelLogin = useCallback(() => {
-    const attempt = ++loginAttempt.current;
-    loginLocked.current = true;
-    void authService
-      .cancelLogin()
-      .then(() => {
-        if (attempt !== loginAttempt.current) return;
-        loginLocked.current = false;
-        setLoginPending(false);
-      })
-      .catch(() => {
-        if (attempt === loginAttempt.current) alert('取消登录失败，请稍后重试。');
-      });
-  }, []);
-
   const handleSettingsClick = useCallback(() => {
     authService
       .getUser()
@@ -480,14 +201,6 @@ const AppContent: React.FC = () => {
       })
       .finally(() => setSettingsVisible(true));
   }, [clearExpiredAuthentication]);
-
-  /**
-   * 退出登录：调用后端清空会话，更新本地状态并关闭用户信息弹窗。
-   */
-  const handleLogout = useCallback(() => {
-    setProfileVisible(false);
-    authService.logout().then(() => setAuthUser(null));
-  }, []);
 
   /** Page fade animation variants */
   const pageVariants = {
@@ -520,78 +233,7 @@ const AppContent: React.FC = () => {
           zIndex: activeTool === 'lynx-imager' ? 1 : 0,
         }}
       >
-        <ImagerPage
-          onOpenAdvanced={() => setActiveTool('workbench')}
-          onOpenAi={() => setActiveTool('ai-supervisor-config')}
-          onOpenLegacyWorkbench={() => setActiveTool('workbench')}
-        />
-      </motion.div>
-      <motion.div
-        className="tool-panel"
-        variants={pageVariants}
-        animate={activeTool === 'hardware-monitor' ? 'visible' : 'hidden'}
-        transition={pageTransition}
-        style={{
-          pointerEvents: activeTool === 'hardware-monitor' ? 'auto' : 'none',
-          visibility: activeTool === 'hardware-monitor' ? 'visible' : 'hidden',
-          zIndex: activeTool === 'hardware-monitor' ? 1 : 0,
-        }}
-      >
-        <HardwareMonitorPage isActive={activeTool === 'hardware-monitor'} />
-      </motion.div>
-      <motion.div
-        className="tool-panel"
-        variants={pageVariants}
-        animate={LEARNING_SECTIONS[activeTool] ? 'visible' : 'hidden'}
-        transition={pageTransition}
-        style={{
-          pointerEvents: LEARNING_SECTIONS[activeTool] ? 'auto' : 'none',
-          visibility: LEARNING_SECTIONS[activeTool] ? 'visible' : 'hidden',
-          zIndex: LEARNING_SECTIONS[activeTool] ? 1 : 0,
-        }}
-      >
-        <LearningCenterPage
-          key={authUser?.id ?? 'anonymous'}
-          isActive={Boolean(LEARNING_SECTIONS[activeTool])}
-          section={LEARNING_SECTIONS[activeTool] ?? 'home'}
-          authUser={authUser}
-          onRequestLogin={handleLoginClick}
-          loginPending={loginPending}
-          onCancelLogin={handleCancelLogin}
-          onSectionChange={(nextSection) => setActiveTool(`learning-${nextSection}`)}
-          deepLinkTarget={learningDeepLink}
-          onOpenLink={setLearningDeepLink}
-          onDeepLinkHandled={() => setLearningDeepLink(null)}
-        />
-      </motion.div>
-      <motion.div
-        className="tool-panel"
-        variants={pageVariants}
-        animate={activeTool === 'record-center' ? 'visible' : 'hidden'}
-        transition={pageTransition}
-        style={{
-          pointerEvents: activeTool === 'record-center' ? 'auto' : 'none',
-          visibility: activeTool === 'record-center' ? 'visible' : 'hidden',
-          zIndex: activeTool === 'record-center' ? 1 : 0,
-        }}
-      >
-        <RecordCenterPage
-          isActive={activeTool === 'record-center'}
-          actorId={authUser ? `user:${authUser.id}` : 'local-user'}
-        />
-      </motion.div>
-      <motion.div
-        className="tool-panel"
-        variants={pageVariants}
-        animate={activeTool === 'mcu-workbench' ? 'visible' : 'hidden'}
-        transition={pageTransition}
-        style={{
-          pointerEvents: activeTool === 'mcu-workbench' ? 'auto' : 'none',
-          visibility: activeTool === 'mcu-workbench' ? 'visible' : 'hidden',
-          zIndex: activeTool === 'mcu-workbench' ? 1 : 0,
-        }}
-      >
-        <MCUWorkbenchPage isActive={activeTool === 'mcu-workbench'} />
+        <ImagerPage onOpenAdvancedWorkbench={() => setActiveTool('workbench')} />
       </motion.div>
       <motion.div
         className="tool-panel"
@@ -639,34 +281,58 @@ const AppContent: React.FC = () => {
 
   return (
     <>
-      <Layout
-        className={LEARNING_SECTIONS[activeTool] ? 'learn-design-surface' : ''}
-        tools={tools}
-        activeTool={
-          activeTool === 'workbench' && boardPublicationView ? 'ai-supervisor-runtime' : activeTool
-        }
-        onToolSelect={handleToolSelect}
-        sidebarCollapsed={sidebarCollapsed}
-        onToggleSidebar={handleToggleSidebar}
-        onSettingsClick={handleSettingsClick}
-        onLoginClick={handleLoginClick}
-        authUserName={authUser?.name ?? null}
-        sidebarLocked={isWorking}
-      >
-        {renderAllTools()}
-      </Layout>
+      <div className="imager-app-shell">
+        <header className="imager-app-header">
+          <div className="imager-brand" aria-label="LYNX Imager">
+            <span className="imager-brand-mark" aria-hidden="true">L</span>
+            <strong>LYNX Imager</strong>
+          </div>
+          <nav className="imager-app-tabs" aria-label="工作区">
+            <button
+              className={activeTool === 'lynx-imager' ? 'is-active' : ''}
+              onClick={() => setActiveTool('lynx-imager')}
+            >
+              基础烧录
+            </button>
+            <button
+              className={activeTool === 'workbench' ? 'is-active' : ''}
+              onClick={() => setActiveTool('workbench')}
+            >
+              高级烧录
+            </button>
+            <button
+              className={SUPERVISOR_SECTIONS[activeTool] ? 'is-active' : ''}
+              onClick={() => setActiveTool('ai-supervisor-config')}
+            >
+              连接 AI
+            </button>
+          </nav>
+          <div className="imager-app-actions">
+            <button
+              type="button"
+              title="帮助"
+              aria-label="帮助"
+              onClick={() => void openUrl('https://github.com/dshanpi/lynx-imager')}
+            >
+              ?
+            </button>
+            <button type="button" title="设置" aria-label="设置" onClick={handleSettingsClick}>
+              ⚙
+            </button>
+          </div>
+        </header>
+        <main className="imager-app-main">{renderAllTools()}</main>
+        <footer className="imager-app-status">
+          <span>开源版 · 专注系统烧录与 AI 接管</span>
+          <span>LYNX Imager</span>
+        </footer>
+      </div>
       <Settings
         visible={settingsVisible}
         authenticated={Boolean(authUser)}
         onAuthExpired={clearExpiredAuthentication}
         onClose={() => setSettingsVisible(false)}
-        onSettingsChange={handleSettingsChange}
-      />
-      <UserProfileDialog
-        visible={profileVisible}
-        user={authUser}
-        onClose={() => setProfileVisible(false)}
-        onLogout={handleLogout}
+        onSettingsChange={() => undefined}
       />
       <Popup
         visible={Boolean(hardwareBlockMessage)}

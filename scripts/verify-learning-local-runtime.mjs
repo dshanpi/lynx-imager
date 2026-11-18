@@ -59,7 +59,7 @@ const output = path.resolve(
   process.env.LYNX_LEARN_RUNTIME_OUTPUT || '.work/learning-local-runtime'
 );
 const data = await mkdtemp(path.join(os.tmpdir(), 'lynx-learn-runtime-'));
-const sourceBinary = await realpath(path.join(root, 'src-tauri/target/debug/lynx-app'));
+const sourceBinary = await realpath(path.join(root, 'src-tauri/target/debug/lynx-imager'));
 const binarySnapshot = await createImmutableDesktopTestBinary(sourceBinary, path.basename(data));
 const binary = binarySnapshot.binary;
 const packages = path.join(data, 'packages');

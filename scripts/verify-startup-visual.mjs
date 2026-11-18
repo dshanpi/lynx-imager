@@ -8,7 +8,7 @@ import process from 'node:process';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
 const platformName = process.platform === 'win32' ? 'windows' : process.platform;
-const binaryName = process.platform === 'win32' ? 'lynx-app.exe' : 'lynx-app';
+const binaryName = process.platform === 'win32' ? 'lynx-imager.exe' : 'lynx-imager';
 const application = process.env.LYNX_VISUAL_APPLICATION
   ? path.resolve(process.env.LYNX_VISUAL_APPLICATION)
   : path.join(repositoryRoot, 'src-tauri', 'target', 'debug', binaryName);

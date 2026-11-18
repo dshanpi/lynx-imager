@@ -7,7 +7,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 const root = path.resolve(import.meta.dirname, '..');
-const binary = path.join(root, 'src-tauri', 'target', 'debug', 'lynx-app');
+const binary = path.join(root, 'src-tauri', 'target', 'debug', 'lynx-imager');
 const evidenceRoot = path.resolve(
   process.env.LYNX_SSH_RUNTIME_EVIDENCE_DIR ||
     path.join(root, 'artifacts', 'ssh-terminal-gate', 'linux')

@@ -15,7 +15,7 @@ const driverPort = Number(process.env.LYNX_AUTH_CALLBACK_DRIVER_PORT || 4486);
 const nativePort = Number(process.env.LYNX_AUTH_CALLBACK_NATIVE_PORT || 4485);
 const callbackPort = Number(process.env.LYNX_AUTH_CALLBACK_PORT || 48934);
 assert.equal(new Set([driverPort, nativePort, callbackPort]).size, 3);
-const binary = process.env.LYNX_AUTH_CALLBACK_BINARY || path.join(root, 'src-tauri/target/debug/lynx-app');
+const binary = process.env.LYNX_AUTH_CALLBACK_BINARY || path.join(root, 'src-tauri/target/debug/lynx-imager');
 await mkdir(out, { recursive: true });
 const profile = await mkdtemp(path.join(out, 'profile-'));
 const result = {

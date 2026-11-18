@@ -4,7 +4,7 @@ import net from 'node:net';
 import path from 'node:path';
 
 const root = path.resolve(import.meta.dirname, '..');
-const binary = path.join(root, 'src-tauri', 'target', 'debug', 'lynx-app');
+const binary = path.join(root, 'src-tauri', 'target', 'debug', 'lynx-imager');
 const outputRoot = path.join(root, 'artifacts', 'live-terminal-workspace');
 const elementKey = 'element-6066-11e4-a52e-4f735466cecf';
 let driver;
