@@ -60,10 +60,18 @@ struct CompletionMessage {
 }
 
 #[derive(Deserialize)]
-struct CompletionResponse {
+pub(super) struct CompletionResponse {
     choices: Vec<CompletionChoice>,
     #[serde(default)]
     usage: Option<CompletionUsage>,
+}
+
+impl CompletionResponse {
+    pub(super) fn content(&self) -> Option<&str> {
+        self.choices
+            .first()
+            .map(|choice| choice.message.content.as_str())
+    }
 }
 
 #[derive(Deserialize)]
@@ -154,11 +162,7 @@ fn finish_provider_call_audit(
     };
     let (status, error_code, input_tokens, output_tokens, output_digest) = match result {
         Ok(response) => {
-            let content = response
-                .choices
-                .first()
-                .map(|choice| choice.message.content.as_str())
-                .unwrap_or_default();
+            let content = response.content().unwrap_or_default();
             (
                 "success",
                 None,
@@ -554,9 +558,7 @@ pub async fn analyze(
     let response = response_result?;
     let usage = response.usage.as_ref().cloned().unwrap_or_default();
     let content = response
-        .choices
-        .first()
-        .map(|choice| choice.message.content.as_str())
+        .content()
         .ok_or_else(|| "AI_PROVIDER_DECISION_MISSING".to_owned())?;
     let decision = parse_json_content(content)?;
     let estimated_cost = (usage.prompt_tokens as f64
@@ -674,6 +676,18 @@ pub async fn analyze(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn completion_requires_a_message_before_reporting_a_working_model() {
+        let error = json!({"error": {"message": "model unavailable"}});
+        assert!(serde_json::from_value::<CompletionResponse>(error).is_err());
+        let empty: CompletionResponse = serde_json::from_value(json!({"choices": []})).unwrap();
+        assert!(empty.content().is_none());
+        let reply: CompletionResponse = serde_json::from_value(json!({
+            "choices": [{"message": {"role": "assistant", "content": "OK"}}]
+        })).unwrap();
+        assert_eq!(reply.content(), Some("OK"));
+    }
 
     #[tokio::test]
     #[ignore = "requires an explicitly configured live supervisor database and keyring"]

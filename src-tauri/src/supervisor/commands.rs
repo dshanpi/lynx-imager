@@ -440,7 +440,11 @@ async fn test_provider_core(
         .await;
     let (status, message, ok) = match response {
         Ok(response) if response.status().is_success() => {
-            if response.json::<Value>().await.is_ok() {
+            if response
+                .json::<engine::CompletionResponse>()
+                .await
+                .is_ok_and(|reply| reply.content().is_some())
+            {
                 let suffix = if models_supported {
                     ""
                 } else {
@@ -454,7 +458,7 @@ async fn test_provider_core(
             } else {
                 (
                     "invalid_response",
-                    "模型调用成功但返回内容不是 JSON".to_owned(),
+                    "模型接口未返回有效的消息内容，请检查模型名称与服务地址。".to_owned(),
                     false,
                 )
             }
