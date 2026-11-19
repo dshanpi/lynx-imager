@@ -55,10 +55,20 @@ export function TaskRecords({ onClose }: { onClose: () => void }) {
         if (current) {
           setRows(tasks);
           setDevices(boards);
+          setStatus((prior) =>
+            tasks.some((row) => statusText(row.status) === prior) ? prior : ''
+          );
+          setDeviceId((prior) =>
+            tasks.some((row) => String(row.deviceId) === prior) ? prior : ''
+          );
         }
       })
       .catch((error) => {
-        if (current) setLoadError(String(error));
+        if (current) {
+          setRows([]);
+          setDevices([]);
+          setLoadError(formatErrorMessage(error));
+        }
       })
       .finally(() => {
         if (current) setReady(true);
@@ -68,7 +78,9 @@ export function TaskRecords({ onClose }: { onClose: () => void }) {
     };
   }, [version]);
   const visible = rows.filter(
-    (row) => (!status || row.status === status) && (!deviceId || String(row.deviceId) === deviceId)
+    (row) =>
+      (!status || statusText(row.status) === status) &&
+      (!deviceId || String(row.deviceId) === deviceId)
   );
   const selected = visible.find((row) => row.taskId === taskId) ?? visible[0];
   const selectedId = selected?.taskId;
@@ -157,9 +169,9 @@ export function TaskRecords({ onClose }: { onClose: () => void }) {
             结果
             <select value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="">全部结果</option>
-              {[...new Set(rows.map((r) => r.status))].map((s) => (
+              {[...new Set(rows.map((r) => statusText(r.status)))].map((s) => (
                 <option key={s} value={s}>
-                  {statusText(s)}
+                  {s}
                 </option>
               ))}
             </select>

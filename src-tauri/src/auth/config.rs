@@ -30,7 +30,7 @@ const DEFAULT_TOKEN_URL: &str = "https://www.100ask.net/api/oauth/token";
 const DEFAULT_USERINFO_URL: &str = "https://www.100ask.net/api/oauth/userinfo";
 const OAUTH_HTTP_TIMEOUT: Duration = Duration::from_secs(30);
 
-#[cfg(debug_assertions)]
+#[cfg(any(test, debug_assertions))]
 fn validated_test_api_urls(raw: &str) -> Option<(String, String)> {
     use url::Host;
 
@@ -69,7 +69,7 @@ fn debug_test_api_urls() -> Option<(String, String)> {
     urls
 }
 
-#[cfg(debug_assertions)]
+#[cfg(any(test, debug_assertions))]
 fn validated_test_http_timeout(raw: &str) -> Option<Duration> {
     let milliseconds = raw.parse::<u64>().ok()?;
     (50..=60_000)

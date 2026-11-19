@@ -496,7 +496,6 @@ fn parse_core_state(text: &str) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::os::unix::process::ExitStatusExt;
     use std::process::ExitStatus;
 
     fn connection() -> JLinkConnection {
@@ -554,7 +553,7 @@ mod tests {
     #[test]
     fn successful_exit_with_flash_failure_is_not_success() {
         let output = Output {
-            status: ExitStatus::from_raw(0),
+            status: ExitStatus::default(),
             stdout: b"Could not download file".to_vec(),
             stderr: Vec::new(),
         };

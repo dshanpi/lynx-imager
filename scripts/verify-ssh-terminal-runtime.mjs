@@ -7,7 +7,9 @@ import path from 'node:path';
 import process from 'node:process';
 
 const root = path.resolve(import.meta.dirname, '..');
-const binary = path.join(root, 'src-tauri', 'target', 'debug', 'lynx-imager');
+const binary =
+  process.env.LYNX_SSH_RUNTIME_BINARY ||
+  path.join(root, 'src-tauri', 'target', 'debug', 'lynx-imager');
 const evidenceRoot = path.resolve(
   process.env.LYNX_SSH_RUNTIME_EVIDENCE_DIR ||
     path.join(root, 'artifacts', 'ssh-terminal-gate', 'linux')
@@ -148,8 +150,9 @@ async function stop(child) {
 }
 
 try {
-  await rm(evidenceRoot, { recursive: true, force: true });
   await mkdir(evidenceRoot, { recursive: true });
+  const profile = path.join(isolatedRoot, 'home');
+  await mkdir(profile);
   const sshPort = await freePort();
   const driverPort = await freePort();
   driverOrigin = `http://127.0.0.1:${driverPort}`;
@@ -192,6 +195,8 @@ try {
 
   const env = {
     ...process.env,
+    HOME: profile,
+    LYNX_TEST_DISABLE_HARDWARE_AUTOSTART: '1',
     XDG_CONFIG_HOME: path.join(isolatedRoot, 'config'),
     XDG_CACHE_HOME: path.join(isolatedRoot, 'cache'),
     XDG_DATA_HOME: path.join(isolatedRoot, 'data'),
@@ -226,7 +231,7 @@ try {
     width: 1600,
     height: 900,
   });
-  await waitFor('desktop startup', () => find('app-sidebar'), 30_000);
+  await waitFor('desktop startup', () => findCss('.imager-app-tabs'), 30_000);
 
   const deviceId = await invokeTauri('workbench_save_device', {
     device: {
@@ -306,6 +311,7 @@ try {
     host: trustedHost,
     connectionTestSessionId: trust.auditSessionId,
   });
+  const localGatewayPort = await freePort();
   const projectId = await invokeTauri('workbench_save_project', {
     project: {
       id: null,
@@ -317,8 +323,8 @@ try {
       firmwarePath: '',
       localDownloadDir: isolatedRoot,
       verifySha256: true,
-      localGatewayPort: await freePort(),
-      remoteForwardPort: 18765,
+      localGatewayPort,
+      remoteForwardPort: await freePort(),
       mcpServerName: 'lynx-ssh-runtime',
       aiProvider: 'codex',
     },
@@ -373,13 +379,19 @@ try {
   });
 
   await request('POST', `/session/${sessionId}/refresh`, {});
-  await waitFor('desktop reload', () => find('app-sidebar'), 30_000);
+  await waitFor('desktop reload', () => findCss('.imager-app-tabs'), 30_000);
+  await execute(`[...document.querySelectorAll('.imager-app-tabs button')]
+    .find(button => button.textContent.trim() === '高级功能').click()`);
   await waitFor('runtime board reload', () =>
     execute(`return document.body.innerText.includes('SSH Runtime Board');`)
   );
+  await execute(`[...document.querySelectorAll('.board-item-select')]
+    .find(button => button.textContent.includes('SSH Runtime Board')).click()`);
   await click('linux-tab-sdk');
   await waitFor('SSH terminal online UI', () =>
-    execute(`return document.body.innerText.includes('SSH 终端在线');`)
+    execute(
+      `return document.querySelector('[data-testid="linux-sdk-terminal"]')?.innerText.includes('终端在线');`
+    )
   );
   const beforeUiInput = await invokeTauri('workbench_ssh_terminal_snapshot', {
     terminalId: opened.terminalId,
@@ -460,6 +472,40 @@ try {
   const remaining = await invokeTauri('workbench_ssh_terminal_list', { projectId, deviceId });
   if (remaining.length !== 0) fail('terminal close did not remove the scoped session');
 
+  await invokeTauri('gateway_start', { port: localGatewayPort, projectId, deviceId });
+  await invokeTauri('workbench_start_tunnel', { projectId });
+  const tunnel = await waitFor('verified SSH forwarding', async () => {
+    const statuses = await invokeTauri('workbench_list_tunnel_statuses', {});
+    return statuses.find(
+      (t) => t.projectId === projectId && t.state === 'connected' && t.remotePort > 0
+    );
+  });
+  await execute(`[...document.querySelectorAll('.imager-app-tabs button')]
+    .find(button => button.textContent.trim() === '连接 AI').click()`);
+  await execute(`[...document.querySelectorAll('.im-ai-rail button')]
+    .find(button => button.textContent.trim() === '远端 SDK').click()`);
+  const verifiedAddresses = [localGatewayPort, tunnel.remotePort].map(
+    (port) => 'http://127.0.0.1:' + port + '/mcp'
+  );
+  for (const address of verifiedAddresses) {
+    await waitFor('native MCP address ' + address, () =>
+      execute(
+        `return document.querySelector('.im-ai-body')?.innerText.includes(${JSON.stringify(address)})`
+      )
+    );
+  }
+  await writeFile(
+    path.join(evidenceRoot, 'mcp-connected.png'),
+    Buffer.from(await request('GET', `/session/${sessionId}/screenshot`), 'base64')
+  );
+  await invokeTauri('workbench_stop_tunnel', { projectId });
+  await invokeTauri('gateway_stop_port', { port: localGatewayPort });
+  await waitFor('actions disabled after stopping both channels', () =>
+    execute(`const buttons = [...document.querySelectorAll('.im-ai-body button')]
+      .filter(b => ['复制本机地址','复制远端地址'].includes(b.textContent.trim()));
+      return buttons.length === 2 && buttons.every(b => b.disabled)`)
+  );
+
   const evidence = {
     version: 1,
     isolatedData: true,
@@ -480,6 +526,7 @@ try {
     resize: { cols: 100, rows: 28 },
     clearVerified: true,
     closeVerified: true,
+    mcp: { verifiedAddresses, copyDisabledAfterStop: true },
     screenshot,
     screenshotSha256: createHash('sha256').update(png).digest('hex'),
     applicationSha256: createHash('sha256')

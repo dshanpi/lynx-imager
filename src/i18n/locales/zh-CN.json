@@ -1043,6 +1043,7 @@
     "updatePartitionFailed": "更新分区失败"
   },
   "settings": {
+    "savedPreferences": "设置已保存。",
     "autoScanDevices": "自动扫描设备(热插拔)",
     "cancel": "取消",
     "close": "✕",

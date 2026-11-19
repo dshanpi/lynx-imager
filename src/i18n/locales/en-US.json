@@ -994,6 +994,7 @@
     "updatePartitionFailed": "Failed to update partition"
   },
   "settings": {
+    "savedPreferences": "Settings saved.",
     "autoScanDevices": "Auto Scan Devices (Hot-plug)",
     "cancel": "Cancel",
     "close": "✕",

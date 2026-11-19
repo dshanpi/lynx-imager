@@ -986,6 +986,7 @@
     "updatePartitionFailed": "파티션 업데이트 실패"
   },
   "settings": {
+    "savedPreferences": "설정을 저장했습니다.",
     "autoScanDevices": "장치 자동 스캔 (핫플러그)",
     "cancel": "취소",
     "close": "✕",

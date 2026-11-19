@@ -986,6 +986,7 @@
     "updatePartitionFailed": "更新分割區失敗"
   },
   "settings": {
+    "savedPreferences": "設定已儲存。",
     "autoScanDevices": "自動掃描裝置（熱插拔）",
     "cancel": "取消",
     "close": "✕",

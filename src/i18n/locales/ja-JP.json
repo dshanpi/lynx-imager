@@ -986,6 +986,7 @@
     "updatePartitionFailed": "パーティションの更新に失敗しました"
   },
   "settings": {
+    "savedPreferences": "設定を保存しました。",
     "autoScanDevices": "デバイスの自動スキャン (ホットプラグ)",
     "cancel": "キャンセル",
     "close": "✕",

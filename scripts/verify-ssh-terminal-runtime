@@ -10,7 +10,7 @@ if [[ "$(uname -s)" != "Linux" ]]; then
 fi
 
 if [[ -z "${LYNX_SSH_RUNTIME_XVFB_ACTIVE:-}" ]]; then
-  exec env LYNX_SSH_RUNTIME_XVFB_ACTIVE=1 xvfb-run -a "$0"
+  exec env LYNX_SSH_RUNTIME_XVFB_ACTIVE=1 xvfb-run -a bash "$0"
 fi
 
 for executable in tauri-driver WebKitWebDriver ssh-keygen sshd; do

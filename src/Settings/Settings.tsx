@@ -26,6 +26,7 @@ import {
   installIdleUpdate,
   getUpdateAssetSize,
   getUpdateStrategy,
+  isUpdateVersionSkipped,
   skipUpdateVersion,
   type UpdateStrategy,
 } from '../Services/AutoUpdater';
@@ -52,6 +53,7 @@ interface OriginalUIState {
   themeMode: ThemeMode;
   themeIdDark: string;
   themeIdLight: string;
+  usbBackend: UsbBackend;
 }
 
 export const Settings: React.FC<SettingsProps> = ({
@@ -119,6 +121,7 @@ export const Settings: React.FC<SettingsProps> = ({
           themeMode: loadedSettings.themeMode,
           themeIdDark: loadedSettings.themeIdDark,
           themeIdLight: loadedSettings.themeIdLight,
+          usbBackend: loadedSettings.usbBackend,
         });
       });
       invokeCommand('cloud_sync_get_status')
@@ -143,6 +146,7 @@ export const Settings: React.FC<SettingsProps> = ({
   }, [visible]);
 
   const handleClose = () => {
+    if (saving) return;
     if (originalUIState) {
       i18n.changeLanguage(originalUIState.language);
       setThemeMode(originalUIState.themeMode);
@@ -174,42 +178,52 @@ export const Settings: React.FC<SettingsProps> = ({
   };
 
   const handleSave = async () => {
-    if (!settings) return;
+    if (!settings || !originalUIState || saving) return;
     setSaving(true);
     setSaveError(null);
     setSaveSuccess(null);
     try {
-      if (cloudSync) {
+      if (cloudSync && cloudSync.enabled !== savedCloudSyncEnabled) {
         const status = await invokeCommand('cloud_sync_set_enabled', {
           enabled: cloudSync.enabled,
         });
         setCloudSync(status);
         setSavedCloudSyncEnabled(status.enabled);
       }
-      if (diagnostics) {
+      let reporting = diagnostics;
+      if (diagnostics && diagnostics.enabled !== savedDiagnosticsEnabled) {
         const status = await invokeCommand('diagnostics_set_enabled', {
           enabled: diagnostics.enabled,
         });
         setDiagnostics(status);
         setSavedDiagnosticsEnabled(status.enabled);
+        reporting = status;
       }
-      await efexService.setUsbBackend(settings.usbBackend);
-      await saveSettings(settings);
+      const backendChanged = settings.usbBackend !== originalUIState.usbBackend;
+      if (backendChanged) await efexService.setUsbBackend(settings.usbBackend);
+      try {
+        await saveSettings(settings);
+      } catch (error) {
+        if (backendChanged) await efexService.setUsbBackend(originalUIState.usbBackend);
+        throw error;
+      }
       onSettingsChange(settings);
       setOriginalUIState({
         language: settings.language,
         themeMode: settings.themeMode,
         themeIdDark: settings.themeIdDark,
         themeIdLight: settings.themeIdLight,
+        usbBackend: settings.usbBackend,
       });
-      const refreshed = await refreshDiagnostics();
       setSaveSuccess(
-        t('settings.saveSucceeded', {
-          state: refreshed.enabled
-            ? t('settings.diagnostics.enabledState')
-            : t('settings.diagnostics.disabledState'),
-          count: refreshed.pendingCount,
-        })
+        reporting
+          ? t('settings.saveSucceeded', {
+              state: reporting.enabled
+                ? t('settings.diagnostics.enabledState')
+                : t('settings.diagnostics.disabledState'),
+              count: reporting.pendingCount,
+            })
+          : t('settings.savedPreferences')
       );
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -340,6 +354,7 @@ export const Settings: React.FC<SettingsProps> = ({
         setUpdateInfo({
           available: true,
           version: update.version,
+          skipped: isUpdateVersionSkipped(update.version),
           notes: update.body || undefined,
           strategy: getUpdateStrategy(update),
           contentLength: getUpdateAssetSize(update),
@@ -497,6 +512,7 @@ export const Settings: React.FC<SettingsProps> = ({
                 <h2 id="imager-settings-title">{t('settings.title')}</h2>
                 <motion.button
                   data-testid="settings-close"
+                  disabled={saving}
                   autoFocus
                   className="settings-close"
                   onClick={handleClose}
@@ -509,7 +525,7 @@ export const Settings: React.FC<SettingsProps> = ({
                 </motion.button>
               </div>
 
-              <div className="settings-content">
+              <div className="settings-content" inert={saving || undefined} aria-busy={saving}>
                 <div className="settings-section">
                   <h3>{t('settings.uiSettings')}</h3>
                   <label className="settings-item">
@@ -633,6 +649,7 @@ export const Settings: React.FC<SettingsProps> = ({
                   <label className="settings-item">
                     <span className="settings-label">{t('settings.usbBackend')}</span>
                     <select
+                      aria-label={t('settings.usbBackend')}
                       value={settings.usbBackend}
                       onChange={(e) => handleChange('usbBackend', e.target.value as UsbBackend)}
                     >
@@ -963,6 +980,7 @@ export const Settings: React.FC<SettingsProps> = ({
                 <motion.button
                   className="settings-btn settings-btn-secondary"
                   onClick={handleClose}
+                  disabled={saving}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.1 }}

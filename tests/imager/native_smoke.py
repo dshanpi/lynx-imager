@@ -50,8 +50,8 @@ def readback_ipc(web, temp):
             "matchingSegment": expected["matches"], "modifiedSegment": actual["matches"]}
 
 
-def offline_board(web):
-    fields = dict(id=None, boardUid="", name="QA-OFFLINE-F101", boardImagePath="", chipVendor="allwinner",
+def offline_board_fields():
+    return dict(id=None, boardUid="", name="QA-OFFLINE-F101", boardImagePath="", chipVendor="allwinner",
                   serialPort="", serialVid=0, serialPid=0, serialNumber="", serialInterfaceNumber=None,
                   usbBinding="", cameraBinding="", adbSerial="", baudRate=115200, serialConsoleType="auto",
                   serialLoginMode="none", serialLoginUsername="root", serialLoginPrompt="login:", serialPasswordPrompt="Password:",
@@ -60,6 +60,10 @@ def offline_board(web):
                   powerControllerInterfaceNumber=None, powerBaudRate=115200, powerProfileJson="", powerChannel="",
                   bootChannel="", resetChannel="", powerOffWaitMs=1000, powerOnWaitMs=2000,
                   serialReconnectTimeoutMs=30000, bootTimeoutMs=60000)
+
+
+def offline_board(web):
+    fields = offline_board_fields()
     board_id = web.ipc("workbench_save_device", {"device": fields})
     rows = web.ipc("workbench_list_devices", {})
     saved = next(d for d in rows if d["id"] == board_id)
@@ -192,9 +196,26 @@ def run(binary, out):
                 Number(getComputedStyle(document.querySelector('[data-testid="'+k+'"]')).opacity)>=0.999)"""),
               'Chinese settings and completed dialog transition')
             capture(web, "production-settings")
+            theme = '[data-testid="settings-theme-mode"]'
+            def select_theme(value):
+                web.js("""const select=document.querySelector(arguments[0]);
+                  select.value=arguments[1];select.dispatchEvent(new Event('change',{bubbles:true}));""",theme,value)
+            select_theme("dark")
+            web.click(".settings-footer .settings-btn-primary")
+            wait(lambda: web.find('[data-testid="settings-save-success"]'), "save native preferences")
+            files = list((temp / "HOME").glob(".lynx-imager*/settings.json"))
+            assert len(files) == 1 and json.loads(files[0].read_text())["themeMode"] == "dark"
             web.click('[data-testid="settings-close"]')
             wait(lambda: not web.find('[data-testid="settings-panel"]'), "close settings")
-            checked("任务记录打开与 Esc 关闭、设置简中预览及关闭")
+            web.click('button[aria-label="设置"]')
+            wait(lambda: web.js("return document.querySelector(arguments[0])?.value==='dark'",theme),
+                 "reopen saved native preferences")
+            select_theme("light")
+            keys(web, "\ue00c")
+            wait(lambda: not web.find('[data-testid="settings-panel"]'), "cancel preference preview")
+            assert web.js("return document.querySelector('.imager-themed').dataset.theme==='dark'")
+            assert json.loads(files[0].read_text())["themeMode"] == "dark"
+            checked("任务记录 Esc 关闭、设置保存至磁盘、重新打开与撤销主题预览")
 
             report["temporaryBoardId"] = offline_board(web)
             web.click('nav[aria-label="工作区"] button', "高级功能")
