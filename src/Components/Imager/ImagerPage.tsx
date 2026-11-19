@@ -6,13 +6,12 @@ import { open } from '@tauri-apps/plugin-dialog';
 import {
   ArrowRight20Regular,
   CheckmarkCircle20Regular,
-  Flash24Regular,
   Layer24Regular,
   UsbPlug24Regular,
 } from '@fluentui/react-icons';
 import { invokeCommand, subscribeUsbHotplug, type WorkbenchDevice } from '../../Platform/IPC';
 import type {
-  FirmwareCandidate,
+  StagedFirmware,
   FirmwareConfirmation,
   WorkbenchFlasherDevice,
 } from '../../Platform/IPC/contracts/Workbench';
@@ -236,13 +235,11 @@ export function ImagerPage({
     setReviewReady(ready);
   }, []);
   const [interfaceRevision, refreshInterface] = useState(0);
-  const [source, setSource] = useState<V2ImageSource>('catalog');
+  const [source, setSource] = useState<V2ImageSource>('local');
   const [imagePath, setImagePath] = useState('');
   const [loaderPath, setLoaderPath] = useState('');
   const [revision, recheck] = useState(0);
-  const [devices, setDevices] = useState<WorkbenchDevice[]>([]);
-  const [catalogId, setCatalogId] = useState<number | null>(null);
-  const [candidate, setCandidate] = useState<FirmwareCandidate | null>(null);
+  const [candidate, setCandidate] = useState<StagedFirmware | null>(null);
   const [selected, setSelected] = useState<Target | null>(null);
   const [target, setTarget] = useState<Preflight | null>(null);
   const [confirmed, setConfirmed] = useState(false);
@@ -367,21 +364,6 @@ export function ImagerPage({
   useEffect(() => {
     onStatusChange?.({ target: statusTarget, task: statusText });
   }, [statusTarget, statusText, onStatusChange]);
-  useEffect(() => {
-    if (!active || step !== 2 || preset?.id !== 'f101' || source !== 'catalog') return;
-    let current = true;
-    invokeCommand('workbench_list_devices', undefined, { timeoutMs: 8000 })
-      .then((rows) => {
-        if (current)
-          setDevices(rows.filter((d) => d.id != null && d.chipVendor === preset.chipVendor));
-      })
-      .catch((e) => {
-        if (current) setError(formatErrorMessage(e));
-      });
-    return () => {
-      current = false;
-    };
-  }, [active, preset, step, source]);
   function invalidate() {
     reviewingUsb.current = null;
     reviewedContext.current = null;
@@ -398,7 +380,7 @@ export function ImagerPage({
   }
   function chooseHardware(next: TargetChoice | null) {
     if (choice?.model === next?.model && choice?.medium === next?.medium) return;
-    const id = next ? profiles[next.model]?.preset ?? null : null;
+    const id = next ? (profiles[next.model]?.preset ?? null) : null;
     setChoice(next);
     invalidate();
     clearFiles();
@@ -407,9 +389,7 @@ export function ImagerPage({
     setSelection(vendor && vendor !== 'allwinner' ? defaultVendorSelection(vendor) : null);
     setRouteOverride(null);
     setRkBoard('');
-    setSource(id === 'f101' ? 'catalog' : 'local');
-    setDevices([]);
-    setCatalogId(null);
+    setSource('local');
     setSelected(null);
     setCount(null);
   }
@@ -448,6 +428,7 @@ export function ImagerPage({
   function changeRoute(next: BasicRoute) {
     if (candidate || next === routeKey) return;
     setRouteOverride(next);
+    if (source === 'catalog' && next !== 'mainline_spinor') setSource('local');
     setReviewReady(false);
     setLoaderPath('');
     setSelected(null);
@@ -519,14 +500,13 @@ export function ImagerPage({
       stop?.();
     };
   }, [active, step, source, loadImage]);
-  function selectCandidate(c: FirmwareCandidate) {
+  function selectCandidate(c: StagedFirmware) {
     invalidate();
     setSelected(null);
     setSource('catalog');
     setRouteOverride('mainline_spinor');
     setReviewReady(false);
     setCandidate(c);
-    setCatalogId(c.deviceId);
     setImagePath(c.imagePath);
     setLoaderPath(c.loaderPath);
     recheck((r) => r + 1);
@@ -630,18 +610,37 @@ export function ImagerPage({
       setSelected(null);
       throw new Error('实际接口已变化，请重新选择设备。');
     }
-    if (
-      candidate &&
-      (candidate.deviceId !== fresh.device.id || candidate.boardUid !== fresh.device.boardUid)
-    )
-      throw new Error('当前设备与板型资源绑定的单板不一致。');
-    const ticket = candidate
-      ? await invokeCommand('workbench_firmware_prepare', {
+    let ticket: FirmwareConfirmation | null = null;
+    if (candidate) {
+      const bound = await invokeCommand(
+        'workbench_firmware_download',
+        {
           deviceId: selected.device.id,
-          candidateId: candidate.id,
-          postAction: 'reboot',
-        })
-      : null;
+          request: {
+            releaseId: candidate.releaseId,
+            indexSha256: candidate.indexSha256,
+            applicationId: candidate.manifest.applicationId,
+            version: candidate.manifest.version,
+            channel: 'stable',
+            loaderPath,
+          },
+        },
+        { timeoutMs: 190000 }
+      );
+      if (
+        bound.deviceId !== fresh.device.id ||
+        bound.boardUid !== fresh.device.boardUid ||
+        bound.manifest.image.sha256 !== files.image.sha256 ||
+        bound.manifest.loader.sha256 !== files.loader?.sha256 ||
+        reviewingUsb.current !== reviewing
+      )
+        throw new Error('设备或发布文件已变化，请重新预检。');
+      ticket = await invokeCommand('workbench_firmware_prepare', {
+        deviceId: selected.device.id,
+        candidateId: bound.id,
+        postAction: 'reboot',
+      });
+    }
     if (reviewingUsb.current !== reviewing) throw new Error('目标 USB 连接已变化，请重新预检。');
     reviewingUsb.current = fresh.usb;
     setTarget({ ...fresh, files, ticket, vendorEvidence });
@@ -765,7 +764,6 @@ export function ImagerPage({
     <section className="v2-basic" aria-label="烧录系统" data-step={step}>
       <aside className="v2-rail">
         <div className="v2-rail-title">
-          <Flash24Regular aria-hidden="true" />
           <h2>烧录系统</h2>
         </div>
         <nav aria-label="烧录步骤">
@@ -831,13 +829,6 @@ export function ImagerPage({
               onBrowse={() => void run('选择镜像', () => chooseFile('image'))}
               onImagePath={loadImage}
               dropRef={dropRef}
-              devices={devices}
-              catalogDevice={devices.find((d) => d.id === catalogId)}
-              onCatalogDevice={(id) => {
-                setCatalogId(id);
-                clearFiles();
-                invalidate();
-              }}
               onCandidate={selectCandidate}
               candidate={candidate}
               fileError={imageError}
@@ -903,7 +894,6 @@ export function ImagerPage({
               selectedDeviceId={selected?.device.id ?? null}
               onTargetChange={selectTarget}
               onDetected={setCount}
-              fixedDeviceId={candidate?.deviceId}
               active={active}
               onOpenAdvanced={onOpenAdvancedWorkbench}
             />
@@ -913,7 +903,7 @@ export function ImagerPage({
               snapshot={{
                 board: boardName,
                 deviceId: target.device.id ?? undefined,
-                candidateId: candidate?.id,
+                candidateId: target.ticket?.candidateId,
                 eraseEmmcUserArea: selection?.route === 'rk-emmc',
                 targetDetails: selection
                   ? [
@@ -979,6 +969,32 @@ export function ImagerPage({
           </p>
         )}
       </div>
+      {step < 4 && !failedPreflight && (
+        <div className="v2-foot-actions">
+          {step > 1 && (
+            <button type="button" disabled={locked} onClick={() => back((step - 1) as BasicStep)}>
+              ← 上一步
+            </button>
+          )}
+          <button
+            type="button"
+            className="v2-primary"
+            id={step === 3 ? 'v2-preflight' : undefined}
+            disabled={locked || !enabled}
+            onClick={() => {
+              if (step === 3) {
+                void run('只读预检中', preflight);
+              } else {
+                invalidate();
+                setStep((step + 1) as BasicStep);
+              }
+            }}
+          >
+            {step === 1 ? '下一步：选择系统' : step === 2 ? '下一步：设备连接' : '下一步：确认烧写'}{' '}
+            <ArrowRight20Regular />
+          </button>
+        </div>
+      )}
       <footer className="v2-foot">
         <div className="v2-status-facts" role="status">
           <span>
@@ -991,39 +1007,13 @@ export function ImagerPage({
           </span>
           <span>
             <Layer24Regular />
-            {step === 1 ? (choice ? choice.model + ' / ' + choice.medium : '选择目标时无需连接 USB') : boardName}
+            {step === 1
+              ? choice
+                ? choice.model + ' / ' + choice.medium
+                : '选择目标时无需连接 USB'
+              : boardName}
           </span>
         </div>
-        {step < 4 && !failedPreflight && (
-          <div className="v2-foot-actions">
-            {step > 1 && (
-              <button type="button" disabled={locked} onClick={() => back((step - 1) as BasicStep)}>
-                ← 上一步
-              </button>
-            )}
-            <button
-              type="button"
-              className="v2-primary"
-              id={step === 3 ? 'v2-preflight' : undefined}
-              disabled={locked || !enabled}
-              onClick={() => {
-                if (step === 3) {
-                  void run('只读预检中', preflight);
-                } else {
-                  invalidate();
-                  setStep((step + 1) as BasicStep);
-                }
-              }}
-            >
-              {step === 1
-                ? '下一步：选择系统'
-                : step === 2
-                  ? '下一步：设备连接'
-                  : '下一步：确认烧写'}{' '}
-              <ArrowRight20Regular />
-            </button>
-          </div>
-        )}
       </footer>
     </section>
   );

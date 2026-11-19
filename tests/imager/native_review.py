@@ -84,9 +84,21 @@ class Review:
     def save(self,id):
         assert self.js("return location.origin==='tauri://localhost' && !!window.__imagerSimulation")
         layout=self.js("""const n=document.documentElement;
+            const field=document.querySelector('.v2-control-area');
+            const rail=document.querySelector('.v2-rail');
+            const title=[...field.querySelectorAll('.target-hero h3, h2')]
+                .find(e=>e.getClientRects().length);
             return {w:innerWidth,h:innerHeight,overflow:n.scrollWidth-n.clientWidth,
+             railRight:rail.getBoundingClientRect().right, contentX:field.getBoundingClientRect().x,
+             bodyFont:getComputedStyle(field).fontFamily,
+             titleSize:title ? getComputedStyle(title).fontSize : null,
              step:document.querySelector('.v2-basic')?.dataset.step};""")
         assert layout['overflow']<=1,(id,layout)
+        compact = layout['w'] <= 1180
+        assert layout['railRight'] == (232 if compact else 264), (id,layout)
+        assert layout['contentX'] == layout['railRight'] + (16 if compact else 24), (id,layout)
+        if layout['titleSize'] is not None:
+            assert layout['titleSize'] == '20px', (id,layout)
         self.web.shot(self.out/(id+'.png'))
         self.shots.append(dict(id=id,**layout))
         print('SCREEN',id,flush=True)

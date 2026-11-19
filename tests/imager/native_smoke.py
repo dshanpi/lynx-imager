@@ -170,7 +170,7 @@ def run(binary, out):
             checked("厂商筛选、Ctrl+K、输入搜索、选择 F101 与继续按钮")
             web.click(".v2-foot-actions .v2-primary")
             web.click(".v2c-tabs button", "本地文件")
-            web.shown("选择文件")
+            web.shown("选择镜像…")
             assert web.js("return document.querySelector('.v2-basic').dataset.step==='2'")
             assert web.js("return document.querySelector('.v2-foot-actions .v2-primary').disabled")
             capture(web, "production-image")

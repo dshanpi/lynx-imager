@@ -8,6 +8,10 @@
   font-size: var(--font-body);
 }
 .imager-app-shell {
+  --workspace-rail: var(--lynx-device-rail-width);
+  --workspace-inset-top: var(--lynx-space-5);
+  --workspace-inset-x: var(--lynx-page-padding);
+  --workspace-rail-title: 15px;
   display: grid;
   grid-template-rows: var(--size-titlebar) minmax(0, 1fr) var(--size-statusbar);
   width: 100%;
@@ -27,7 +31,7 @@
   border-bottom: 1px solid var(--color-border);
 }
 .imager-brand {
-  width: calc(var(--size-rail) - 28px);
+  width: calc(var(--workspace-rail) - 28px);
   flex: none;
   gap: 9px;
   font-size: 18px;
@@ -41,7 +45,15 @@
   font-weight: 650;
   letter-spacing: -0.4px;
 }
+.imager-brand small {
+  font-size: var(--font-caption);
+  color: var(--color-muted);
+  white-space: nowrap;
+}
 .imager-app-tabs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 6em;
   height: 100%;
   gap: 4px;
 }
@@ -245,4 +257,25 @@
   .imager-themed * {
     scroll-behavior: auto !important;
   }
+}
+
+@media (max-width: 1180px) {
+  .imager-app-shell {
+    --workspace-rail: var(--lynx-device-rail-compact-width);
+    --workspace-inset-top: var(--lynx-space-4);
+    --workspace-inset-x: var(--lynx-space-4);
+  }
+}
+@media (min-width: 901px) {
+  .imager-screen .board-workbench.lynx-advanced-desktop {
+    grid-template-columns: var(--workspace-rail) minmax(0, 1fr);
+  }
+  .imager-screen .lynx-advanced-desktop .board-main {
+    padding: var(--workspace-inset-top) var(--workspace-inset-x) var(--workspace-inset-x);
+  }
+}
+@media (max-width: 900px) {
+  .imager-brand { width: auto; }
+  .imager-brand small { display: none; }
+  .imager-app-header { overflow-x: auto; white-space: nowrap; }
 }

@@ -245,7 +245,8 @@ export function AllwinnerRoute({ board, route, onRoute, candidate }: V2SystemPic
   const mainline = awMainline(board.storage);
   return (
     <fieldset className="imager-aw-route">
-      <legend>系统用途</legend>
+      <legend className="v2c-visually-hidden">系统类型</legend>
+      <span className="image-route-label" aria-hidden="true">系统类型</span>
       {(['vendor', mainline].filter(Boolean) as BasicRoute[]).map((r) => (
         <label key={r}>
           <input
@@ -258,10 +259,10 @@ export function AllwinnerRoute({ board, route, onRoute, candidate }: V2SystemPic
           />
           <span>
             <b>{awRouteText[r]?.[0]}</b>
-            <small>{awRouteText[r]?.[2]}</small>
           </span>
         </label>
       ))}
+      <span className="image-route-hint">{awRouteText[route]?.[2]}</span>
     </fieldset>
   );
 }
@@ -528,26 +529,38 @@ export function SystemImageReview(props: V2SystemPickerProps) {
               </button>
             )}
           {needsRam && (
-            <div className="imager-image-line">
+            <div
+              className={imagePath ? 'imager-image-line' : 'imager-image-line image-desk-loader'}
+            >
+              {!imagePath && (
+                <span className="image-desk-file-icon">
+                  <LynxIcon name="board" size={24} aria-hidden="true" />
+                </span>
+              )}
               <div>
                 <h3>RAM FES 引导来源</h3>
-                <code>
-                  <LynxIcon name="document" size={16} />
-                  {loaderPath ? basename(loaderPath) : '尚未选择引导包'}
-                </code>
+                {loaderPath && <code>{basename(loaderPath)}</code>}
                 <small>
                   {loaderIdentity
                     ? '板型配套包 · ' + loaderIdentity.sizeBytes.toLocaleString() + ' B'
-                    : '请选择板型配套的全志原厂包。'}
+                    : '选择配套原厂包，提取 FES 与 U-Boot。'}
                 </small>
               </div>
-              <div className="imager-file-destination">
-                <LynxIcon name="board" size={20} />
-                <div>
-                  <strong>仅加载到 RAM</strong>
-                  <small>提取 FES 与 U-Boot</small>
+              {!imagePath && (
+                <span className="image-desk-destination">
+                  <LynxIcon name="board" size={16} aria-hidden="true" />
+                  仅加载到 RAM
+                </span>
+              )}
+              {imagePath && (
+                <div className="imager-file-destination">
+                  <LynxIcon name="board" size={20} aria-hidden="true" />
+                  <div>
+                    <strong>仅加载到 RAM</strong>
+                    <small>提取 FES 与 U-Boot</small>
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="imager-image-actions">
                 <button type="button" disabled={!!manifest} onClick={props.onChooseLoader}>
                   {loaderPath ? '更换引导包…' : '选择引导包…'}

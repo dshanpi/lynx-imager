@@ -9,11 +9,9 @@
   --v2-green: #118846;
   --v2-disabled: #e5e9f1;
   --v2-disabled-ink: #5a667c;
-  --v2-rail: clamp(200px, 17.5vw, 290px);
   color: var(--v2-ink);
   background: var(--v2-tint);
-  grid-template-rows: clamp(52px, 6.4vh, 68px) minmax(0, 1fr);
-  font-family: 'Microsoft YaHei UI', 'Noto Sans CJK SC', 'PingFang SC', system-ui, sans-serif;
+  grid-template-rows: var(--size-titlebar) minmax(0, 1fr);
 }
 [data-theme='dark'] .imager-app-shell.v2-basic-shell {
   --v2-paper: #172333;
@@ -30,11 +28,6 @@
 .v2-basic-shell > .imager-app-status {
   display: none;
 }
-.v2-top,
-.v2-brand,
-.v2-top nav,
-.v2-top-tools,
-.v2-top button,
 .v2-foot,
 .v2-status-facts,
 .v2-status-facts span,
@@ -43,102 +36,16 @@
   display: flex;
   align-items: center;
 }
-.v2-top {
-  gap: clamp(10px, 2.2vw, 38px);
-  padding-inline: clamp(14px, 2vw, 32px);
-  border-bottom: 1px solid var(--v2-line);
-  background: var(--v2-paper);
-  overflow-x: auto;
-  scrollbar-width: none;
-  white-space: nowrap;
-}
-.v2-brand {
-  gap: 11px;
-  flex: none;
-  color: var(--v2-ink);
-  letter-spacing: -0.5px;
-}
-.v2-brand > svg {
-  width: 31px;
-  height: 31px;
-  padding: 4px;
-  box-sizing: border-box;
-  border-radius: 8px;
-  background: #155dfc;
-  color: #fff;
-}
-.v2-brand strong {
-  font-weight: 700;
-  font-size: clamp(18px, 1.48vw, 25px);
-}
-.v2-brand small {
-  color: var(--v2-secondary);
-  background: var(--v2-active);
-  font:
-    500 12px/1.5 system-ui,
-    sans-serif;
-  letter-spacing: 0;
-  padding: 1px 7px;
-  border-radius: 12px;
-}
-.v2-top nav {
-  align-self: stretch;
-  gap: 4px;
-}
-.v2-top button {
-  gap: 8px;
-  min-height: 36px;
-  padding-inline: clamp(7px, 1.4vw, 24px);
-  border: 0;
-  background: transparent;
-  color: var(--v2-ink);
-  font-family: inherit;
-  font-size: clamp(13px, 1.06vw, 17px);
-  font-weight: 600;
-  cursor: pointer;
-  position: relative;
-}
-.v2-top nav button {
-  align-self: stretch;
-  border-radius: 7px;
-}
-.v2-top button.is-current {
-  background: var(--v2-active);
-  color: var(--v2-blue);
-}
-.v2-top button.is-current:after {
-  content: '';
-  height: 3px;
-  background: var(--v2-blue);
-  position: absolute;
-  bottom: 0;
-  left: 10px;
-  right: 10px;
-  border-radius: 2px;
-}
-.v2-top button:hover {
-  background: var(--v2-active);
-}
-.v2-top button svg {
-  width: 21px;
-  height: 21px;
-}
-.v2-top-tools {
-  border-left: 1px solid var(--v2-line);
-  padding-left: 12px;
-  gap: 4px;
-}
 .v2-basic {
   display: grid;
-  grid-template-columns: var(--v2-rail) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-columns: var(--workspace-rail) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto var(--size-statusbar);
   height: 100%;
   min-width: 0;
   color: var(--v2-ink);
   background: var(--v2-tint);
 }
-.v2-basic *,
-.v2-top * {
+.v2-basic * {
   box-sizing: border-box;
 }
 .v2-basic button,
@@ -146,14 +53,13 @@
 .v2-basic select {
   font-family: inherit;
 }
-.v2-basic :focus-visible,
-.v2-top :focus-visible {
+.v2-basic :focus-visible {
   outline: 2px solid var(--v2-blue);
   outline-offset: 2px;
 }
 .v2-rail {
   grid-column: 1;
-  grid-row: 1;
+  grid-row: 1 / 3;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -470,15 +376,6 @@
   height: 18px;
 }
 @media (max-width: 950px) {
-  .v2-basic-shell {
-    --v2-rail: 175px !important;
-  }
-  .v2-top {
-    gap: 6px;
-  }
-  .v2-top-tools {
-    padding-left: 5px;
-  }
   .v2-rail-title {
     gap: 7px;
   }
@@ -487,15 +384,6 @@
   }
 }
 @media (max-width: 760px) {
-  .imager-app-shell.v2-basic-shell {
-    --v2-rail: 135px !important;
-  }
-  .v2-top button {
-    gap: 3px;
-    padding-inline: 6px;
-  }
-  .v2-top-tools button span,
-  .v2-brand small,
   .v2-rail-note,
   .v2-chip-icon,
   .v2-status-facts span:not(:first-child) {
@@ -514,19 +402,14 @@
   .v2-rail nav button > svg {
     display: none;
   }
-  .v2-top-tools button {
-    min-width: 30px;
-  }
-  .v2-top-tools button:after {
-    display: none;
-  }
 }
 @media (max-width: 570px) {
   .v2-basic {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr) auto var(--size-statusbar);
   }
   .v2-rail {
+    grid-row: 1;
     padding: 2px 6px;
     overflow: visible;
     border-right: 0;
@@ -562,25 +445,6 @@
     grid-row: 2;
     grid-column: 1;
     padding: 5px;
-  }
-  .v2-brand strong {
-    font-size: 14px;
-  }
-  .v2-top {
-    padding-inline: 5px;
-  }
-  .v2-brand {
-    gap: 3px;
-  }
-  .v2-brand > svg {
-    width: 22px;
-    height: 22px;
-  }
-  .v2-top button svg {
-    width: 16px;
-  }
-  .v2-top nav {
-    gap: 0;
   }
   .v2-foot {
     padding: 5px 7px;

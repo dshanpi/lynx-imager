@@ -84,7 +84,7 @@ def inspector(ui, panel):
     ui.wait(lambda:ui.js("const p=document.querySelector('.imager-review-page'); return p?.dataset.inspector===arguments[0] && document.activeElement===p.querySelector('h2')",panel), 'focused inline '+panel+' workspace')
     assert ui.js("""const show=e=>!!e?.getClientRects().length;
         return [...document.querySelectorAll('.v2c-tabs,.imager-image-line,.imager-aw-route,.imager-file-details')].every(e=>!show(e)) &&
-               ['.v2-top','nav[aria-label="烧录步骤"]','.v2-foot','.imager-review-page'].every(s=>show(document.querySelector(s))) &&
+               ['.imager-app-header','nav[aria-label="烧录步骤"]','.v2-foot','.imager-review-page'].every(s=>show(document.querySelector(s))) &&
                !document.querySelector('dialog.imager-review-dialog[open]')"""), 'file picker hides while shell stays visible'
 
 def return_to_files(ui, label, escape=False):
@@ -101,7 +101,7 @@ def prepare_f101(ui, fixtures):
     """Return on step 2 with checked real files; no USB access."""
     paths = image_fixtures(fixtures)
     local(ui, "f101")
-    ui.pick(paths["raw"], "选择文件")
+    ui.pick(paths["raw"], "选择镜像…")
     ui.pick(paths["loader"], "选择引导包…")
     ui.pick(paths["ref"], "选择参考清单…")
     ui.wait(lambda:ui.js("return document.querySelector('.imager-image-reference small')?.innerText==='BUILD-INFO.json'"), "parsed build reference")
@@ -147,24 +147,63 @@ def run(ui, fixtures):
     uid="sim-f101-resource"
     profile={"id":19,"boardUid":uid,"name":"F101 simulated","chipVendor":"allwinner",
              "usbBinding":"location:libusb:1:10.2","flasherKind":"openixcli","flasherPath":"","flasherArgs":"[]"}
-    ui.fixture("workbench_list_devices",[profile])
+    ui.fixture("workbench_list_devices",[])
     file_ref=lambda p:dict(fileName=p.name,sizeBytes=p.stat().st_size,sha256=hashlib.sha256(p.read_bytes()).hexdigest())
     manifest=dict(applicationId="nekobox",version="qa.1",boardModel="yuzukineko",chip="f101",route="xip_spinor_full",layout={"bootOffset":0,"applicationOffset":524288,"parametersOffset":131072},image=file_ref(files["raw"]),loader=file_ref(files["loader"]))
-    entry=dict(releaseId=1,entry=dict(status="active",manifest=manifest))
-    ui.fixture("workbench_firmware_catalog",dict(deviceId=19,boardUid=uid,entries=[entry]))
-    ui.fixture("workbench_firmware_download",dict(id="qa-candidate",deviceId=19,boardUid=uid,manifest=manifest,imagePath=str(files["raw"]),loaderPath=str(files["loader"])))
+    entry=dict(releaseId=1,indexSha256="ab"*32,entry=dict(status="active",manifest=manifest))
+    ui.fixture("imager_firmware_catalog",[entry])
+    ui.fixture("imager_stage_firmware",dict(releaseId=1,indexSha256=entry["indexSha256"],manifest=manifest,imagePath=str(files["raw"]),loaderPath=str(files["loader"])))
+    bound_candidate=dict(id="qa-candidate",deviceId=19,boardUid=uid,manifest=manifest,imagePath=str(files["raw"]),loaderPath=str(files["loader"]))
     ui.board("f101")
     ui.next()
-    ui.wait(lambda:ui.js("return document.querySelector('.v2c-device-select select')?.options.length===2"),"saved catalog board")
-    ui.js("const e=document.querySelector('.v2c-device-select select'); e.value='19'; e.dispatchEvent(new Event('change',{bubbles:true}));")
+    ui.text("玄铁 C907 · RISC-V")
+    assert ui.js("return document.querySelector('.v2c-tabs [aria-pressed=true]').innerText.trim()==='本地文件'")
+    assert ui.js("return !document.querySelector('.v2c-device-select,.image-desk-checklist')")
+    geometry = """return ['.image-desk-title','.image-source-bar','.image-target-summary'].map(s=>{
+        const r=document.querySelector(s).getBoundingClientRect();return [r.x,r.y,r.width]})"""
+    anchored = ui.js(geometry)
+    for source in ('本地文件','最近使用','板型资源'):
+        ui.click('.v2c-tabs button',source)
+        assert ui.js(geometry) == anchored, source
+        assert not ui.js("return !!document.querySelector('.image-manifest')")
+    assert ui.js("return !window.__imagerSimulation.calls.some(c=>c.cmd==='workbench_firmware_download')")
+    ui.click("button","查看 qa.1 资源详情")
+    ui.save("f101-choose-image")
+    ui.pick(files["factory"],"选择本地镜像…")
+    ui.wait(lambda:ui.js("return document.querySelector('.v2c-tabs button[aria-pressed=true]')?.innerText.trim()==='本地文件'"),"local image opened directly")
+    ui.text("factory-nor.img")
+    ui.click(".v2c-tabs button","板型资源")
     ui.click("button","查看 qa.1 资源详情")
     ui.text("清单声明的适用板型")
     ui.pick(files["loader"],"获取并核对 nekobox qa.1")
     next_enabled(ui,True)
     ui.text("下载的镜像与发布清单的指纹一致")
+    original = ui.web.call("GET", ui.web.session+"/window/rect")
+    ui.web.call("POST", ui.web.session+"/window/rect", {"width":1090, "height":720})
+    ui.wait(lambda:ui.js("return innerWidth === 1090"), "narrow window")
+    assert ui.js("""const p=document.querySelector('.v2c-primary').getBoundingClientRect();
+        const buttons=[...document.querySelectorAll('.imager-image-line button')].filter(b=>b.getClientRects().length);
+        return buttons.length>0 && buttons.every(b=>b.getBoundingClientRect().right<=p.right+1)""")
+    ui.web.call("POST", ui.web.session+"/window/rect", {"width":original["width"], "height":original["height"]})
     assert ui.js("return [...document.querySelectorAll('.imager-aw-route input')].every(e=>e.disabled)")
+    assert ui.js("return !window.__imagerSimulation.calls.some(c=>c.cmd==='workbench_firmware_download')")
+    ui.fixture("workbench_list_devices",[profile])
     ui.fixture("workbench_firmware_prepare", {"id":"qa-confirmation", "deviceId":19, "candidateId":"qa-candidate"})
-    review_target(ui)
+    ui.fixture("workbench_firmware_download", dict(bound_candidate,boardUid="different-board"))
+    ui.usb("allwinner")
+    ui.next()
+    ui.selectUsb()
+    ui.next()
+    ui.text("设备或发布文件已变化，请重新预检。")
+    assert ui.js("return !window.__imagerSimulation.calls.some(c=>c.cmd==='workbench_firmware_prepare')")
+    assert not submissions(ui)
+    ui.fixture("workbench_firmware_download", bound_candidate)
+    ui.click('.v2w-preflight-error button','重新检测设备')
+    ui.selectUsb()
+    ui.next()
+    ui.text("确认烧录")
+    ui.click(".v2w-drawer input[type=checkbox]")
+    assert ui.js("return window.__imagerSimulation.calls.filter(c=>c.cmd==='workbench_firmware_download').every(c=>c.args.deviceId===19 && c.args.request.indexSha256===arguments[0])",entry["indexSha256"])
     assert not submissions(ui)
     ui.click(".v2w-drawer .v2w-primary")
     ui.wait(lambda: len(submissions(ui)) == 1, "catalog candidate submitted with its own confirmation")
@@ -172,14 +211,14 @@ def run(ui, fixtures):
 
     local(ui, "f101")
     route(ui, "vendor")
-    ui.pick(files["factory"], "选择文件")
+    ui.pick(files["factory"], "选择镜像…")
     ui.text("将这个包改作 RAM 引导来源")
     next_enabled(ui, False)
     ui.save("aw-source-role")
     ui.click("button", "将这个包改作 RAM 引导来源")
     ui.text("factory-nor.img")
     next_enabled(ui, False)
-    ui.pick(files["raw"], "选择文件")
+    ui.pick(files["raw"], "选择镜像…")
     accept(ui)
 
     files = prepare_f101(ui, fixtures)
@@ -230,7 +269,7 @@ def run(ui, fixtures):
     accept(ui)
 
     local(ui, "f101")
-    ui.pick(files["unknown"], "选择文件")
+    ui.pick(files["unknown"], "选择镜像…")
     ui.text("完整 SPI NOR 镜像")
     ui.click("button", "分析系统镜像")
     inspector(ui,"image")
@@ -243,14 +282,14 @@ def run(ui, fixtures):
 
     local(ui, "f101")
     route(ui, "vendor")
-    ui.pick(files["factory"], "选择文件")
+    ui.pick(files["factory"], "选择镜像…")
     accept(ui)
     ui.save("aw-factory")
     submit(ui,files["factory"],"vendor")
 
     local(ui, "t113-pro")
     route(ui, "mainline_nand")
-    ui.pick(files["nand"], "选择文件")
+    ui.pick(files["nand"], "选择镜像…")
     ui.pick(files["loader"], "选择引导包…")
     accept(ui)
     ui.save("aw-mainline-nand")
@@ -258,21 +297,21 @@ def run(ui, fixtures):
 
     local(ui, "t113-pro")
     route(ui, "mainline_nand")
-    ui.pick(files["nand"], "选择文件")
+    ui.pick(files["nand"], "选择镜像…")
     ui.pick(files["raw"], "更换系统镜像…")
     ui.text("需要 IMAGEWTY 组件包")
     next_enabled(ui, False)
     assert not submissions(ui)
 
     local(ui, "t153-emmc")
-    ui.pick(files["emmc"], "选择文件")
+    ui.pick(files["emmc"], "选择镜像…")
     ui.pick(files["loader"], "选择引导包…")
     accept(ui)
     ui.save("aw-mainline-emmc")
     submit(ui,files["emmc"],"mainline_emmc",files["loader"])
 
     local(ui, "t153-emmc")
-    ui.pick(files["emmc"], "选择文件")
+    ui.pick(files["emmc"], "选择镜像…")
     ui.pick(files["corrupt"], "更换系统镜像…")
     ui.text("IMAGEWTY 文件头截断")
     next_enabled(ui, False)

@@ -37,6 +37,7 @@
   accent-color: var(--vc-accent);
 }
 .imager-image-review {
+  container: image-review / inline-size;
   display: grid;
   align-content: start;
   gap: 10px;
@@ -86,8 +87,16 @@
 }
 .imager-image-confirm {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
+  min-height: 32px;
+  cursor: pointer;
+}
+.imager-image-confirm input {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  scroll-margin-block: 16px;
 }
 .imager-image-problem {
   border-inline-start: 3px solid var(--lynx-danger);
@@ -128,40 +137,6 @@
   padding-top: 6px;
 }
 
-.v2c-layout.v2c-system-layout.local {
-  grid-template-columns: minmax(0, 1fr);
-  align-content: start;
-  min-height: 0;
-}
-.v2c-system-layout.local > .v2c-primary {
-  border: 0;
-  border-radius: 0;
-  padding: 0;
-  gap: 13px;
-}
-.v2c-system-layout.local .v2c-page-heading h2 {
-  font-size: 20px;
-}
-.v2c-system-layout.local .v2c-page-heading p {
-  font-size: 13px;
-}
-.v2c-system-layout.local .v2c-tabs {
-  justify-content: flex-start;
-}
-.v2c-system-layout.local .v2c-tabs button {
-  flex: 0 1 auto;
-  padding-inline: 18px;
-}
-.v2c-system-layout.local .imager-aw-route {
-  align-items: stretch;
-}
-.v2c-system-layout.local .imager-aw-route label {
-  flex: 0 1 auto;
-  min-width: 160px;
-}
-.v2c-system-layout.local .imager-aw-route label small {
-  display: none;
-}
 .imager-image-line {
   display: grid;
   grid-template-columns: minmax(180px, 1.15fr) minmax(150px, 0.65fr) minmax(260px, 1fr);
@@ -214,16 +189,7 @@
   display: flex;
   justify-content: flex-end;
 }
-.v2c-system-layout.local .v2c-drop.imager-empty-files {
-  min-height: 85px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 12px;
-}
-@media (max-width: 1050px) {
+@container image-review (max-width: 630px) {
   .imager-image-line {
     grid-template-columns: minmax(0, 1.25fr) minmax(150px, 0.7fr);
   }
@@ -232,7 +198,7 @@
     justify-content: flex-start;
   }
 }
-@media (max-width: 680px) {
+@container image-review (max-width: 420px) {
   .imager-image-line {
     grid-template-columns: minmax(0, 1fr);
   }

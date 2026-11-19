@@ -195,6 +195,18 @@ export interface FirmwareCatalogVersion {
     validation: Record<string, unknown>;
   };
 }
+export interface FirmwareDownloadRequest {
+  releaseId: number;
+  applicationId: string;
+  version: string;
+  channel: string;
+  loaderPath: string;
+  indexSha256?: string;
+}
+export type StagedFirmware = Pick<FirmwareCandidate, 'manifest' | 'imagePath' | 'loaderPath'> & {
+  releaseId: number;
+  indexSha256: string;
+};
 export interface FirmwareRemoteCatalog {
   deviceId: number;
   boardUid: string;
@@ -508,17 +520,10 @@ export interface WorkbenchCommandMap {
     { deviceId: number; channel: string },
     FirmwareRemoteCatalog
   >;
+  imager_firmware_catalog: IpcCommandSpec<undefined, FirmwareCatalogVersion[]>;
+  imager_stage_firmware: IpcCommandSpec<{ request: FirmwareDownloadRequest }, StagedFirmware>;
   workbench_firmware_download: IpcCommandSpec<
-    {
-      deviceId: number;
-      request: {
-        releaseId: number;
-        applicationId: string;
-        version: string;
-        channel: string;
-        loaderPath: string;
-      };
-    },
+    { deviceId: number; request: FirmwareDownloadRequest },
     FirmwareCandidate
   >;
   workbench_firmware_build_start: IpcCommandSpec<

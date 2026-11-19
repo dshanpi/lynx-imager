@@ -112,5 +112,5 @@ def launch(binary, desktop_scale=1):
         web.session='/session/'+session['sessionId']
         stack.callback(web.call,'DELETE',web.session)
         web.call('POST',web.session+'/window/rect',{'width':1290,'height':790,'x':0,'y':0})
-        wait(lambda:web.js("return location.origin==='tauri://localhost' && !!document.querySelector('.v2-top')"),'native basic workspace',40)
+        wait(lambda:web.js("return location.origin==='tauri://localhost' && !!document.querySelector('.imager-app-header')"),'native basic workspace',40)
         yield web,temp

@@ -71,7 +71,7 @@ def run(ui, fixtures):
     def pick(file,replace=False):
         ui.pick(str(file),'更换文件' if replace else '选择文件')
     def enabled():
-        return bool(ui.js("const b=document.querySelector('footer button.v2-primary');return b&&!b.disabled"))
+        return bool(ui.js("const b=document.querySelector('.v2-foot-actions button.v2-primary');return b&&!b.disabled"))
     def ready():
         ui.wait(enabled,'vendor route can continue')
     def blocked():

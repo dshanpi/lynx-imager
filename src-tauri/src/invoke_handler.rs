@@ -339,6 +339,8 @@ pub fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Syn
         crate::workbench::firmware_lifecycle::workbench_firmware_acceptance,
         crate::workbench::firmware_lifecycle::workbench_firmware_workspace,
         crate::workbench::firmware_lifecycle::workbench_firmware_report,
+        crate::workbench::firmware_distribution::imager_firmware_catalog,
+        crate::workbench::firmware_distribution::imager_stage_firmware,
         crate::workbench::firmware_distribution::workbench_firmware_catalog,
         crate::workbench::firmware_distribution::workbench_firmware_download,
         crate::workbench::firmware_build::workbench_firmware_build_start,

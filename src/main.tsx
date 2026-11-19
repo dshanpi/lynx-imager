@@ -6,7 +6,7 @@ import { WorkbenchPage } from './Components/Workbench';
 import { ImagerAIWorkspace } from './Components/Imager/ImagerAIWorkspace';
 import { TaskRecords } from './Components/Imager/TaskRecords';
 import { ImagerPage } from './Components/Imager/ImagerPage';
-import { V2BasicHeader } from './Components/Imager/V2BasicHeader';
+import { useAppVersion } from './Hooks/useAppVersion';
 import { Settings, loadSettings } from './Settings';
 import { authService, AuthUserInfo } from './Services';
 import { efexService } from './Services';
@@ -62,6 +62,7 @@ async function showAppWindow() {
  */
 const AppContent: React.FC = () => {
   const { setThemeMode, isDark, currentThemeId, currentColors } = useTheme();
+  const version = useAppVersion();
   const [activeTool, setActiveTool] = useState<Workspace>('basic');
   const [visited, setVisited] = useState<Workspace[]>(['basic']);
   const [flashTarget, setFlashTarget] = useState<{ deviceId: number; sequence: number }>();
@@ -262,54 +263,50 @@ const AppContent: React.FC = () => {
         className={activeTool === 'basic' ? 'imager-app-shell v2-basic-shell' : 'imager-app-shell'}
         inert={settingsVisible || undefined}
       >
-        {activeTool === 'basic' ? (
-          <V2BasicHeader
-            onAdvanced={() => activate('advanced')}
-            onAI={() => activate('ai')}
-            onRecords={openRecords}
-            onSettings={handleSettingsClick}
-          />
-        ) : (
-          <header className="imager-app-header">
-            <div className="imager-brand">
-              <svg aria-hidden="true" viewBox="0 0 25 25">
-                <path fill="currentColor" d="M5 3h7L8.8 16.5H22l-1.3 5.5H.5z" />
-                <path fill="currentColor" opacity=".45" d="M14.4 3h5l-1.5 6.5h-5z" />
-              </svg>
-              <strong>LYNX Imager</strong>
-            </div>
-            <nav className="imager-app-tabs" aria-label="工作区">
-              {(Object.keys(workspaceNames) as Workspace[]).map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  aria-current={activeTool === key ? 'page' : undefined}
-                  className={activeTool === key ? 'is-active' : ''}
-                  onClick={() => activate(key)}
-                >
-                  {workspaceNames[key]}
-                </button>
-              ))}
-            </nav>
-            <div className="imager-app-actions">
+        <header className="imager-app-header" aria-label="应用导航">
+          <div className="imager-brand">
+            <svg aria-hidden="true" viewBox="0 0 25 25">
+              <path fill="currentColor" d="M5 3h7L8.8 16.5H22l-1.3 5.5H.5z" />
+              <path fill="currentColor" opacity=".45" d="M14.4 3h5l-1.5 6.5h-5z" />
+            </svg>
+            <strong>LYNX Imager</strong>
+            <small>v{version}</small>
+          </div>
+          <nav className="imager-app-tabs" aria-label="工作区">
+            {(Object.keys(workspaceNames) as Workspace[]).map((key) => (
               <button
+                key={key}
                 type="button"
-                onClick={() =>
-                  void openUrl('https://github.com/dshanpi/lynx-imager').catch((e) =>
-                    setHardwareBlockMessage(String(e))
-                  )
-                }
+                aria-current={activeTool === key ? 'page' : undefined}
+                className={activeTool === key ? 'is-active' : ''}
+                onClick={() => activate(key)}
               >
-                <LynxIcon name="info" size={16} />
-                使用帮助
+                {workspaceNames[key]}
               </button>
-              <button type="button" onClick={handleSettingsClick}>
-                <LynxIcon name="settings" size={16} />
-                设置
-              </button>
-            </div>
-          </header>
-        )}
+            ))}
+          </nav>
+          <div className="imager-app-actions">
+            <button type="button" aria-label="任务记录" onClick={openRecords}>
+              <LynxIcon name="history" size={16} />
+              任务记录
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                void openUrl('https://github.com/dshanpi/lynx-imager').catch((e) =>
+                  setHardwareBlockMessage(String(e))
+                )
+              }
+            >
+              <LynxIcon name="info" size={16} />
+              使用帮助
+            </button>
+            <button type="button" aria-label="设置" onClick={handleSettingsClick}>
+              <LynxIcon name="settings" size={16} />
+              设置
+            </button>
+          </div>
+        </header>
         <main className="imager-app-main">
           <div className="imager-screen" hidden={activeTool !== 'basic'}>
             <ImagerPage

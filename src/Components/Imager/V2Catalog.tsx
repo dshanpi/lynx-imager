@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'rea
 import { LynxIcon, type LynxIconName } from '../../CoreUI';
 import type { WorkbenchDevice } from '../../Platform/IPC';
 import type {
-  FirmwareCandidate,
+  StagedFirmware,
   FirmwareCatalogVersion,
 } from '../../Platform/IPC/contracts/Workbench';
 import { formatLinuxBytes } from '../Workbench/linuxWorkbenchModel';
@@ -29,13 +29,6 @@ export interface V2Board {
 }
 export type V2ImageSource = 'catalog' | 'local' | 'recent';
 type Identity = { sizeBytes: number; sha256: string };
-const vendors: Record<string, string> = {
-  allwinner: 'Allwinner',
-  rockchip: 'Rockchip',
-  nxp: 'NXP',
-  st: 'STMicroelectronics',
-  kendryte: 'Canaan',
-};
 const chipPackages: Record<string, [string, string]> = {
   f101: ['F101', 'ALLWINNER'],
   't153-emmc': ['T153', 'ALLWINNER'],
@@ -44,13 +37,6 @@ const chipPackages: Record<string, [string, string]> = {
   'canaan-k230': ['K230', 'CANAAN'],
 };
 const baseName = (path: string) => path.split(/[/\\]/).pop() || path;
-const prettyRoute = (board: V2Board) => {
-  if (board.route === 'mainline_spinor') return '主线系统 · SPI NOR';
-  if (board.route === 'mainline_emmc') return '主线系统 · eMMC';
-  if (board.route === 'mainline_nand') return '主线系统 · SPI NAND';
-  if (board.route === 'rockchip_raw_emmc') return '主线系统 · eMMC';
-  return '厂商系统镜像';
-};
 function icon(name: LynxIconName, size: 16 | 20 | 24 = 20) {
   return <LynxIcon name={name} size={size} aria-hidden="true" />;
 }
@@ -263,11 +249,8 @@ export interface V2SystemPickerProps {
   onBrowse: () => void;
   onImagePath: (path: string) => void;
   dropRef: RefObject<HTMLDivElement | null>;
-  catalogDevice?: WorkbenchDevice | null;
-  devices: WorkbenchDevice[];
-  onCatalogDevice: (id: number | null) => void;
-  onCandidate: (candidate: FirmwareCandidate) => void;
-  candidate: FirmwareCandidate | null;
+  onCandidate: (candidate: StagedFirmware) => void;
+  candidate: StagedFirmware | null;
   fileError?: string;
   reading?: boolean;
   route: BasicRoute;
@@ -292,9 +275,6 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
     onBrowse,
     onImagePath,
     dropRef,
-    catalogDevice,
-    devices,
-    onCatalogDevice,
     onCandidate,
     candidate,
     fileError,
@@ -305,6 +285,7 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
   const [textPath, setTextPath] = useState('');
   const recorded = useRef('');
   const inCatalog = source === 'catalog';
+  useEffect(() => setInspected(null), [board.id, props.route, source]);
   const visibleRecent = recent.filter((r) => r.boardId === board.id && r.boardName === boardName);
   useEffect(() => {
     if (source !== 'local' || !identity || !imagePath) return;
@@ -330,140 +311,90 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
     onImagePath(path);
   }
   const manifest = inspected?.entry.manifest || candidate?.manifest;
+  const hasCatalog = board.id === 'f101' && props.route === 'mainline_spinor';
   const tabs = (
-    <div className={'v2c-tabs' + (inCatalog ? ' is-catalog' : '')} aria-label="镜像来源">
+    <div className="v2c-tabs" role="group" aria-label="镜像来源">
       {(
         [
-          ['catalog', 'cloud', '板型资源'],
           ['local', 'folder', '本地文件'],
+          ['catalog', 'cloud', '板型资源'],
           ['recent', 'clock', '最近使用'],
         ] as const
-      ).map(([key, glyph, name]) => (
-        <button type="button" aria-pressed={source === key} key={key} onClick={() => onSource(key)}>
-          {icon(glyph)}
-          {name}
-          {key === 'recent' && visibleRecent.length > 0 && <small>{visibleRecent.length}</small>}
-        </button>
-      ))}
+      )
+        .filter(([key]) => key !== 'catalog' || hasCatalog)
+        .map(([key, glyph, name]) => (
+          <button
+            type="button"
+            aria-pressed={source === key}
+            key={key}
+            onClick={() => onSource(key)}
+          >
+            {icon(glyph)}
+            {name}
+            {key === 'recent' && visibleRecent.length > 0 && <small>{visibleRecent.length}</small>}
+          </button>
+        ))}
     </div>
   );
+  const isAw = board.chipVendor === 'allwinner';
+  const imageRole = isAw ? awRouteText[props.route]?.[1] || '系统镜像' : '系统镜像';
   return (
-    <div className={'v2c-layout v2c-system-layout ' + (inCatalog ? 'catalog' : 'local')}>
-      <div className="v2c-primary">
-        {inCatalog ? (
-          <div className="v2c-board-banner">
-            <V2BoardArt id={board.id} name={boardName} large />
-            <div>
-              <h2>
-                {boardName} <small>{vendors[board.chipVendor]}</small>
-              </h2>
-              <p>
-                {board.chip} · {board.storage}
-              </p>
-              <span>
-                {icon('board', 16)}
-                {board.mode}
-              </span>
-              <span>
-                {icon('branch', 16)}
-                {board.chipVendor === 'allwinner'
-                  ? awRouteText[props.route]?.[0]
-                  : prettyRoute(board)}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <header className="v2c-page-heading">
-            <h2>
-              {icon(source === 'recent' ? 'clock' : 'folder', 24)}
-              {source === 'recent'
-                ? '最近使用'
-                : board.chipVendor === 'allwinner' && props.route !== 'vendor'
-                  ? '选择系统与引导文件'
-                  : props.vendorTitle || '选择系统镜像'}
-            </h2>
-            <p>
-              {source === 'recent'
-                ? '选择此前使用的本地文件，重新读取镜像指纹。'
-                : boardName + ' · ' + board.storage + '，请依据板型配套资料选择文件。'}
-            </p>
-          </header>
+    <div className="v2c-layout v2c-system-layout image-desk">
+      <header className="image-desk-title">
+        <h2>选择系统镜像</h2>
+        <div className="image-target-summary" aria-label="烧录目标">
+          {icon('board', 16)}
+          <strong>{boardName}</strong>
+          <span>{board.storage}</span>
+          <span>{board.mode}</span>
+        </div>
+        {board.id === 'f101' && (
+          <p>
+            YuzukiNeko · F101S3 参考配置　玄铁 C907 · RISC-V　16 MiB PSRAM　16 MiB SPI NOR　USB-C ·
+            FEL
+          </p>
         )}
-        {tabs}
-        {board.chipVendor === 'allwinner' && <AllwinnerRoute {...props} />}
+      </header>
+      {isAw && <AllwinnerRoute {...props} />}
+      <div className="v2c-primary">
+        <header className="image-source-bar">
+          <h3>{props.vendorTitle || '烧录文件'}</h3>
+          {tabs}
+        </header>
         {source === 'local' && props.vendorControls}
         {inCatalog && (
-          <>
-            {board.id === 'f101' && (
-              <label className="v2c-device-select">
-                资源对应的单板
-                <select
-                  aria-label="资源对应的单板"
-                  value={catalogDevice?.id ?? ''}
-                  onChange={(e) => {
-                    setInspected(null);
-                    onCatalogDevice(e.target.value ? Number(e.target.value) : null);
-                  }}
-                >
-                  <option value="">选择已保存的 F101 单板…</option>
-                  {devices.map((d) => (
-                    <option key={d.id} value={d.id ?? ''}>
-                      {d.name || d.boardUid}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            <BasicCatalog
-              key={board.id + ':' + (catalogDevice?.id ?? '')}
-              device={board.id === 'f101' ? catalogDevice : null}
-              hasCatalog={board.id === 'f101'}
-              onChoose={onCandidate}
-              onInspect={setInspected}
-              selected={candidate}
-              onLocal={() => onSource('local')}
-            />
-          </>
+          <BasicCatalog
+            key={board.id + ':' + props.route}
+            onChoose={onCandidate}
+            onInspect={setInspected}
+            selected={candidate}
+            onLocal={onBrowse}
+          />
         )}
         {source === 'local' && (
           <>
             {!imagePath && (
               <div className="v2c-drop imager-empty-files" ref={dropRef}>
-                <span className="v2c-upload-icon">{icon('upload', 24)}</span>
-                <strong>
-                  {props.vendorControls ? '也可将本地文件拖入此处' : '将系统镜像拖到这里'}
-                </strong>
+                <span className="image-desk-file-icon">{icon('document', 24)}</span>
+                <div className="image-desk-file-copy">
+                  <strong>{imageRole}</strong>
+                  <small>
+                    {props.vendorControls
+                      ? '也可将本地文件拖入此处'
+                      : '支持拖入本地镜像文件。'}
+                  </small>
+                </div>
+                {!props.vendorControls && (
+                  <span className="image-desk-destination">
+                    {icon('database', 16)}写入 {board.storage}
+                  </span>
+                )}
                 {!props.vendorControls && (
                   <button type="button" className="v2c-solid" onClick={onBrowse}>
-                    {icon('folder')}选择文件
+                    {icon('folder')}选择镜像…
                   </button>
                 )}
               </div>
-            )}
-            {!imagePath && (
-              <details className="v2c-path-entry">
-                <summary>输入文件路径</summary>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (textPath.trim()) onImagePath(textPath.trim());
-                  }}
-                >
-                  <label className="v2c-visually-hidden" htmlFor="basic-image">
-                    镜像文件路径
-                  </label>
-                  <input
-                    id="basic-image"
-                    value={textPath}
-                    onChange={(e) => setTextPath(e.target.value)}
-                    placeholder="粘贴镜像的完整路径…"
-                    spellCheck={false}
-                  />
-                  <button type="submit" disabled={!textPath.trim()}>
-                    读取文件
-                  </button>
-                </form>
-              </details>
             )}
             {fileError ? (
               <Notice kind="error" title="文件读取失败">
@@ -474,10 +405,44 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
             )}
           </>
         )}
-        <SystemImageReview
-          key={JSON.stringify([board.id, boardName, props.route, source, imagePath, candidate?.id])}
-          {...props}
-        />
+        {(source === 'local' || (source === 'catalog' && candidate)) && (
+          <SystemImageReview
+            key={JSON.stringify([
+              board.id,
+              boardName,
+              props.route,
+              source,
+              imagePath,
+              candidate?.indexSha256,
+            ])}
+            {...props}
+          />
+        )}
+        {source === 'local' && !imagePath && (
+          <details className="v2c-path-entry">
+            <summary>输入文件路径</summary>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (textPath.trim()) onImagePath(textPath.trim());
+              }}
+            >
+              <label className="v2c-visually-hidden" htmlFor="basic-image">
+                镜像文件路径
+              </label>
+              <input
+                id="basic-image"
+                value={textPath}
+                onChange={(e) => setTextPath(e.target.value)}
+                placeholder="粘贴镜像的完整路径…"
+                spellCheck={false}
+              />
+              <button type="submit" disabled={!textPath.trim()}>
+                读取文件
+              </button>
+            </form>
+          </details>
+        )}
         {source === 'local' && imagePath && (
           <details className="imager-file-details">
             <summary>文件详情</summary>
@@ -516,52 +481,48 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
         {source === 'recent' && (
           <RecentFiles items={visibleRecent} choose={chooseRecent} clear={clearRecent} />
         )}
-      </div>
-      {inCatalog ? (
-        <div className="v2c-detail-stack">
-          <DetailsPane title="镜像信息" glyph="document">
-            <div className="v2c-image-identity">
-              <span>{icon('archive', 24)}</span>
-              <div>
-                <strong>
-                  {manifest ? manifest.applicationId + ' ' + manifest.version : '尚未选择资源'}
-                </strong>
-                <small>{manifest?.image.fileName ?? '选择当前板型的资源或本地文件。'}</small>
+        {inCatalog && manifest && (
+          <div className="image-manifest">
+            <DetailsPane title="镜像信息" glyph="document">
+              <div className="v2c-image-identity">
+                <span>{icon('archive', 24)}</span>
+                <div>
+                  <strong>
+                    {manifest.applicationId} {manifest.version}
+                  </strong>
+                  <small>{manifest.image.fileName}</small>
+                </div>
               </div>
-            </div>
-            <Facts
-              rows={[
-                ['格式', manifest?.image.fileName.split('.').pop()?.toUpperCase() ?? '—'],
-                ['大小', manifest ? formatLinuxBytes(manifest.image.sizeBytes) : '—'],
-                ['适用板型', manifest?.boardModel ?? '—'],
-                ['平台', manifest?.chip ?? '—'],
-                ['系统版本', manifest?.version ?? '—'],
-                ['烧录路线', manifest?.route ?? '—'],
-              ]}
-            />
-            <Notice kind="info" title={manifest ? '清单声明的适用板型' : '板型适配待检查'}>
-              {manifest
-                ? manifest.boardModel + ' · 真正写入前仍需预检目标。'
-                : '选择资源后查看发布清单与板型信息。'}
-            </Notice>
-          </DetailsPane>
-          <DetailsPane title="镜像校验" glyph="shield">
-            <Facts
-              rows={[['SHA-256', manifest ? <CopyHash hash={manifest.image.sha256} /> : '—']]}
-            />
-            {candidate &&
-            identity &&
-            manifest?.image.sha256 === identity.sha256 &&
-            candidate.manifest.image.sha256 === identity.sha256 ? (
-              <Notice kind="success" title="校验通过">
-                下载的镜像与发布清单的指纹一致。
+              <Facts
+                rows={[
+                  ['格式', manifest.image.fileName.split('.').pop()?.toUpperCase()],
+                  ['大小', formatLinuxBytes(manifest.image.sizeBytes)],
+                  ['适用板型', manifest.boardModel],
+                  ['平台', manifest.chip],
+                  ['系统版本', manifest.version],
+                  ['烧录路线', manifest.route],
+                ]}
+              />
+              <Notice kind="info" title="清单声明的适用板型">
+                {manifest.boardModel} · 真正写入前仍需预检目标。
               </Notice>
-            ) : (
-              <p className="v2c-hint">获取镜像后核对文件指纹。</p>
-            )}
-          </DetailsPane>
-        </div>
-      ) : null}
+            </DetailsPane>
+            <DetailsPane title="镜像校验" glyph="shield">
+              <Facts rows={[['SHA-256', <CopyHash hash={manifest.image.sha256} />]]} />
+              {candidate &&
+              identity &&
+              manifest.image.sha256 === identity.sha256 &&
+              candidate.manifest.image.sha256 === identity.sha256 ? (
+                <Notice kind="success" title="校验通过">
+                  下载的镜像与发布清单的指纹一致。
+                </Notice>
+              ) : (
+                <p className="v2c-hint">获取镜像后核对文件指纹。</p>
+              )}
+            </DetailsPane>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

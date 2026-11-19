@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
-import { invokeCommand, type WorkbenchDevice } from '../../Platform/IPC';
+import { invokeCommand } from '../../Platform/IPC';
 import type {
-  FirmwareCandidate,
+  StagedFirmware,
   FirmwareCatalogVersion,
 } from '../../Platform/IPC/contracts/Workbench';
 import { formatLinuxBytes } from '../Workbench/linuxWorkbenchModel';
@@ -10,21 +10,12 @@ import { LynxIcon } from '../../CoreUI';
 import { formatErrorMessage } from '../../Utils';
 
 interface Props {
-  device?: WorkbenchDevice | null;
-  hasCatalog?: boolean;
-  selected?: FirmwareCandidate | null;
+  selected?: StagedFirmware | null;
   onInspect?: (entry: FirmwareCatalogVersion | null) => void;
-  onChoose: (candidate: FirmwareCandidate) => void;
-  onLocal?: () => void;
+  onChoose: (candidate: StagedFirmware) => void;
+  onLocal: () => void;
 }
-export default function BasicCatalog({
-  device,
-  hasCatalog = true,
-  selected,
-  onChoose,
-  onInspect,
-  onLocal,
-}: Props) {
+export default function BasicCatalog({ selected, onChoose, onInspect, onLocal }: Props) {
   const [entries, setEntries] = useState<FirmwareCatalogVersion[]>([]);
   const [inspected, setInspected] = useState(false);
   const [reading, setReading] = useState(false);
@@ -35,24 +26,19 @@ export default function BasicCatalog({
   const [storage, setStorage] = useState('');
   const active = useRef(false);
   const lock = useRef(false);
-  const deviceId = device?.id;
-  const boardUid = device?.boardUid;
   const readCatalog = useCallback(async () => {
-    if (!hasCatalog || !deviceId || lock.current) return;
+    if (lock.current) return;
     lock.current = true;
     setReading(true);
     setError('');
     setInspected(false);
     try {
-      const catalog = await invokeCommand('workbench_firmware_catalog', {
-        deviceId,
-        channel: 'stable',
+      const entries = await invokeCommand('imager_firmware_catalog', undefined, {
+        timeoutMs: 65000,
       });
       if (!active.current) return;
-      if (catalog.deviceId !== deviceId || catalog.boardUid !== boardUid)
-        throw new Error('目标设备已变化，请重新读取目录。');
       setEntries(
-        catalog.entries.filter(
+        entries.filter(
           (v) =>
             v.entry.status === 'active' &&
             v.entry.manifest.applicationId === 'nekobox' &&
@@ -69,7 +55,7 @@ export default function BasicCatalog({
       lock.current = false;
       if (active.current) setReading(false);
     }
-  }, [hasCatalog, deviceId, boardUid]);
+  }, []);
   useEffect(() => {
     active.current = true;
     const start = window.setTimeout(() => void readCatalog(), 0);
@@ -79,7 +65,7 @@ export default function BasicCatalog({
     };
   }, [readCatalog]);
   async function obtain(v: FirmwareCatalogVersion) {
-    if (!deviceId || lock.current) return;
+    if (lock.current) return;
     lock.current = true;
     setReading(true);
     setError('');
@@ -93,19 +79,23 @@ export default function BasicCatalog({
         ],
       });
       if (typeof loader !== 'string' || !active.current) return;
-      const c = await invokeCommand('workbench_firmware_download', {
-        deviceId,
-        request: {
-          releaseId: v.releaseId,
-          applicationId: v.entry.manifest.applicationId,
-          version: v.entry.manifest.version,
-          channel: 'stable',
-          loaderPath: loader,
+      const c = await invokeCommand(
+        'imager_stage_firmware',
+        {
+          request: {
+            releaseId: v.releaseId,
+            indexSha256: v.indexSha256,
+            applicationId: v.entry.manifest.applicationId,
+            version: v.entry.manifest.version,
+            channel: 'stable',
+            loaderPath: loader,
+          },
         },
-      });
+        { timeoutMs: 190000 }
+      );
       if (!active.current) return;
-      if (c.deviceId !== deviceId || c.boardUid !== boardUid)
-        throw new Error('候选包的设备作用域已改变。');
+      if (c.indexSha256 !== v.indexSha256 || c.releaseId !== v.releaseId)
+        throw new Error('发布版本已变化，请刷新目录。');
       onInspect?.(v);
       onChoose(c);
     } catch (e) {
@@ -132,47 +122,70 @@ export default function BasicCatalog({
     );
   return (
     <section className="v2c-resources" aria-label="板型资源目录">
-      <div className="v2c-resource-filter">
-        <label className="v2c-search">
-          <LynxIcon name="search" size={16} />
-          <input
-            type="search"
-            aria-label="搜索系统或版本"
-            placeholder="搜索系统或版本…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </label>
-        <select aria-label="筛选系统" value={system} onChange={(e) => setSystem(e.target.value)}>
-          <option value="">全部系统</option>
-          {Array.from(new Set(entries.map((v) => v.entry.manifest.applicationId))).map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
-        <select
-          aria-label="筛选存储路线"
-          value={storage}
-          onChange={(e) => setStorage(e.target.value)}
-        >
-          <option value="">全部路线</option>
-          {Array.from(new Set(entries.map((v) => v.entry.manifest.route))).map((s) => (
-            <option key={s}>{s}</option>
-          ))}
-        </select>
-        <select aria-label="排序" value={sort} onChange={(e) => setSort(e.target.value)}>
-          <option value="new">最新优先</option>
-          <option value="small">最小优先</option>
-        </select>
-        <button
-          type="button"
-          title="刷新发布目录"
-          aria-label="刷新发布目录"
-          disabled={!deviceId || reading || !hasCatalog}
-          onClick={() => void readCatalog()}
-        >
-          <LynxIcon name="refresh" size={16} />
+      <div className="v2c-image-action">
+        <span className="image-desk-file-icon">
+          <LynxIcon name="cloud" size={24} aria-hidden="true" />
+        </span>
+        <div className="image-desk-file-copy">
+          <strong>在线镜像</strong>
+          <small role="status">
+            {reading
+              ? '正在读取资源…'
+              : error
+                ? '读取在线资源失败。'
+                : entries.length
+                  ? `有 ${entries.length} 个可用版本`
+                  : '当前板型暂无在线镜像。'}
+          </small>
+        </div>
+        <button type="button" className="v2c-solid" onClick={onLocal}>
+          <LynxIcon name="folder" size={16} />
+          选择本地镜像…
         </button>
       </div>
+      {entries.length > 0 && (
+        <div className="v2c-resource-filter">
+          <label className="v2c-search">
+            <LynxIcon name="search" size={16} />
+            <input
+              type="search"
+              aria-label="搜索系统或版本"
+              placeholder="搜索系统或版本…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </label>
+          <select aria-label="筛选系统" value={system} onChange={(e) => setSystem(e.target.value)}>
+            <option value="">全部系统</option>
+            {Array.from(new Set(entries.map((v) => v.entry.manifest.applicationId))).map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+          <select
+            aria-label="筛选存储路线"
+            value={storage}
+            onChange={(e) => setStorage(e.target.value)}
+          >
+            <option value="">全部路线</option>
+            {Array.from(new Set(entries.map((v) => v.entry.manifest.route))).map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+          <select aria-label="排序" value={sort} onChange={(e) => setSort(e.target.value)}>
+            <option value="new">最新优先</option>
+            <option value="small">最小优先</option>
+          </select>
+          <button
+            type="button"
+            title="刷新发布目录"
+            aria-label="刷新发布目录"
+            disabled={reading}
+            onClick={() => void readCatalog()}
+          >
+            <LynxIcon name="refresh" size={16} />
+          </button>
+        </div>
+      )}
       {filtered.map((v) => (
         <div
           key={v.releaseId + '-' + v.entry.manifest.version}
@@ -215,37 +228,12 @@ export default function BasicCatalog({
           </button>
         </div>
       ))}
-      {!filtered.length && (
+      {!reading && !filtered.length && (
         <div className="v2c-catalog-empty">
-          <LynxIcon name="archive" size={40} />
-          <strong>
-            {!hasCatalog
-              ? '此板型尚未配置发布目录'
-              : reading
-                ? '正在读取板型资源…'
-                : !deviceId
-                  ? '选择资源对应的单板'
-                  : error
-                    ? '发布目录读取失败'
-                    : inspected && entries.length
-                      ? '没有匹配的系统'
-                      : '暂无可用的发布资源'}
-          </strong>
-          <p>
-            {!hasCatalog
-              ? '可使用与该开发板匹配的本地镜像。'
-              : !deviceId
-                ? '也可直接选择本地文件，无需连接 USB。'
-                : reading
-                  ? '正在核对发布清单。'
-                  : error
-                    ? '检查网络后刷新，或选择本地镜像。'
-                    : '可调整筛选条件，或选择本地镜像。'}
-          </p>
-          {onLocal && !reading && (
-            <button type="button" onClick={onLocal}>
-              <LynxIcon name="folder" size={16} />
-              选择本地文件
+          {inspected && entries.length > 0 && <span role="status">没有符合筛选条件的镜像。</span>}
+          {!entries.length && (
+            <button type="button" onClick={() => void readCatalog()}>
+              刷新目录
             </button>
           )}
         </div>

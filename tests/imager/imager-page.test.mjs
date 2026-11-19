@@ -34,8 +34,9 @@ test('basic flow calls existing typed IPC boundaries', async () => {
   assert.match(source, /!confirmed/);
   assert.match(source, /sameUsb\(fresh\.usb,\s*target\.usb\)/);
   assert.match(source, /files\.image\.sha256\s*!==\s*target\.files\.image\.sha256/);
-  assert.match(catalog, /workbench_firmware_catalog/);
-  assert.match(catalog, /workbench_firmware_download/);
+  assert.match(catalog, /imager_firmware_catalog/);
+  assert.match(catalog, /imager_stage_firmware/);
+  assert.match(source, /workbench_firmware_download/);
   assert.match(observation, /workbench-task-event/);
   assert.match(observation, /workbench-flash-telemetry/);
   assert.match(observation, /workbench_list_tasks/);

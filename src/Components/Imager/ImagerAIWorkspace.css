@@ -1,12 +1,12 @@
 .im-ai-workspace {
   display: grid;
-  grid-template-columns: var(--size-rail) minmax(0, 1fr);
+  grid-template-columns: var(--workspace-rail) minmax(0, 1fr);
   height: 100%;
   min-height: 0;
   min-width: 0;
   color: var(--color-text);
   background: var(--color-surface);
-  font: var(--font-body)/1.45 var(--font-ui);
+  font: var(--lynx-font-size-table)/1.45 var(--lynx-font-sans);
 }
 .im-ai-workspace * {
   box-sizing: border-box;
@@ -57,7 +57,7 @@
   background: var(--color-surface);
   color: var(--color-text);
   padding: 0 var(--space-md);
-  font: 600 var(--font-body)/1 var(--font-ui);
+  font: 600 var(--ui-text-control)/1 var(--lynx-font-sans);
   cursor: pointer;
 }
 .im-ai-workspace button:hover:enabled {
@@ -298,9 +298,6 @@
   display: none;
 }
 @media (max-width: 1000px) {
-  .im-ai-workspace {
-    grid-template-columns: 176px minmax(0, 1fr);
-  }
   .im-ai-columns {
     gap: var(--space-lg);
   }

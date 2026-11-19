@@ -422,6 +422,69 @@ pub struct DownloadRequest {
     version: String,
     channel: String,
     loader_path: String,
+    #[serde(default)]
+    index_sha256: Option<String>,
+}
+// Browsing a board model and checking its files need no device record or USB session.
+#[tauri::command]
+pub async fn imager_firmware_catalog() -> Result<Vec<CatalogVersion>, String> {
+    tokio::time::timeout(Duration::from_secs(60), catalog("stable"))
+        .await
+        .map_err(|_| "FIRMWARE_RELEASE_TIMEOUT")?
+}
+
+async fn verified_files(
+    app: &AppHandle,
+    request: &DownloadRequest,
+) -> Result<(CatalogVersion, std::path::PathBuf, std::path::PathBuf), String> {
+    let current = tokio::time::timeout(Duration::from_secs(60), catalog(&request.channel))
+        .await
+        .map_err(|_| "FIRMWARE_RELEASE_TIMEOUT")??
+        .into_iter()
+        .find(|v| {
+            v.release_id == request.release_id
+                && v.entry.manifest.application_id == request.application_id
+                && v.entry.manifest.version == request.version
+        })
+        .ok_or("FIRMWARE_VERSION_WITHDRAWN_OR_MISSING")?;
+    if current.entry.status != "active" {
+        return Err("FIRMWARE_VERSION_WITHDRAWN".into());
+    }
+    if request
+        .index_sha256
+        .as_ref()
+        .is_some_and(|sha| sha != &current.index_sha256)
+    {
+        return Err("FIRMWARE_VERSION_CHANGED_REFRESH_REQUIRED".into());
+    }
+    // Loader bytes are supplied by the operator; this source never redistributes it.
+    let supplied = Path::new(&request.loader_path)
+        .canonicalize()
+        .map_err(|_| "FIRMWARE_LOADER_MISSING")?;
+    if current.entry.manifest.loader.sha256.to_lowercase() != lifecycle::F101_LOADER_SHA {
+        return Err("FIRMWARE_LOADER_NOT_VERIFIED".into());
+    }
+    let mut loader = current.entry.manifest.loader.clone();
+    loader.file_name = supplied
+        .file_name()
+        .ok_or("FIRMWARE_LOADER_MISSING")?
+        .to_string_lossy()
+        .into_owned();
+    package::verify_file(supplied.parent().ok_or("FIRMWARE_LOADER_MISSING")?, &loader)?;
+    let image = download_image(app, &current).await?;
+    Ok((current, image, supplied))
+}
+
+#[tauri::command]
+pub async fn imager_stage_firmware(
+    app: AppHandle,
+    request: DownloadRequest,
+) -> Result<Value, String> {
+    let (current, image, loader) = verified_files(&app, &request).await?;
+    Ok(
+        json!({"manifest": current.entry.manifest, "imagePath": image, "loaderPath": loader,
+              "releaseId": current.release_id, "indexSha256": current.index_sha256}),
+    )
 }
 #[tauri::command]
 pub async fn workbench_firmware_download(
@@ -430,45 +493,11 @@ pub async fn workbench_firmware_download(
     device_id: i64,
     request: DownloadRequest,
 ) -> Result<lifecycle::Candidate, String> {
-    let DownloadRequest {
-        release_id,
-        application_id,
-        version,
-        channel,
-        loader_path,
-    } = request;
     let d = lifecycle::board(&state, device_id)?;
     let task_id = lifecycle::id("fwdownload");
     super::commands::insert_task(&state, &task_id, "transfer", None)?;
     let result = async {
-        let current = tokio::time::timeout(Duration::from_secs(60), catalog(&channel))
-            .await
-            .map_err(|_| "FIRMWARE_RELEASE_TIMEOUT")??
-            .into_iter()
-            .find(|v| {
-                v.release_id == release_id
-                    && v.entry.manifest.application_id == application_id
-                    && v.entry.manifest.version == version
-            })
-            .ok_or("FIRMWARE_VERSION_WITHDRAWN_OR_MISSING")?;
-        if current.entry.status != "active" {
-            return Err("FIRMWARE_VERSION_WITHDRAWN".into());
-        }
-        // Loader bytes are supplied by the operator; this source never redistributes it.
-        let supplied = Path::new(&loader_path)
-            .canonicalize()
-            .map_err(|_| "FIRMWARE_LOADER_MISSING")?;
-        if current.entry.manifest.loader.sha256.to_lowercase() != lifecycle::F101_LOADER_SHA {
-            return Err("FIRMWARE_LOADER_NOT_VERIFIED".into());
-        }
-        let mut loader = current.entry.manifest.loader.clone();
-        loader.file_name = supplied
-            .file_name()
-            .ok_or("FIRMWARE_LOADER_MISSING")?
-            .to_string_lossy()
-            .into_owned();
-        package::verify_file(supplied.parent().ok_or("FIRMWARE_LOADER_MISSING")?, &loader)?;
-        let image = download_image(&app, &current).await?;
+        let (current, image, supplied) = verified_files(&app, &request).await?;
         let staging = lifecycle::cache_root(&app)?.join(lifecycle::id("package"));
         std::fs::create_dir(&staging).map_err(|_| "FIRMWARE_CACHE_UNAVAILABLE")?;
         std::fs::copy(image, staging.join(&current.entry.manifest.image.file_name))
