@@ -18,11 +18,11 @@ class Review:
         self.js=web.js
 
     def reset(self):
-        # Each independent scenario starts with a fresh image picker history.
-        self.js("localStorage.removeItem('lynx-imager.basic.local-files.v2')")
         previous=self.js('return performance.timeOrigin')
         self.js('location.reload()')
         wait(lambda:self.js("return performance.timeOrigin!==arguments[0] && !!window.__imagerSimulation && !!document.querySelector('.v2-basic')",previous),'new native view')
+        # Each independent scenario starts with a fresh image picker history.
+        self.js("localStorage.removeItem('lynx-imager.basic.local-files.v2')")
         self.fixture('workbench_list_workflow_steps',[])
         self.js("window.__imagerSimulation.sequence=Number(sessionStorage.getItem('simulation-sequence')||0)+1;sessionStorage.setItem('simulation-sequence',String(window.__imagerSimulation.sequence))")
 
