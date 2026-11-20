@@ -25,7 +25,13 @@ def test_write(page, outcome, results, capture):
         pageFixture.devices=[{id:7,boardUid:'qa-rk',name:'QA-RK3588',chipVendor:'rockchip',
           usbBinding:'1:10.2',flasherKind:'openrockcli',flasherArgs:'[]',serialPort:'',baudRate:115200}];
     }""")
-    page.get_by_role('button',name='选择文件',exact=True).click()
+    if outcome == 'success':
+        page.get_by_role('button',name='选择文件',exact=True).click()
+    else:
+        expect(page.get_by_role('button',name='更换文件',exact=True)).to_be_visible()
+        expect(page.locator('body')).to_contain_text('rockchip-update.img')
+        assert 'plugin:dialog|open' not in page.evaluate('pageFixture.calls')
+        results.append('重开同一 RK3588 配置后自动恢复镜像，无需再次选文件')
     expect(next_step).to_be_enabled()
     next_step.click()
     expect(page.locator('#v2-preflight')).to_be_disabled()
@@ -113,6 +119,8 @@ def test_pages(page, results, capture):
                                  ('BUILD-INFO.json','选择参考清单…')]:
                 page.evaluate('file => pageFixture.nextFile=file','C:/qa/'+name)
                 button(action).click()
+                if name == 'loader.img':
+                    assert page.evaluate('pageFixture.lastDialog.defaultPath') == 'C:/qa/'
             for trigger, panel in [('分析系统镜像','image'),('检查引导组件','loader')]:
                 button(trigger).click()
                 inspector=page.locator('.imager-review-page')
@@ -127,6 +135,18 @@ def test_pages(page, results, capture):
                 expect(button(trigger)).to_be_focused()
             page.locator('.imager-image-confirm input').check()
             expect(page.locator('.v2-foot-actions .v2-primary')).to_be_enabled()
+            page.reload()
+            page.locator('.target-vendors').get_by_role('button',name=vendor).click()
+            page.locator('.target-families').get_by_role('button',name=family+' 系列').click()
+            page.locator('[data-model="F101"]').click()
+            page.locator('[data-medium="SPI NOR"]').click()
+            page.locator('.v2-foot-actions .v2-primary').click()
+            expect(page.locator('body')).to_contain_text('system.img')
+            expect(page.locator('body')).to_contain_text('loader.img')
+            expect(page.locator('.imager-image-confirm input')).not_to_be_checked()
+            expect(page.locator('.v2-foot-actions .v2-primary')).to_be_disabled()
+            assert 'plugin:dialog|open' not in page.evaluate('pageFixture.calls')
+            results.append('重开 F101 后自动恢复镜像与 RAM Loader，重新校验并等待确认')
             results.append('F101 主线 SPI NOR：镜像分析、清单布局、RAM FES 组件及返回焦点')
         else:
             routes=page.locator('.vendor-switch button')

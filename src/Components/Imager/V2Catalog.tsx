@@ -172,7 +172,14 @@ function Notice({
     </div>
   );
 }
-type Recent = { boardId: string; boardName: string; path: string; sizeBytes: number };
+type Recent = {
+  boardId: string;
+  boardName: string;
+  path: string;
+  sizeBytes: number;
+  scope?: string;
+  loaderPath?: string;
+};
 const recentKey = 'lynx-imager.basic.local-files.v2';
 function readRecent(): Recent[] {
   try {
@@ -199,6 +206,11 @@ function writeRecent(items: Recent[]) {
   } catch {
     /* History is optional in restricted profiles. */
   }
+}
+export function imagePickerDirectory(currentPath: string) {
+  const path = currentPath || readRecent()[0]?.path || '';
+  const end = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+  return end >= 0 ? path.slice(0, end + 1) : undefined;
 }
 function RecentFiles({
   items,
@@ -240,6 +252,8 @@ function RecentFiles({
   );
 }
 export interface V2SystemPickerProps {
+  memoryScope: string;
+  onRestore: (image: string, loader: string) => void;
   board: V2Board;
   boardName: string;
   source: V2ImageSource;
@@ -284,25 +298,70 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
   const [inspected, setInspected] = useState<FirmwareCatalogVersion | null>(null);
   const [textPath, setTextPath] = useState('');
   const recorded = useRef('');
+  const restoredScope = useRef('');
+  const { memoryScope, onRestore } = props;
+  useEffect(() => {
+    if (source !== 'local') {
+      restoredScope.current = '';
+      return;
+    }
+    if (restoredScope.current === memoryScope) return;
+    restoredScope.current = memoryScope;
+    if (imagePath || props.loaderPath) return;
+    const last = readRecent().find((item) => item.scope === memoryScope);
+    if (last) onRestore(last.path, typeof last.loaderPath === 'string' ? last.loaderPath : '');
+  }, [memoryScope, source, imagePath, props.loaderPath, onRestore]);
   const inCatalog = source === 'catalog';
   useEffect(() => setInspected(null), [board.id, props.route, source]);
-  const visibleRecent = recent.filter((r) => r.boardId === board.id && r.boardName === boardName);
+  const visibleRecent = recent.filter(
+    (r) =>
+      r.boardId === board.id && r.boardName === boardName && (!r.scope || r.scope === memoryScope)
+  );
   useEffect(() => {
     if (source !== 'local' || !identity || !imagePath) return;
-    const key = JSON.stringify([board.id, boardName, imagePath, identity.sha256]);
+    if (props.loaderPath && !props.loaderIdentity && !props.loaderError) return;
+    const loaderPath = props.loaderIdentity ? props.loaderPath : undefined;
+    const key = JSON.stringify([memoryScope, imagePath, identity.sha256, loaderPath]);
     if (recorded.current === key) return;
     recorded.current = key;
     const next = [
-      { boardId: board.id, boardName, path: imagePath, sizeBytes: identity.sizeBytes },
+      {
+        boardId: board.id,
+        boardName,
+        path: imagePath,
+        sizeBytes: identity.sizeBytes,
+        scope: memoryScope,
+        loaderPath,
+      },
       ...readRecent().filter(
-        (r) => !(r.boardId === board.id && r.boardName === boardName && r.path === imagePath)
+        (r) =>
+          !(
+            r.boardId === board.id &&
+            r.boardName === boardName &&
+            r.path === imagePath &&
+            (!r.scope || r.scope === memoryScope)
+          )
       ),
     ].slice(0, 10);
     writeRecent(next);
     setRecent(next);
-  }, [board.id, boardName, source, imagePath, identity]);
+  }, [
+    board.id,
+    boardName,
+    memoryScope,
+    source,
+    imagePath,
+    identity,
+    props.loaderIdentity,
+    props.loaderPath,
+    props.loaderError,
+  ]);
   function clearRecent() {
-    const next = readRecent().filter((r) => r.boardId !== board.id || r.boardName !== boardName);
+    recorded.current = '';
+    const next = readRecent().filter(
+      (r) =>
+        r.boardId !== board.id || r.boardName !== boardName || (r.scope && r.scope !== memoryScope)
+    );
     writeRecent(next);
     setRecent(next);
   }
@@ -379,9 +438,7 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
                 <div className="image-desk-file-copy">
                   <strong>{imageRole}</strong>
                   <small>
-                    {props.vendorControls
-                      ? '也可将本地文件拖入此处'
-                      : '支持拖入本地镜像文件。'}
+                    {props.vendorControls ? '也可将本地文件拖入此处' : '支持拖入本地镜像文件。'}
                   </small>
                 </div>
                 {!props.vendorControls && (

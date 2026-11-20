@@ -53,6 +53,7 @@ mockIPC(
       case 'workbench_list_tunnel_statuses':
         return qa.tunnels || [];
       case 'plugin:dialog|open':
+        qa.lastDialog = args.options;
         return qa.nextFile;
       case 'plugin:dialog|save':
         qa.exportPending = true;

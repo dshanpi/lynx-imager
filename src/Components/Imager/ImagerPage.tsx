@@ -19,7 +19,7 @@ import { formatErrorMessage } from '../../Utils';
 import { linuxVendorLabel } from '../Workbench/linuxWorkbenchModel';
 import { ended, stateName, useBasicTask } from './BasicTask';
 import { flashOptions, uniqueUsbTarget, type BasicRoute } from './BasicPlan';
-import { V2BoardArt, V2SystemPicker, type V2ImageSource } from './V2Catalog';
+import { imagePickerDirectory, V2BoardArt, V2SystemPicker, type V2ImageSource } from './V2Catalog';
 import { V2Interface } from './V2Interface';
 import { V2Write, WritePreflightFailure, type PreflightContext } from './V2Write';
 import { VendorRoutePanel, VendorTargetPanel } from './VendorRoutePanel';
@@ -418,6 +418,13 @@ export function ImagerPage({
     setSelected(null);
     setError('');
   }, []);
+  const restoreFiles = useCallback(
+    (image: string, loader: string) => {
+      loadImage(image);
+      setLoaderPath(loader);
+    },
+    [loadImage]
+  );
   function loadLoader(path: string) {
     if (candidate) return;
     setLoaderPath(path.trim());
@@ -454,6 +461,7 @@ export function ImagerPage({
     const result = await open({
       multiple: false,
       directory: false,
+      defaultPath: imagePickerDirectory((which === 'loader' && loaderPath) || imagePath),
       title: which === 'image' ? '选择本地镜像' : '选择匹配的 RAM Loader',
       filters:
         which === 'image'
@@ -819,6 +827,13 @@ export function ImagerPage({
           )}
           {step === 2 && board && (
             <V2SystemPicker
+              memoryScope={JSON.stringify([
+                choice?.model,
+                board.storage,
+                boardName,
+                vendorRoute ?? board.route,
+              ])}
+              onRestore={restoreFiles}
               board={board}
               boardName={boardName}
               source={source}
