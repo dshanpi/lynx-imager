@@ -1,14 +1,14 @@
 {
-  "version": "0.1.0-rc.2",
-  "notes": "LYNX Imager v0.1-rc2。完整变更见 GitHub Release。",
+  "version": "0.1.0-rc.3",
+  "notes": "LYNX Imager v0.1-rc3。完整变更见 GitHub Release。",
   "platforms": {
     "windows-x86_64": {
-      "url": "https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc2/LYNX-Imager_0.1.0-rc.2_windows-x64-setup.exe",
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUdUl2SFJPWm0zbzhycE5QdHdNNHFoTENZT2hwYVM2dStpakxyZ25URXlIeEx4Uy9aUGhIdnV6KzV0S0tYRURRRFpUTWlsS3VDRURodXJLWGRBMkZJa3F2SDFHOXY0THdzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1MTU2NDM5CWZpbGU6TFlOWC1JbWFnZXJfMC4xLjAtcmMuMl93aW5kb3dzLXg2NC1zZXR1cC5leGUKMlNjVnE2NnBBVmt0cXgzODVDTUQwRkdrdDVJV3p4ZXd5Kys3ZTBjcGlHRTVtQnRPbkR4MGw5MTc2WS91RG9UeWNUa24rZEN5VVBFMVhBRGdsWUFLQ0E9PQo="
+      "url": "https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc3/LYNX-Imager_0.1.0-rc.3_windows-x64-setup.exe",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUdUl2SFJPWm0zb3lvem9ZMFI0ZXI5ZFp6Mk5UbDBON2lZK0s2NG5iakxoWXlUSm5YU2RGN1VweUpUTFpVSnFKUE1SbmtFNUYzbEMxZDJjRGZ1dE96dFlXVnFBTHF6V3dnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1MzQwMTY5CWZpbGU6TFlOWC1JbWFnZXJfMC4xLjAtcmMuM193aW5kb3dzLXg2NC1zZXR1cC5leGUKNHN4Vm15TzBBNVNGbzdxUC9LOVp0S1ptVVJUSWd2M3UxUXQ4eEtsQW1FdWlGcXdKUGcvQmdFdkVTeCtvZ0tPYjRPSW1FREFKdXI2WW16a3NXVEZ5RFE9PQo="
     },
     "linux-x86_64": {
-      "url": "https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc2/LYNX-Imager_0.1.0-rc.2_linux-amd64.deb",
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUdUl2SFJPWm0zbzFpR0U3UzBOOHhZNVR5Wmh6R2RjZnNYV0ZSbUE0eWtXQ25kamlKcDIvL29MMzVHczBKZ3QweVVjajBrNS9GOUJEblVyODRGSXlWdm5Wb0FvTFY2OVFFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1MTU2NDM5CWZpbGU6TFlOWC1JbWFnZXJfMC4xLjAtcmMuMl9saW51eC1hbWQ2NC5kZWIKeVdScXRYSmVNSFlwZGswdkpLdE9ZSGdNT0tQWUdjOGl5bTlxODE5dzVaZlR2dlYwa3JTVGFzYkt2NmVseVRrdWE3K0VDUFlXeFI4MDJNVlowalVCQlE9PQo="
+      "url": "https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc3/LYNX-Imager_0.1.0-rc.3_linux-amd64.deb",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUdUl2SFJPWm0zbzJqckticEFjR3dCVFZSZloxcmxONlYzSjNLdE5yWE5vYlhka1c2akMrREhOZi92eFo4T2NXUnFiZlVpRHBEcW1wRlV4YndndjM2bmdJdSsrNTBMcEE4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk1MzQwMTY5CWZpbGU6TFlOWC1JbWFnZXJfMC4xLjAtcmMuM19saW51eC1hbWQ2NC5kZWIKV285bC9IV1piT1JURDFIb1FuOTR1N3JpTTc0US9sZVZ4dDJabFVLZzNhRzhyeFpJZGl0ekd5OUZhUlpYOG9OaCtySlVvWXdVRG9HMlVtRVRId0tkQ0E9PQo="
     }
   }
 }
