@@ -161,7 +161,7 @@ def run(binary, out):
               .some(o=>o.value==='LubanCat-4 (RK3588S)') && document.querySelector('.v2-foot-actions .v2-primary').disabled""")
             checked("RK 系列内筛选、主控识别帮助、未适配介质和具体板型门禁")
             web.click(".target-vendors button", "恩智浦")
-            assert web.js("""return document.querySelectorAll('[data-model]').length===2 && !!document.querySelector('[data-model="i.MX8"]')""")
+            assert web.js("""return [...document.querySelectorAll('[data-model]')].map(e=>e.dataset.model).sort().join(',')==='i.MX6ULL,i.MX8,i.MX9'""")
             keys(web, "\ue009", "k")  # Control+K via real WebDriver keyboard events.
             wait(lambda: web.js("return document.activeElement.matches('.imager-board-search input')"), "search focus")
             for letter in "f101":
@@ -252,7 +252,7 @@ def run(binary, out):
             shape = native_window(web)
             assert shape["dpr"] >= 1.9, shape
             web.click(".target-vendors button", "意法半导体")
-            assert web.js("return document.querySelectorAll('[data-model]').length===1")
+            assert web.js("return [...document.querySelectorAll('[data-model]')].map(e=>e.dataset.model).sort().join(',')==='STM32MP1,STM32MP157'")
             capture(web, "production-hidpi")
             checked("GTK 原生 2× HiDPI、可操作筛选与无水平溢出")
     finally:
