@@ -10,6 +10,7 @@ import {
   type VendorInspection,
   type VendorSelection,
 } from './vendorPlan';
+import { ImageLayout, vendorLayouts } from './ImageLayout';
 import './VendorRoutePanel.css';
 
 interface RouteProps {
@@ -163,6 +164,9 @@ export function VendorRoutePanel({
           )}
         </dl>
       </aside>
+      {result && !result.blockers.length && (
+        <ImageLayout key={result.route + result.path} views={vendorLayouts(result)} />
+      )}
     </div>
   );
 }

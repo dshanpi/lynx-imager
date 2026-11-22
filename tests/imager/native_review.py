@@ -5,7 +5,7 @@ import time
 import traceback
 from pathlib import Path
 from native_driver import launch,wait
-import native_images,native_vendors,native_results
+import native_images,native_vendors,native_results,native_layouts,native_drivers
 
 
 class Review:
@@ -31,10 +31,14 @@ class Review:
         self.actions.append(('click',label or selector))
 
     def board(self,id,model='',medium=None):
+        self.board_id=id
         vendor,family,chip,default = {
             't113-pro':('全志','T','T113','SPI NAND'), 'f101':('全志','F','F101','SPI NOR'),
             't153-emmc':('全志','T','T153','eMMC'), 'rk3588':('瑞芯微','RK35','RK3588','eMMC'),
             'nxp-imx':('恩智浦','i.MX','i.MX8','eMMC'), 'stm32mp1':('意法半导体','STM32MP','STM32MP1','eMMC'),
+            'rk3576':('瑞芯微','RK35','RK3576','eMMC'),
+            'nxp-imx6ull':('恩智浦','i.MX','i.MX6ULL','eMMC'),
+            'stm32mp157':('意法半导体','STM32MP','STM32MP157','eMMC'),
             'canaan-k230':('嘉楠','Kendryte','K230','SD'),
         }[id]
         self.click('.target-vendors button',vendor)
@@ -64,6 +68,10 @@ class Review:
             'nxp':('uuu','sdp',0x1fc9,0x0134,'MX8M'),
             'kendryte':('k230','bootrom / loader',0x29f1,0x0230,'K230 / K230D'),
         }[vendor]
+        if vendor == 'rockchip' and getattr(self,'board_id',None) == 'rk3576':
+            pid,chip=0x350e,'RK3576'
+        if vendor == 'nxp' and getattr(self,'board_id',None) == 'nxp-imx6ull':
+            vid,pid,chip=0x15a2,0x0080,'MX6ULL'
         devices=[];profiles=[]
         for i in range(count):
             bus=1
@@ -101,6 +109,8 @@ class Review:
         assert layout['contentX'] == layout['railRight'] + (16 if compact else 24), (id,layout)
         if layout['titleSize'] is not None:
             assert layout['titleSize'] == '20px', (id,layout)
+        if id.startswith('layout-'):
+            layout['panel'] = self.js("const r=document.querySelector('section.img-layout').getBoundingClientRect();return [r.left,r.top,r.right,r.bottom]")
         self.web.shot(self.out/(id+'.png'))
         self.shots.append(dict(id=id,**layout))
         print('SCREEN',id,flush=True)
@@ -113,7 +123,7 @@ def connections(ui,fixtures):
     ui.js("document.querySelector('#v2-step-4').click()")
     assert ui.js("return document.querySelector('.v2-basic').dataset.step==='1'")
     ui.click('.target-vendors button','恩智浦')
-    assert ui.js("return document.querySelectorAll('button[data-model]').length===2")
+    assert ui.js("return document.querySelectorAll('button[data-model]').length===3")
     ui.click('.target-vendors button','全志')
     ui.board('f101')
     ui.save('choose-board')
@@ -161,38 +171,29 @@ def connections(ui,fixtures):
     assert ui.js("return document.querySelectorAll('.vi-device').length===2 && ![...document.querySelectorAll('.vi-device')].some(e=>e.innerText.includes('2207'))")
     second='.vi-device:has([title$="10.3"])'
     ui.click(second)
-    ui.text('将此接口绑定到 F101')
-    assert ui.js("return document.querySelector('#v2-preflight').disabled && !document.querySelector('#v2-step-2').disabled")
-    ui.save('device-unbound')
-    ui.click('.vi-binding button','将此接口绑定到 F101')
     ui.text('核对已连接的下载设备')
-    def saves():
-        return ui.js("return window.__imagerSimulation.calls.filter(c=>c.cmd==='workbench_save_device').map(c=>c.args.device)")
-    assert len(saves())==1
-    saved=saves()[0]
-    assert (saved['usbBinding'],saved['name'],saved['chipVendor'],saved['flasherKind'])==('location:libusb:1:10.3','F101','allwinner','openixcli'),saved
-    assert ui.js("return !document.querySelector('#v2-preflight').disabled")
-    ui.save('device-bound')
-    # Re-enumerate with reversed order. The saved physical location must remain selected
-    # only after an explicit choice, and the other port must still require its own binding.
+    assert ui.js("return !document.querySelector('#v2-preflight').disabled && document.querySelectorAll('.vi-device input:checked').length===1 && !window.__imagerSimulation.calls.some(c=>c.cmd==='workbench_save_device')")
+    ui.save('device-selected')
+    # A rescan clears the selection even when two identical devices swap order.
     ui.js("window.__imagerSimulation.usb.reverse()")
     ui.click('.vi-bar button','重新检测')
     ui.text('选定这次要写入的物理端口')
     assert ui.js("return !document.querySelector('.vi-device.chosen') && document.querySelector('#v2-preflight').disabled")
     ui.click('.vi-device:has([title$="10.2"])')
-    ui.text('将此接口绑定到 F101')
-    assert ui.js("return document.querySelector('#v2-preflight').disabled")
+    ui.text('核对已连接的下载设备')
+    assert ui.js("return !document.querySelector('#v2-preflight').disabled && document.querySelectorAll('.vi-device input:checked').length===1")
     ui.click(second)
     ui.text('核对已连接的下载设备')
     ui.next()
     ui.text('确认烧录')
-    assert len(saves())==1 and not native_images.submissions(ui)
+    assert ui.js("return window.__imagerSimulation.calls.filter(c=>c.cmd==='imager_resolve_flash_target').at(-1).args.usbBinding==='location:libusb:1:10.3' && !window.__imagerSimulation.calls.some(c=>c.cmd==='workbench_save_device')")
+    assert not native_images.submissions(ui)
 
 
 def main():
     out=Path(sys.argv[2]).resolve()
     out.mkdir(parents=True,exist_ok=True)
-    suites={'connection':connections,'images':native_images.run,'vendors':native_vendors.run,'results':native_results.run}
+    suites={'drivers':native_drivers.run,'layouts':native_layouts.run,'connection':connections,'images':native_images.run,'vendors':native_vendors.run,'results':native_results.run}
     selected=sys.argv[3:] or list(suites)
     report = dict(suites=selected, passed=[], failures={}, actions=[], screens=[])
     for name in selected:

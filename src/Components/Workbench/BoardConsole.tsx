@@ -395,10 +395,9 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
   const flashTasksRef = useRef<Record<number, string>>({});
   const workbenchTasksRef = useRef<Record<string, string>>({});
   const latestFlashTaskRef = useRef(new Map<number, string>());
-  const openedPortsRef = useRef(new Set<string>());
+  const serialActionRevision = useRef(0);
   const serialPortOwnersRef = useRef(new Map<string, string>());
   const serialFailureFingerprintRef = useRef(new Map<string, string>());
-  const terminalReconcileRunningRef = useRef(false);
   const serialTerminalRef = useRef<TerminalHandle>(null);
   const flashLogRef = useRef<HTMLPreElement>(null);
   const serialWriteQueueRef = useRef(Promise.resolve());
@@ -901,7 +900,7 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
   }, [enqueueSerialCaptureWork, isActive, reconcileSerialCapture, updateRuntime]);
 
   const openSerial = useCallback(
-    async (target: WorkbenchDevice, timeoutMs = 1_000, silent = false) => {
+    async (target: WorkbenchDevice, timeoutMs: number) => {
       const id = boardId(target);
       if (!target.serialPort) return false;
       const knownPort = [...serialPortOwnersRef.current].find(([, owner]) => owner === id)?.[0];
@@ -911,7 +910,6 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
         );
         if (!isOpen) {
           serialPortOwnersRef.current.delete(knownPort);
-          openedPortsRef.current.delete(knownPort);
           await invokeCommand('serial_close', { port: knownPort }).catch(() => undefined);
         }
       }
@@ -940,14 +938,9 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
             sessionTitle: `${target.name} · ${target.serialPort || '串口'}`,
           },
         });
-        const alreadyOpen = openedPortsRef.current.has(resolved.name);
-        if (!alreadyOpen) {
-          openedPortsRef.current.add(resolved.name);
-        }
         for (const [port, owner] of serialPortOwnersRef.current) {
           if (owner === id && port !== resolved.name) {
             serialPortOwnersRef.current.delete(port);
-            openedPortsRef.current.delete(port);
             await invokeCommand('serial_close', { port }).catch(() => undefined);
           }
         }
@@ -967,14 +960,12 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
           serialConnected: false,
           serialOpening: false,
           serialConnectionError: formatErrorMessage(value),
-          serialData: silent
-            ? current.serialData
-            : appendBytes(
-                current.serialData,
-                Array.from(
-                  new TextEncoder().encode(`\r\n[串口连接失败] ${formatErrorMessage(value)}\r\n`)
-                )
-              ),
+          serialData: appendBytes(
+            current.serialData,
+            Array.from(
+              new TextEncoder().encode(`\r\n[串口连接失败] ${formatErrorMessage(value)}\r\n`)
+            )
+          ),
         }));
         const fingerprint = `${target.serialPort}:${target.baudRate}`;
         if (serialFailureFingerprintRef.current.get(id) !== fingerprint) {
@@ -1003,55 +994,38 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
   );
 
   useEffect(() => {
-    if (!isActive) return;
-    let cancelled = false;
-    const reconcileBoardTerminals = async () => {
-      if (terminalReconcileRunningRef.current) return;
-      terminalReconcileRunningRef.current = true;
-      try {
-        const configuredBoards = boardsRef.current.filter((board) => board.serialPort);
-        const configuredBoardIds = new Set(configuredBoards.map((board) => boardId(board)));
-        for (const [port, owner] of [...serialPortOwnersRef.current]) {
-          if (!configuredBoardIds.has(owner)) {
-            serialPortOwnersRef.current.delete(port);
-            openedPortsRef.current.delete(port);
-            await invokeCommand('serial_close', { port }).catch(() => undefined);
-            updateRuntime(owner, (current) => ({
-              ...current,
-              serialConnected: false,
-              serialOpening: false,
-            }));
-          }
-        }
-        for (const target of configuredBoards) {
-          if (cancelled) break;
-          await openSerial(target, 250, true).catch(() => undefined);
-        }
-      } finally {
-        terminalReconcileRunningRef.current = false;
-      }
-    };
-    void reconcileBoardTerminals();
-    const timer = window.setInterval(() => {
-      if (!cancelled) void reconcileBoardTerminals();
-    }, 3000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-    };
-  }, [isActive, openSerial, updateRuntime]);
-
-  useEffect(() => {
-    const target = selectedDeviceRef.current;
-    if (!isActive || !target?.id) return;
-    if (!serialDetected) {
-      updateRuntime(boardId(target), (current) => ({
-        ...current,
-        serialConnected: false,
-        serialOpening: false,
-      }));
+    const bound = new Set(devices.filter((board) => board.serialPort).map(boardId));
+    for (const [port, owner] of serialPortOwnersRef.current) {
+      if (bound.has(owner)) continue;
+      serialPortOwnersRef.current.delete(port);
+      void invokeCommand('serial_close', { port }).catch((error) => {
+        serialPortOwnersRef.current.set(port, owner);
+        setSerialInputNotice(formatErrorMessage(error));
+      });
     }
-  }, [isActive, selected?.id, serialDetected, updateRuntime]);
+  }, [devices]);
+
+  // Reattach the view to an existing Imager session without opening an OS handle.
+  useEffect(() => {
+    const port = selected?.serialPort;
+    if (!isActive || !port) return;
+    let current = true;
+    const revision = serialActionRevision.current;
+    void invokeCommand('serial_is_open', { port })
+      .then((open) => {
+        if (!current || revision !== serialActionRevision.current) return;
+        if (open) serialPortOwnersRef.current.set(port, selectedId);
+        updateRuntime(selectedId, (previous) => ({
+          ...previous,
+          serialConnected: open,
+          serialPort: open ? port : '',
+        }));
+      })
+      .catch(() => undefined);
+    return () => {
+      current = false;
+    };
+  }, [isActive, selected?.serialPort, selectedId, serialDetected, updateRuntime]);
 
   const flushPendingSerialWrite = useCallback(() => {
     if (serialWriteTimerRef.current != null) {
@@ -1095,7 +1069,7 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
   const sendSerial = useCallback(
     (data: string) => {
       if (!runtime.serialPort || !runtime.serialConnected) {
-        setSerialInputNotice('串口当前不可输入，请等待自动接管或点击“重新接管串口”。');
+        setSerialInputNotice('串口当前不可输入，请点击“连接串口”。');
         return;
       }
       setSerialInputNotice('');
@@ -1122,21 +1096,36 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
     [flushPendingSerialWrite, runtime.serialConnected, runtime.serialPort]
   );
 
-  const reclaimSerial = useCallback(async () => {
-    if (!selected?.serialPort) {
-      setSerialInputNotice('当前单板尚未绑定串口。');
+  const toggleSerial = async () => {
+    if (!selected?.serialPort || runtime.serialOpening) return;
+    serialActionRevision.current++;
+    if (runtime.serialConnected && runtime.serialPort) {
+      const port = runtime.serialPort;
+      updateRuntime(selectedId, (current) => ({ ...current, serialOpening: true }));
+      try {
+        await invokeCommand('serial_close', { port });
+        serialPortOwnersRef.current.delete(port);
+        updateRuntime(selectedId, (current) => ({
+          ...current,
+          serialOpening: false,
+          serialConnected: false,
+          serialPort: '',
+          serialConnectionError: '',
+        }));
+        setSerialInputNotice('串口已释放。');
+      } catch (error) {
+        updateRuntime(selectedId, (current) => ({ ...current, serialOpening: false }));
+        setSerialInputNotice(formatErrorMessage(error));
+      }
       return;
     }
-    setSerialInputNotice('正在重新接管串口…');
-    const connected = await openSerial(selected, selected.serialReconnectTimeoutMs);
-    setSerialInputNotice(
-      connected ? '串口已由 LYNX 接管，用户可输入。' : '重新接管失败，请检查占用、连接或权限。'
-    );
-  }, [openSerial, selected]);
+    setSerialInputNotice('');
+    await openSerial(selected, selected.serialReconnectTimeoutMs);
+  };
 
   const pasteSerial = useCallback(async () => {
     if (!runtime.serialPort || !runtime.serialConnected) {
-      setSerialInputNotice('串口当前不可输入，请等待自动接管或点击“重新接管串口”。');
+      setSerialInputNotice('串口当前不可输入，请点击“连接串口”。');
       return;
     }
     try {
@@ -1209,8 +1198,12 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
             readOnly: false,
             actions: (
               <>
-                <button type="button" onClick={() => void reclaimSerial()}>
-                  重新接管串口
+                <button
+                  type="button"
+                  disabled={runtime.serialOpening || !selected.serialPort}
+                  onClick={() => void toggleSerial()}
+                >
+                  {serialReady ? '断开串口' : '连接串口'}
                 </button>
                 <button type="button" disabled={!serialReady} onClick={() => void pasteSerial()}>
                   粘贴
@@ -1426,8 +1419,12 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
                     {runtime.serialEmitErrors ? ` · 事件失败 ${runtime.serialEmitErrors}` : ''}
                   </span>
                 )}
-                <button type="button" onClick={() => void reclaimSerial()}>
-                  重新接管串口
+                <button
+                  type="button"
+                  disabled={runtime.serialOpening || !selected.serialPort}
+                  onClick={() => void toggleSerial()}
+                >
+                  {serialReady ? '断开串口' : '连接串口'}
                 </button>
                 <button type="button" disabled={!serialReady} onClick={() => void pasteSerial()}>
                   粘贴
@@ -1474,7 +1471,7 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
               <i />
               <strong>
                 {runtime.serialOpening
-                  ? '正在重新接管'
+                  ? '正在切换串口连接'
                   : serialReady
                     ? '用户可输入'
                     : '串口不可输入'}
@@ -1483,7 +1480,7 @@ export const BoardConsole: React.FC<BoardConsoleProps> = ({
                 {serialInputNotice ||
                   (serialReady
                     ? '点击终端输入；可使用 Ctrl+C、方向键、Tab 或“粘贴”。'
-                    : '等待 LYNX 自动接管，或点击“重新接管串口”。')}
+                    : '点击“连接串口”以使用当前单板。')}
               </span>
             </div>
             <TerminalSurface

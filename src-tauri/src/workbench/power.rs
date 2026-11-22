@@ -98,6 +98,7 @@ pub fn execute_and_audit(
     pulse_ms: u64,
     actor: PowerAuditActor,
 ) -> Result<String, String> {
+    crate::flash_owner::check_start(&device.flasher_kind)?;
     let is_write = !matches!(action, PowerAction::GetState);
     if is_write {
         publish_power_intent(app, task_id, device, action, pulse_ms, actor)?;

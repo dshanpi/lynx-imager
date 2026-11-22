@@ -1,3 +1,4 @@
+!include "${__FILEDIR__}\imager-process-guard.nsh"
 Unicode true
 
 !include "MUI2.nsh"
@@ -7,7 +8,7 @@ Unicode true
 !endif
 
 !ifndef OUTPUT_FILE
-  !define OUTPUT_FILE "..\release\windows\LYNX_0.1.0-rc.2_x64-setup.exe"
+  !define OUTPUT_FILE "..\release\windows\LYNX_0.1.0-rc.3_x64-setup.exe"
 !endif
 
 !ifndef PRODUCT_NAME
@@ -17,7 +18,7 @@ Unicode true
   !define PRODUCT_BRAND "DshanPI LYNX Imager"
 !endif
 !ifndef PRODUCT_VERSION
-  !define PRODUCT_VERSION "0.1.0-rc.2"
+  !define PRODUCT_VERSION "0.1.0-rc.3"
 !endif
 !ifndef PRODUCT_FILE_VERSION
   !define PRODUCT_FILE_VERSION "0.1.0.0"
@@ -25,7 +26,7 @@ Unicode true
 !ifndef PRODUCT_PUBLISHER
   !define PRODUCT_PUBLISHER "DshanPI"
 !endif
-!define PRODUCT_REG_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\DshanPI.LYNX"
+!define PRODUCT_REG_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\DshanPI.LYNXImager"
 
 Var PreviousInstallDir
 
@@ -33,7 +34,7 @@ Name "${PRODUCT_BRAND}"
 OutFile "${OUTPUT_FILE}"
 ; .onInit replaces this base with a unique per-install program directory.
 ; Program files are deliberately separate from Tauri app data and the keyring.
-InstallDir "$LOCALAPPDATA\DshanPI\LYNX"
+InstallDir "$LOCALAPPDATA\DshanPI\LYNX Imager"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
 Icon "..\src-tauri\icons\icon.ico"
@@ -66,20 +67,19 @@ VIAddVersionKey /LANG=1033 "ProductVersion" "${PRODUCT_VERSION}"
 
 Function .onInit
   SetShellVarContext current
-  ReadRegStr $PreviousInstallDir HKCU "Software\DshanPI\LYNX" "InstallDir"
+  ReadRegStr $PreviousInstallDir HKCU "Software\DshanPI\LYNX Imager" "InstallDir"
   ; A fresh directory makes upgrades and same-version reinstalls independent of
   ; an old vendor flasher stuck in an uninterruptible USB driver call.
   System::Call 'kernel32::GetTickCount() i .r0'
-  StrCpy $INSTDIR "$LOCALAPPDATA\DshanPI\LYNX\app-${PRODUCT_VERSION}-$0"
+  StrCpy $INSTDIR "$LOCALAPPDATA\DshanPI\LYNX Imager\app-${PRODUCT_VERSION}-$0"
 FunctionEnd
 
 Function TryRemovePreviousInstall
   StrCmp $PreviousInstallDir "" previous_cleanup_done
   StrCmp $PreviousInstallDir "$INSTDIR" previous_cleanup_done
-  ; Only the exact legacy program root or a LYNX-created instance is eligible.
+  ; Only a versioned Imager instance is eligible for cleanup.
   ; /REBOOTOK means a locked old flasher delays cleanup but never installation.
-  StrCmp $PreviousInstallDir "$LOCALAPPDATA\LYNX" previous_cleanup_allowed
-  StrCpy $1 "$LOCALAPPDATA\DshanPI\LYNX\app-"
+  StrCpy $1 "$LOCALAPPDATA\DshanPI\LYNX Imager\app-"
   StrLen $2 $1
   StrCpy $3 $PreviousInstallDir $2
   StrCmp $3 $1 previous_cleanup_allowed previous_cleanup_done
@@ -91,24 +91,7 @@ FunctionEnd
 Section "LYNX" SEC_MAIN
   SetShellVarContext current
 
-  ; Stop both the current package and legacy Tauri installations before
-  ; replacing the executable. This prevents an old running v0.1.6 process
-  ; from surviving an otherwise successful v0.1.0 reinstall.
-  nsExec::ExecToLog 'taskkill /F /T /IM lynx-imager.exe'
-  nsExec::ExecToLog 'taskkill /F /T /IM openixcli.exe'
-  nsExec::ExecToLog 'taskkill /F /T /IM openrockcli.exe'
-  nsExec::ExecToLog 'taskkill /F /T /IM uuu.exe'
-  nsExec::ExecToLog 'taskkill /F /T /IM dfu-util.exe'
-
-  ; Remove shortcuts created by older Tauri bundles. User configuration and
-  ; databases live outside these install directories and are intentionally kept.
-  Delete "$DESKTOP\LYNX.lnk"
-  Delete "$SMPROGRAMS\LYNX.lnk"
-  Delete "$SMPROGRAMS\DshanPI\LYNX.lnk"
-
-  ; Never overwrite or recursively delete the previous program instance here.
-  ; A stuck old helper may keep its files locked even after taskkill. The new
-  ; instance is complete and self-tested before shortcuts/registry are switched.
+  !insertmacro ImagerRequireIdle
   SetOutPath "$INSTDIR"
 
   File "${SOURCE_DIR}\lynx-imager.exe"
@@ -149,10 +132,10 @@ Section "LYNX" SEC_MAIN
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
   CreateDirectory "$SMPROGRAMS\DshanPI"
-  CreateShortcut "$SMPROGRAMS\DshanPI\LYNX.lnk" "$INSTDIR\lynx-imager.exe"
-  CreateShortcut "$DESKTOP\LYNX.lnk" "$INSTDIR\lynx-imager.exe"
+  CreateShortcut "$SMPROGRAMS\DshanPI\LYNX Imager.lnk" "$INSTDIR\lynx-imager.exe"
+  CreateShortcut "$DESKTOP\LYNX Imager.lnk" "$INSTDIR\lynx-imager.exe"
 
-  WriteRegStr HKCU "Software\DshanPI\LYNX" "InstallDir" "$INSTDIR"
+  WriteRegStr HKCU "Software\DshanPI\LYNX Imager" "InstallDir" "$INSTDIR"
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "DisplayName" "${PRODUCT_BRAND}"
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
@@ -161,23 +144,24 @@ Section "LYNX" SEC_MAIN
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
   WriteRegDWORD HKCU "${PRODUCT_REG_KEY}" "NoModify" 1
   WriteRegDWORD HKCU "${PRODUCT_REG_KEY}" "NoRepair" 1
-  WriteRegStr HKCU "Software\DshanPI\LYNX" "PreviousInstallDir" "$PreviousInstallDir"
+  WriteRegStr HKCU "Software\DshanPI\LYNX Imager" "PreviousInstallDir" "$PreviousInstallDir"
 
   Call TryRemovePreviousInstall
 SectionEnd
 
 Section "Uninstall"
+  !insertmacro ImagerRequireIdle
   SetShellVarContext current
   ; A manually launched stale uninstaller may remove only its own instance. It
   ; must not delete shortcuts or protocol registration belonging to a newer one.
-  ReadRegStr $0 HKCU "Software\DshanPI\LYNX" "InstallDir"
+  ReadRegStr $0 HKCU "Software\DshanPI\LYNX Imager" "InstallDir"
   StrCmp $0 "$INSTDIR" uninstall_current uninstall_instance
   uninstall_current:
-    Delete "$DESKTOP\LYNX.lnk"
-    Delete "$SMPROGRAMS\DshanPI\LYNX.lnk"
+    Delete "$DESKTOP\LYNX Imager.lnk"
+    Delete "$SMPROGRAMS\DshanPI\LYNX Imager.lnk"
     RMDir "$SMPROGRAMS\DshanPI"
     DeleteRegKey HKCU "${PRODUCT_REG_KEY}"
-    DeleteRegKey HKCU "Software\DshanPI\LYNX"
+    DeleteRegKey HKCU "Software\DshanPI\LYNX Imager"
   uninstall_instance:
   RMDir /r "$INSTDIR"
 SectionEnd

@@ -119,7 +119,10 @@ def test_pages(page, results, capture):
                                  ('BUILD-INFO.json','选择参考清单…')]:
                 page.evaluate('file => pageFixture.nextFile=file','C:/qa/'+name)
                 button(action).click()
+                if name == 'system.img':
+                    expect(page.locator('.v2-foot-actions .v2-primary')).to_be_disabled()
                 if name == 'loader.img':
+                    expect(page.locator('.v2-foot-actions .v2-primary')).to_be_enabled()
                     assert page.evaluate('pageFixture.lastDialog.defaultPath') == 'C:/qa/'
             for trigger, panel in [('分析系统镜像','image'),('检查引导组件','loader')]:
                 button(trigger).click()
@@ -133,7 +136,7 @@ def test_pages(page, results, capture):
                 capture('f101-'+panel)
                 page.keyboard.press('Escape')
                 expect(button(trigger)).to_be_focused()
-            page.locator('.imager-image-confirm input').check()
+            expect(page.locator('.imager-image-review input[type=checkbox]')).to_have_count(0)
             expect(page.locator('.v2-foot-actions .v2-primary')).to_be_enabled()
             page.reload()
             page.locator('.target-vendors').get_by_role('button',name=vendor).click()
@@ -143,10 +146,30 @@ def test_pages(page, results, capture):
             page.locator('.v2-foot-actions .v2-primary').click()
             expect(page.locator('body')).to_contain_text('system.img')
             expect(page.locator('body')).to_contain_text('loader.img')
-            expect(page.locator('.imager-image-confirm input')).not_to_be_checked()
-            expect(page.locator('.v2-foot-actions .v2-primary')).to_be_disabled()
+            expect(page.locator('.v2-foot-actions .v2-primary')).to_be_enabled()
             assert 'plugin:dialog|open' not in page.evaluate('pageFixture.calls')
-            results.append('重开 F101 后自动恢复镜像与 RAM Loader，重新校验并等待确认')
+            page.evaluate("""pageFixture.usb=[3,4].map(port=>({
+               key:'location:pciroot(0)#pci(1400)#usbroot(0)#usb(9)#usb('+port+')',
+               flasherKind:'openixcli',vid:0x1f3a,pid:0xefe8,bus:1,port:'9.'+port,
+               mode:'fel/fes',chip:'Allwinner',dfuAlternates:[]}))""")
+            page.locator('.v2-foot-actions .v2-primary').click()
+            rows=page.locator('.vi-device')
+            expect(rows).to_have_count(2)
+            for i in (1,0):
+                rows.nth(i).click()
+                expect(rows.nth(i).get_by_role('radio')).to_be_checked()
+                expect(page.locator('.vi-device input:checked')).to_have_count(1)
+                expect(page.locator('#v2-preflight')).to_be_enabled()
+                expect(page.locator('.r3-connect-facts')).to_contain_text('USB 端口 9.'+str(i+3))
+            expect(page.locator('.vi-port-path code')).to_be_hidden()
+            capture('windows-f101-selected')
+            page.locator('.vi-bar').get_by_role('button',name='重新检测').click()
+            expect(page.locator('.vi-device input:checked')).to_have_count(0)
+            expect(page.locator('#v2-preflight')).to_be_disabled()
+            assert 'workbench_save_device' not in page.evaluate('pageFixture.calls')
+            page.locator('.v2-foot-actions').get_by_role('button',name='上一步').click()
+            results.append('F101 两个同型号 USB 设备按端口单选，重检后清除选择')
+            results.append('重开 F101 后自动恢复镜像与 RAM Loader，重新校验后可直接进入设备连接')
             results.append('F101 主线 SPI NOR：镜像分析、清单布局、RAM FES 组件及返回焦点')
         else:
             routes=page.locator('.vendor-switch button')
@@ -262,7 +285,7 @@ def test_pages(page, results, capture):
     capture('device-new')
     page.get_by_test_id('linux-settings-dialog').get_by_role('button',name='关闭',exact=True).click()
     page.evaluate('board => sessionStorage.qaBoard=JSON.stringify(board)',
-                  dict(offline_board_fields(), id=7, boardUid='qa-offline'))
+                  dict(offline_board_fields(), id=7, boardUid='qa-offline', serialPort='COM77'))
     page.reload()
     tab('高级功能')
     page.locator('.board-item-select').get_by_text('QA-OFFLINE-F101').click()
@@ -273,6 +296,21 @@ def test_pages(page, results, capture):
     capture('device-overview')
     page.get_by_test_id('linux-tab-serial').click()
     expect(page.locator('.device-console-view').get_by_role('button',name='粘贴')).to_be_disabled()
+    serial = page.locator('.device-console-view')
+    expect(serial.get_by_role('button',name='连接串口')).to_be_enabled()
+    # Cover the old automatic three-second reclaim loop.
+    page.wait_for_timeout(3300)
+    background = set(page.evaluate('pageFixture.calls'))
+    assert not background.intersection({'serial_wait_and_open','ch347_list_devices',
+        'workbench_scan_flasher_devices','gateway_start','workbench_start_tunnel'}), background
+    serial.get_by_role('button',name='连接串口').click()
+    expect(serial.get_by_role('button',name='断开串口')).to_be_enabled()
+    assert page.evaluate('pageFixture.openPort') == 'COM77'
+    serial.get_by_role('button',name='断开串口').click()
+    expect(serial.get_by_role('button',name='连接串口')).to_be_enabled()
+    page.wait_for_timeout(3300)
+    assert page.evaluate("!pageFixture.openPort && pageFixture.calls.filter(x=>x==='serial_wait_and_open').length===1")
+    results.append('浏览高级功能和串口页保持空闲；显式连接、断开后不再抢占端口')
     capture('device-serial')
     page.get_by_test_id('linux-tab-sdk').click()
     expect(page.get_by_test_id('linux-sdk-terminal').get_by_role('button',name='新建终端')).to_be_disabled()

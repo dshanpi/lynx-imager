@@ -1,3 +1,4 @@
+!include "${__FILEDIR__}\imager-process-guard.nsh"
 Unicode true
 
 !include "LogicLib.nsh"
@@ -21,13 +22,13 @@ Unicode true
   !define PRODUCT_FILE_VERSION "${PRODUCT_VERSION}.0"
 !endif
 
-!define PRODUCT_NAME "LYNX"
-!define PRODUCT_BRAND "DshanPI LYNX｜芯桥"
+!define PRODUCT_NAME "LYNX Imager"
+!define PRODUCT_BRAND "LYNX Imager"
 !define PRODUCT_PUBLISHER "dshanpi"
-!define PRODUCT_REG_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\LYNX"
-!define PRODUCT_LOCATION_KEY "Software\dshanpi\LYNX"
-!define LYNX_PROTOCOL_REG_KEY "Software\Classes\lynx"
-!define FAILURE_MARKER_DIR "$APPDATA\com.dshanpi.lynx"
+!define PRODUCT_REG_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\LYNX Imager"
+!define PRODUCT_LOCATION_KEY "Software\dshanpi\LYNX Imager"
+!define LYNX_PROTOCOL_REG_KEY "Software\Classes\lynx-imager"
+!define FAILURE_MARKER_DIR "$APPDATA\com.dshanpi.lynximager"
 !define FAILURE_MARKER "${FAILURE_MARKER_DIR}\update-delta-failure"
 
 Var PreviousInstallDir
@@ -35,7 +36,7 @@ Var PreviousVersion
 
 Name "${PRODUCT_BRAND} ${FROM_VERSION} → ${PRODUCT_VERSION} 小版本更新"
 OutFile "${OUTPUT_FILE}"
-InstallDir "$LOCALAPPDATA\DshanPI\LYNX"
+InstallDir "$LOCALAPPDATA\DshanPI\LYNX Imager"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
 SilentInstall silent
@@ -63,7 +64,7 @@ Function WriteFailureMarker
 FunctionEnd
 
 Function RelaunchPrevious
-  StrCpy $1 "$LOCALAPPDATA\DshanPI\LYNX\app-"
+  StrCpy $1 "$LOCALAPPDATA\DshanPI\LYNX Imager\app-"
   StrLen $2 $1
   StrCpy $3 $PreviousInstallDir $2
   StrCmp $3 $1 0 relaunch_previous_done
@@ -109,6 +110,7 @@ FunctionEnd
 
 Function .onInit
   SetShellVarContext current
+  !insertmacro ImagerRequireIdle
   Delete "${FAILURE_MARKER}"
   ReadRegStr $PreviousInstallDir HKCU "${PRODUCT_LOCATION_KEY}" ""
   ReadRegStr $PreviousVersion HKCU "${PRODUCT_REG_KEY}" "DisplayVersion"
@@ -117,14 +119,14 @@ Function .onInit
 
   ; Never copy from an arbitrary registry-controlled directory. Delta updates
   ; are allowed only from a versioned LYNX program instance under LocalAppData.
-  StrCpy $1 "$LOCALAPPDATA\DshanPI\LYNX\app-"
+  StrCpy $1 "$LOCALAPPDATA\DshanPI\LYNX Imager\app-"
   StrLen $2 $1
   StrCpy $3 $PreviousInstallDir $2
   StrCmp $3 $1 previous_path_ok precondition_failed
   previous_path_ok:
     IfFileExists "$PreviousInstallDir\lynx-imager.exe" 0 precondition_failed
     System::Call 'kernel32::GetTickCount() i .r0'
-    StrCpy $INSTDIR "$LOCALAPPDATA\DshanPI\LYNX\app-${PRODUCT_VERSION}-$0"
+    StrCpy $INSTDIR "$LOCALAPPDATA\DshanPI\LYNX Imager\app-${PRODUCT_VERSION}-$0"
     Return
   precondition_failed:
     Call FailPrecondition
@@ -133,7 +135,7 @@ FunctionEnd
 Function TryRemovePreviousInstall
   StrCmp $PreviousInstallDir "" previous_cleanup_done
   StrCmp $PreviousInstallDir "$INSTDIR" previous_cleanup_done
-  StrCpy $1 "$LOCALAPPDATA\DshanPI\LYNX\app-"
+  StrCpy $1 "$LOCALAPPDATA\DshanPI\LYNX Imager\app-"
   StrLen $2 $1
   StrCpy $3 $PreviousInstallDir $2
   StrCmp $3 $1 previous_cleanup_allowed previous_cleanup_done
@@ -192,18 +194,11 @@ Section "LYNX delta update" SEC_MAIN
   SetOutPath "$INSTDIR"
   WriteUninstaller "$INSTDIR\uninstall.exe"
 
-  ; Stop hardware helpers only after the fresh tree has passed every check.
-  nsExec::ExecToLog 'taskkill /F /T /IM lynx-imager.exe'
-  nsExec::ExecToLog 'taskkill /F /T /IM openixcli.exe'
-  nsExec::ExecToLog 'taskkill /F /T /IM openrockcli.exe'
-  nsExec::ExecToLog 'taskkill /F /T /IM uuu.exe'
-  nsExec::ExecToLog 'taskkill /F /T /IM dfu-util.exe'
-
-  Delete "$DESKTOP\LYNX.lnk"
-  Delete "$SMPROGRAMS\LYNX.lnk"
-  Delete "$SMPROGRAMS\DshanPI\LYNX.lnk"
-  CreateShortcut "$SMPROGRAMS\LYNX.lnk" "$INSTDIR\lynx-imager.exe"
-  CreateShortcut "$DESKTOP\LYNX.lnk" "$INSTDIR\lynx-imager.exe"
+  Delete "$DESKTOP\LYNX Imager.lnk"
+  Delete "$SMPROGRAMS\LYNX Imager.lnk"
+  Delete "$SMPROGRAMS\DshanPI\LYNX Imager.lnk"
+  CreateShortcut "$SMPROGRAMS\LYNX Imager.lnk" "$INSTDIR\lynx-imager.exe"
+  CreateShortcut "$DESKTOP\LYNX Imager.lnk" "$INSTDIR\lynx-imager.exe"
 
   WriteRegStr HKCU "${PRODUCT_LOCATION_KEY}" "" "$INSTDIR"
   WriteRegStr HKCU "${PRODUCT_LOCATION_KEY}" "PreviousInstallDir" "$PreviousInstallDir"
@@ -216,7 +211,7 @@ Section "LYNX delta update" SEC_MAIN
   WriteRegStr HKCU "${PRODUCT_REG_KEY}" "MainBinaryName" "lynx-imager.exe"
   WriteRegDWORD HKCU "${PRODUCT_REG_KEY}" "NoModify" 1
   WriteRegDWORD HKCU "${PRODUCT_REG_KEY}" "NoRepair" 1
-  WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}" "" "URL:LYNX Learning Protocol"
+  WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}" "" "URL:LYNX Imager Protocol"
   WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}" "URL Protocol" ""
   WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}\DefaultIcon" "" "$INSTDIR\lynx-imager.exe,0"
   WriteRegStr HKCU "${LYNX_PROTOCOL_REG_KEY}\shell\open\command" "" '"$INSTDIR\lynx-imager.exe" "%1"'
@@ -228,13 +223,14 @@ Section "LYNX delta update" SEC_MAIN
 SectionEnd
 
 Section "Uninstall"
+  !insertmacro ImagerRequireIdle
   SetShellVarContext current
   ReadRegStr $0 HKCU "${PRODUCT_LOCATION_KEY}" ""
   StrCmp $0 "$INSTDIR" uninstall_current uninstall_instance
   uninstall_current:
-    Delete "$DESKTOP\LYNX.lnk"
-    Delete "$SMPROGRAMS\LYNX.lnk"
-    Delete "$SMPROGRAMS\DshanPI\LYNX.lnk"
+    Delete "$DESKTOP\LYNX Imager.lnk"
+    Delete "$SMPROGRAMS\LYNX Imager.lnk"
+    Delete "$SMPROGRAMS\DshanPI\LYNX Imager.lnk"
     RMDir "$SMPROGRAMS\DshanPI"
     DeleteRegKey HKCU "${PRODUCT_REG_KEY}"
     DeleteRegKey HKCU "${LYNX_PROTOCOL_REG_KEY}"

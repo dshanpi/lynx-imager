@@ -96,87 +96,21 @@ pub fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     }
     let records = Arc::new(records);
     app.manage(records.clone());
-    let saved_projects = {
-        let db = workbench
-            .db
-            .lock()
-            .map_err(|error| boxed_io_error(error.to_string()))?;
-        workbench::storage::list_projects(&db).map_err(|error| boxed_io_error(error.to_string()))?
-    };
     app.manage(workbench.clone());
     let cloud_sync = cloud_sync::CloudSyncState::open(&data_dir.join("cloud-sync.sqlite"))
         .map_err(boxed_io_error)?;
     app.manage(Arc::new(cloud_sync));
-    records::register_audit_sink(app.handle(), records, workbench.clone())
+    records::register_audit_sink(app.handle(), records, workbench)
         .map_err(|error| boxed_io_error(error.to_string()))?;
     crate::supervisor::register_task_lifecycle_port(app.handle())
         .map_err(|error| boxed_io_error(error.to_string()))?;
     supervisor::scheduler::start(app.handle().clone());
     cloud_sync::start(app.handle().clone());
     diagnostics::start(app.handle().clone());
-    hardware_monitor::start_default(app.handle().clone());
-    restore_saved_sdk_channels(app.handle().clone(), saved_projects, workbench);
     // 启动 USB 设备插拔监听（事件驱动设备扫描，替代前端轮询）
     ch347::device_notifier::start(app.handle().clone());
     log::info!("LYNX_LIFECYCLE_SETUP_READY");
     Ok(())
-}
-
-fn restore_saved_sdk_channels(
-    app_handle: tauri::AppHandle,
-    saved_projects: Vec<workbench::types::ProjectConfig>,
-    workbench: Arc<workbench::WorkbenchState>,
-) {
-    tauri::async_runtime::spawn(async move {
-        for project in saved_projects {
-            let (Some(project_id), Some(device_id)) = (project.id, project.device_id) else {
-                continue;
-            };
-            log::info!(
-                "Restoring saved SDK channel project={project_id}, device={device_id}, gateway={}, remote={}",
-                project.local_gateway_port,
-                project.remote_forward_port
-            );
-            let gateway_state = app_handle.state::<gateway::GatewayState>();
-            match gateway::start_gateway(
-                app_handle.clone(),
-                gateway_state.inner(),
-                Some(project.local_gateway_port),
-                Some(project_id),
-                Some(device_id),
-            )
-            .await
-            {
-                Ok(_) => {
-                    if let Err(error) = workbench::tunnel::start_tunnel(project_id, &workbench) {
-                        log::warn!("Failed to restore SDK tunnel project={project_id}: {error}");
-                        if let Some(state) =
-                            app_handle.try_state::<Arc<diagnostics::DiagnosticState>>()
-                        {
-                            diagnostics::capture_backend_error(
-                                state.inner(),
-                                "sdk_channel_restore",
-                                "SDK_TUNNEL_RESTORE_FAILED",
-                                "background_channel_restore",
-                            );
-                        }
-                    }
-                }
-                Err(error) => {
-                    log::warn!("Failed to restore Gateway project={project_id}: {error:?}");
-                    if let Some(state) = app_handle.try_state::<Arc<diagnostics::DiagnosticState>>()
-                    {
-                        diagnostics::capture_backend_error(
-                            state.inner(),
-                            "sdk_channel_restore",
-                            "SDK_GATEWAY_RESTORE_FAILED",
-                            "background_channel_restore",
-                        );
-                    }
-                }
-            }
-        }
-    });
 }
 
 pub fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {

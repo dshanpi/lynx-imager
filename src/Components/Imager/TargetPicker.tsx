@@ -259,7 +259,7 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
               {choice && part.vendor !== 'allwinner' && (
                 <label className="v2c-select-model">
                   具体板型
-                  {part.vendor === 'rockchip' ? (
+                  {part.vendor === 'rockchip' && !!part.profile?.aliases.length ? (
                     <select
                       aria-label="具体 RK 板型"
                       value={boardName}

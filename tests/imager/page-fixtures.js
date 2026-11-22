@@ -19,7 +19,7 @@ mockIPC(
     qa.calls.push(cmd);
     switch (cmd) {
       case 'plugin:app|version':
-        return '0.1.0-rc.2';
+        return '0.1.0-rc.3';
       case 'get_system_proxy':
         return null;
       case 'plugin:updater|check':
@@ -42,6 +42,16 @@ mockIPC(
         return;
       case 'plugin:fs|read_text_file':
         return Array.from(new TextEncoder().encode(localStorage.qaSettings));
+      case 'serial_list_ports':
+        return [];
+      case 'serial_is_open':
+        return qa.openPort === args.port;
+      case 'serial_wait_and_open':
+        qa.openPort = args.identity.port;
+        return { name: qa.openPort };
+      case 'serial_close':
+        if (qa.openPort === args.port) qa.openPort = null;
+        return;
       case 'workbench_list_devices':
         return qa.devices;
       case 'workbench_list_projects':

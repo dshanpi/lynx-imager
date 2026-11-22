@@ -220,6 +220,7 @@ pub fn start<R: Runtime>(
     options: FlashOptions,
     hardware_guard: Option<crate::hardware_safety::HardwareActivityGuard>,
 ) -> Result<FlashStartResult, AppError> {
+    crate::flash_owner::check_start("openixcli").map_err(AppError::from)?;
     let task_id = NEXT_TASK_ID.fetch_add(1, Ordering::SeqCst);
     let active = ActiveTask {
         id: task_id,

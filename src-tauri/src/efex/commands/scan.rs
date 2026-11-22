@@ -16,11 +16,12 @@ const SCAN_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[tauri::command]
 pub async fn efex_scan_devices(app: AppHandle) -> Result<Vec<EfexDevice>, EfexError> {
-    crate::hardware_safety::ensure_idle(&app, "EFEX USB 设备扫描").map_err(hardware_busy)?;
+    crate::hardware_safety::ensure_idle(&app, "EFEX USB 设备扫描")
+        .map_err(EfexError::hardware_busy)?;
     let safety = app.state::<crate::hardware_safety::HardwareSafetyState>();
     let _hardware_guard = safety
         .try_begin("EFEX", "USB 设备扫描", "legacy-efex")
-        .map_err(hardware_busy)?;
+        .map_err(EfexError::hardware_busy)?;
     efex_scan_devices_core().await
 }
 
@@ -28,6 +29,7 @@ pub(crate) async fn efex_scan_devices_core() -> Result<Vec<EfexDevice>, EfexErro
     let _scan_guard = SCAN_LOCK.lock().await;
     debug!("efex_scan_devices called");
     run_blocking_with_timeout(SCAN_TIMEOUT, "Scan device timeout", || {
+        crate::flash_owner::check("openixcli").map_err(EfexError::hardware_busy)?;
         debug!("Scanning USB devices");
         let scanned = libefex::Context::scan_usb_devices()
             .map_err(|e| EfexError::from_libefex_with_device_id(&e, None))?;
@@ -104,12 +106,4 @@ pub(crate) async fn efex_scan_devices_core() -> Result<Vec<EfexDevice>, EfexErro
         Ok(devices)
     })
     .await
-}
-
-fn hardware_busy(message: String) -> EfexError {
-    EfexError {
-        code: -33,
-        name: "DeviceBusy".to_owned(),
-        message,
-    }
 }

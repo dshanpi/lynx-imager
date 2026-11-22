@@ -603,6 +603,7 @@ pub(crate) fn scan_flasher_devices(
     kind: &str,
     path: &str,
 ) -> Result<Vec<FlasherDeviceCandidate>, String> {
+    crate::flash_owner::check(kind)?;
     let result = match kind {
         "openixcli" => match libefex::Context::scan_usb_devices() {
             Ok(devices) => Ok(devices
@@ -1055,6 +1056,7 @@ pub(crate) fn start_flash_with_args_and_guard(
         return Err("FLASH_TARGET_UNBOUND:请先绑定当前单板的 USB 烧录接口".to_owned());
     }
     ensure_stable_allwinner_binding(&device.flasher_kind, &device.usb_binding)?;
+    crate::flash_owner::check_start(&device.flasher_kind)?;
     let hardware_guard = match execution.hardware_guard {
         Some(guard) => guard,
         None => {
@@ -1372,6 +1374,10 @@ fn ensure_allwinner_reboot_fallback(
     {
         return Ok(());
     }
+    if let Err(reason) = crate::flash_owner::check_start("openixcli") {
+        log::warn!("Skipping optional post-flash device reopen: {reason}");
+        return Ok(());
+    }
     // The embedded libefex implementation owns process-global payload state.
     // It may coexist with an external openixcli process on another endpoint,
     // but two in-process libefex operations must never overlap.
@@ -1481,6 +1487,7 @@ pub(crate) fn run_k230_flasher(
     extra_args: &[String],
     cancellation: &AtomicBool,
 ) -> Result<i32, String> {
+    crate::flash_owner::check_start("k230")?;
     let (bus, port) = parse_k230_binding(&device.usb_binding)?;
     let (medium, reboot) = parse_k230_options(extra_args)?;
     let image = KdImage::parse(firmware_path).map_err(|error| format!("K230_IMAGE:{error}"))?;
@@ -1533,6 +1540,7 @@ pub(crate) fn run_k230_flasher(
             }),
         );
     });
+    crate::flash_owner::check_start("k230")?;
     K230Burner::new(medium)
         .burn(bus, port, &image, &progress, reboot, cancellation)
         .map_err(|error| format!("K230_FLASH:{error}"))?;
@@ -1825,6 +1833,7 @@ pub(crate) fn run_flasher(
     let cancellation_marker = FlasherCancellationMarker::new(task_id);
     command.env("LYNX_FLASH_CANCEL_FILE", cancellation_marker.path());
     configure_background_command(&mut command);
+    crate::flash_owner::check_start(&device.flasher_kind)?;
     let mut child = command.spawn().map_err(|e| format!("FLASHER_START:{e}"))?;
     let process_job = match crate::process::ProcessJob::attach(&child) {
         Ok(job) => job,

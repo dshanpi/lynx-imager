@@ -334,6 +334,7 @@ export interface VendorFileReference {
   sha256: string;
 }
 export interface WorkbenchVendorInspection {
+  layouts?: import('./ImagerImage').ImageLayoutData[];
   dependencies: VendorFileReference[];
   route: WorkbenchVendorRoute;
   path: string;
@@ -564,6 +565,10 @@ export interface WorkbenchCommandMap {
     FirmwareCandidateInspection
   >;
   workbench_list_cameras: IpcCommandSpec<undefined, CameraDeviceCandidate[]>;
+  imager_resolve_flash_target: IpcCommandSpec<
+    Pick<WorkbenchDevice, 'name' | 'chipVendor' | 'flasherKind' | 'flasherPath' | 'usbBinding'>,
+    WorkbenchDevice
+  >;
   workbench_save_device: IpcCommandSpec<{ device: WorkbenchDevice }, number>;
   workbench_serial_login_password_status: IpcCommandSpec<{ deviceId: number }, boolean>;
   workbench_save_serial_login_password: IpcCommandSpec<{

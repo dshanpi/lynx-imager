@@ -46,7 +46,7 @@ export const manufacturers: Manufacturer[] = [
     brand: 'NXP',
     mark: 'NXP',
     tip: '以板卡配套的 UUU 脚本为准，核对脚本选用的存储设备。',
-    families: { 'i.MX': 'i.MX8 i.MX9' },
+    families: { 'i.MX': 'i.MX6ULL i.MX8 i.MX9' },
   },
   {
     id: 'st',
@@ -54,7 +54,7 @@ export const manufacturers: Manufacturer[] = [
     brand: 'ST',
     mark: 'ST',
     tip: '按板级存储布局核对 DFU 接口及目标区域。',
-    families: { STM32MP: 'STM32MP1' },
+    families: { STM32MP: 'STM32MP1 STM32MP157' },
   },
   {
     id: 'kendryte',
@@ -86,6 +86,7 @@ export const profiles: Record<string, Profile | undefined> = {
     aliases: ['YuzukiNeko'],
     routes: '厂商包 / 主线整盘',
   },
+  RK3576: { preset: 'rk3576', media: ['eMMC'], aliases: [], routes: 'update.img / 整盘' },
   RK3588: {
     preset: 'rk3588',
     media: ['eMMC'],
@@ -97,6 +98,12 @@ export const profiles: Record<string, Profile | undefined> = {
     media: ['eMMC'],
     aliases: ['LubanCat-4 (RK3588S)'],
     routes: 'update.img / 整盘',
+  },
+  'i.MX6ULL': {
+    preset: 'nxp-imx6ull',
+    media: ['eMMC', 'SD'],
+    aliases: ['i.MX 6ULL'],
+    routes: '板级 UUU 配方',
   },
   'i.MX8': {
     preset: 'nxp-imx',
@@ -110,6 +117,7 @@ export const profiles: Record<string, Profile | undefined> = {
     aliases: ['i.MX 9'],
     routes: '板级 UUU 配方',
   },
+  STM32MP157: { preset: 'stm32mp157', media: ['eMMC', 'SD'], aliases: [], routes: 'DFU / DfuSe' },
   STM32MP1: { preset: 'stm32mp1', media: ['eMMC', 'SD'], aliases: [], routes: 'DFU / DfuSe' },
   K230: {
     preset: 'canaan-k230',

@@ -8,10 +8,10 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$productKey = 'HKCU:\Software\dshanpi\LYNX'
-$uninstallKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\LYNX'
-$installRoot = Join-Path $env:LOCALAPPDATA 'DshanPI\LYNX'
-$failureMarker = Join-Path $env:APPDATA 'com.dshanpi.lynx\update-delta-failure'
+$productKey = 'HKCU:\Software\dshanpi\LYNX Imager'
+$uninstallKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\LYNX Imager'
+$installRoot = Join-Path $env:LOCALAPPDATA 'DshanPI\LYNX Imager'
+$failureMarker = Join-Path $env:APPDATA 'com.dshanpi.lynximager\update-delta-failure'
 
 function Assert-True([bool]$Condition, [string]$Message) {
   if (-not $Condition) { throw $Message }
@@ -30,9 +30,15 @@ function Invoke-Installer([string]$Path, [string[]]$Arguments, [string]$Stage) {
 }
 
 function Stop-LynxProcesses {
-  @('lynx-imager', 'openixcli', 'openrockcli', 'uuu', 'dfu-util') | ForEach-Object {
-    Stop-Process -Name $_ -Force -ErrorAction SilentlyContinue
+  foreach ($process in (Get-Process -Name 'lynx-imager' -ErrorAction SilentlyContinue)) {
+    if ($process.Path -and $process.Path.StartsWith("$installRoot\", [StringComparison]::OrdinalIgnoreCase)) {
+      if (-not $process.CloseMainWindow() -or -not $process.WaitForExit(15000)) {
+        throw 'LYNX Imager is busy; close it normally before running installation validation.'
+      }
+    }
   }
+  & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'imager-process-guard.ps1')
+  if ($LASTEXITCODE -ne 0) { throw 'LYNX Imager processes must be idle for installation validation.' }
 }
 
 function Wait-PathAbsent([string]$Path, [string]$Stage) {

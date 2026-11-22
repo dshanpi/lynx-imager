@@ -232,6 +232,7 @@ pub fn ch347_list_devices(
     crate::hardware_safety::ensure_idle(&app, "CH347 USB 设备扫描")?;
     let safety = app.state::<crate::hardware_safety::HardwareSafetyState>();
     let _hardware_guard = safety.try_begin("CH347", "USB 设备扫描", "CH347F")?;
+    crate::flash_owner::check_ch347()?;
     Ok(list_devices_core(&state))
 }
 
@@ -272,6 +273,7 @@ pub fn resolve_device_index_core(
     preferred_index: u32,
     serial_number: &str,
 ) -> Result<u32, String> {
+    crate::flash_owner::check_ch347()?;
     list_devices_core(state)
         .into_iter()
         .find(|device| {
@@ -303,6 +305,7 @@ pub fn ch347_open(
 }
 
 pub fn open_core(state: &Ch347State, index: u32) -> Result<(), String> {
+    crate::flash_owner::check_ch347()?;
     let mut counts = state
         .open_count
         .lock()

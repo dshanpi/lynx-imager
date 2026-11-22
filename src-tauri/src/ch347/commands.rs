@@ -231,6 +231,7 @@ pub fn ch347_list_devices(
     crate::hardware_safety::ensure_idle(&app, "CH347 USB 设备扫描")?;
     let safety = app.state::<crate::hardware_safety::HardwareSafetyState>();
     let _hardware_guard = safety.try_begin("CH347", "USB 设备扫描", "CH347F")?;
+    crate::flash_owner::check_ch347()?;
     Ok(list_devices_core(&state))
 }
 
@@ -313,6 +314,7 @@ pub fn resolve_device_index_core(
     preferred_index: u32,
     serial_number: &str,
 ) -> Result<u32, String> {
+    crate::flash_owner::check_ch347()?;
     list_devices_core(state)
         .into_iter()
         .find(|device| {
@@ -349,6 +351,7 @@ pub fn ch347_open(
 /// 引用计数：同一 index 可被多次 open（计数 +1），仅当计数从 0→1 时才真正调 DLL open。
 /// 这样前端工具与 Python 脚本可共享同一设备，不会因重复 open 破坏 DLL 状态。
 pub fn open_core(state: &Ch347State, index: u32) -> Result<(), String> {
+    crate::flash_owner::check_ch347()?;
     if !state.is_available() {
         return Err("CH347DLL not available".into());
     }

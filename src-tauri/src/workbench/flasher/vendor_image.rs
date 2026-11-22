@@ -3,6 +3,7 @@ use super::{
     adapter_override_args, parse_extra_args, AdapterFlashOptions, DeviceConfig,
     FlasherDeviceCandidate, LocalFlashOptions,
 };
+use crate::imager_layout::{self as image_layout, Layout};
 use crate::k230::kdimage::{KdImage, KDIMG_HEADER_MAGIC, KDIMG_PART_MAGIC};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -38,6 +39,7 @@ struct FileReference {
 
 #[derive(Debug, Serialize)]
 pub struct Inspection {
+    layouts: Vec<Layout>,
     dependencies: Vec<FileReference>,
     route: String,
     path: String,
@@ -89,6 +91,7 @@ pub(super) fn inspect(route: &str, path: &Path) -> Result<Inspection, String> {
         .to_string_lossy()
         .to_lowercase();
     let mut r = Inspection {
+        layouts: Vec::new(),
         route: route.into(),
         path: path.to_string_lossy().into_owned(),
         bytes: metadata.len(),
@@ -111,6 +114,7 @@ pub(super) fn inspect(route: &str, path: &Path) -> Result<Inspection, String> {
             if !rk {
                 r.blockers.push("文件头未识别为 RKFW / RKAF 厂商包".into());
             } else {
+                r.layouts.extend(image_layout::rockchip(&mut f, r.bytes));
                 r.item("包头", String::from_utf8_lossy(&h[..4]), true);
             }
         }
@@ -219,6 +223,7 @@ pub(super) fn inspect(route: &str, path: &Path) -> Result<Inspection, String> {
                         r.blockers
                             .push("当前 KDImage 解析器需要 v2 分区字段".into());
                     }
+                    let mut layout = Layout::new("KDImage 分区表", "介质偏移");
                     for p in img.parts {
                         let ok = p.magic == KDIMG_PART_MAGIC
                             && u64::from(p.part_content_offset) + u64::from(p.part_content_size)
@@ -229,16 +234,29 @@ pub(super) fn inspect(route: &str, path: &Path) -> Result<Inspection, String> {
                             r.blockers
                                 .push(format!("分区 {} 的表项或数据范围无效", p.part_name));
                         }
+                        layout.add(
+                            p.part_name.clone(),
+                            p.part_offset.into(),
+                            p.part_size.into(),
+                        );
                         r.item(
                             p.part_name,
                             format!("目标 0x{:X} · {} 字节", p.part_offset, p.part_content_size),
                             ok,
                         );
                     }
+                    r.layouts.push(layout);
                 }
             }
         }
         _ => return Err("未知的厂商烧录路线".into()),
+    }
+    if matches!(route, "rk-emmc" | "k230-raw" | "nxp-configured")
+        && !gzip
+        && !xz
+        && r.blockers.is_empty()
+    {
+        r.layouts.extend(image_layout::disk(&mut f, r.bytes));
     }
     Ok(r)
 }
@@ -275,7 +293,8 @@ fn dfuse(file: &mut File, h: &[u8], result: &mut Inspection) -> Result<(), Strin
             result.alternates.push(alt);
         }
         pos += 274;
-        for _ in 0..elements {
+        let mut layout = Layout::new(format!("DfuSe · Alternate {alt}"), "目标地址");
+        for index in 0..elements {
             if pos + 8 > end {
                 return Err("元素表截断".into());
             }
@@ -288,12 +307,14 @@ fn dfuse(file: &mut File, h: &[u8], result: &mut Inspection) -> Result<(), Strin
             if size == 0 || pos > end || addr as u64 + size as u64 > u32::MAX as u64 + 1 {
                 return Err("元素地址或数据超出范围".into());
             }
+            layout.add(format!("元素 {}", index + 1), addr.into(), size.into());
             result.item(
                 format!("Alternate {alt}"),
                 format!("0x{addr:08X} · {size} 字节"),
                 true,
             );
         }
+        result.layouts.push(layout);
         if pos != end {
             return Err("DfuSe 目标数据长度不符".into());
         }
@@ -458,6 +479,10 @@ fn uuu_references(script: &str, folder: &Path, result: &mut Inspection) {
                     || metadata.modified().ok() != after.modified().ok()
                 {
                     return Err("计算指纹时文件已变化".into());
+                }
+                if let Some(mut layout) = image_layout::disk(&mut source, digest.size_bytes) {
+                    layout.source = format!("{} · {}", file, layout.source);
+                    result.layouts.push(layout);
                 }
                 Ok(FileReference {
                     path: file.into(),

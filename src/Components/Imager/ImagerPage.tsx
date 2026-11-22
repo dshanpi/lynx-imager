@@ -83,6 +83,17 @@ const BOARD_PRESETS: BoardPreset[] = [
     needsLoader: true,
   },
   {
+    id: 'rk3576',
+    name: 'RK3576 系列',
+    chipVendor: 'rockchip',
+    chip: '瑞芯微 · RK3576',
+    storage: 'eMMC',
+    mode: 'Maskrom / Loader',
+    route: 'rockchip_raw_emmc',
+    needsLoader: true,
+    loaderLabel: 'Rockchip Loader',
+  },
+  {
     id: 'rk3588',
     name: 'RK3588 系列',
     chipVendor: 'rockchip',
@@ -94,15 +105,37 @@ const BOARD_PRESETS: BoardPreset[] = [
     loaderLabel: 'Rockchip Loader',
   },
   {
-    id: 'nxp-imx',
-    name: 'i.MX 系列',
+    id: 'nxp-imx6ull',
+    name: 'i.MX6ULL',
     chipVendor: 'nxp',
-    chip: 'NXP · i.MX 8 / 9',
+    chip: 'NXP · i.MX6ULL',
     storage: 'eMMC / SD',
     mode: 'SDP / Fastboot',
     route: 'vendor',
     needsLoader: false,
   },
+
+  {
+    id: 'nxp-imx',
+    name: 'i.MX 系列',
+    chipVendor: 'nxp',
+    chip: 'NXP · i.MX',
+    storage: 'eMMC / SD',
+    mode: 'SDP / Fastboot',
+    route: 'vendor',
+    needsLoader: false,
+  },
+  {
+    id: 'stm32mp157',
+    name: 'STM32MP157',
+    chipVendor: 'st',
+    chip: 'ST · STM32MP157',
+    storage: 'eMMC / SD',
+    mode: 'USB DFU / DfuSe',
+    route: 'vendor',
+    needsLoader: false,
+  },
+
   {
     id: 'stm32mp1',
     name: 'STM32MP1 系列',
@@ -189,18 +222,25 @@ async function identities(imagePath: string, loaderPath: string): Promise<Files>
   return { image, loader };
 }
 async function checkTarget(selected: WorkbenchDevice) {
-  const devices = await invokeCommand('workbench_list_devices', undefined);
-  const device = devices.find((d) => d.id === selected.id);
-  if (!device || signature(device) !== signature(selected))
-    throw new Error('保存的设备或接口配置已变化。请刷新列表并重新选择。');
-  if (!device.usbBinding)
-    throw new Error('该设备尚未绑定 USB 接口。请到「高级功能」的设备设置中绑定。');
+  let device = selected;
+  if (selected.id != null && !selected.boardUid?.startsWith('imager-usb:')) {
+    const devices = await invokeCommand('workbench_list_devices', undefined);
+    const saved = devices.find((d) => d.id === selected.id);
+    if (!saved || signature(saved) !== signature(selected))
+      throw new Error('设备配置已变化，请重新选择端口。');
+    device = saved;
+  }
   const found = await invokeCommand('workbench_scan_flasher_devices', {
     kind: device.flasherKind,
     path: device.flasherPath,
   });
   const usb = uniqueUsbTarget(device.usbBinding, device.flasherKind, found);
   return { device, usb };
+}
+async function resolveFlashTarget(device: WorkbenchDevice) {
+  if (device.id != null) return device;
+  const { name, chipVendor, flasherKind, flasherPath, usbBinding } = device;
+  return invokeCommand('imager_resolve_flash_target', { name, chipVendor, flasherKind, flasherPath, usbBinding });
 }
 
 function sameUsb(a: WorkbenchFlasherDevice, b: WorkbenchFlasherDevice) {
@@ -596,7 +636,7 @@ export function ImagerPage({
     return signature;
   }
   async function preflight() {
-    if (!selected?.device.id || !board || !watchReady) return;
+    if (!selected || !board || !watchReady) return;
     invalidate();
     const reviewing = selected.usb;
     reviewedContext.current = {
@@ -618,12 +658,15 @@ export function ImagerPage({
       setSelected(null);
       throw new Error('实际接口已变化，请重新选择设备。');
     }
+    if (reviewingUsb.current !== reviewing) throw new Error('目标 USB 连接已变化，请重新选择。');
+    fresh.device = await resolveFlashTarget(fresh.device);
+    if (fresh.device.id == null) throw new Error('无法准备本次烧录目标。');
     let ticket: FirmwareConfirmation | null = null;
     if (candidate) {
       const bound = await invokeCommand(
         'workbench_firmware_download',
         {
-          deviceId: selected.device.id,
+          deviceId: fresh.device.id,
           request: {
             releaseId: candidate.releaseId,
             indexSha256: candidate.indexSha256,
@@ -644,7 +687,7 @@ export function ImagerPage({
       )
         throw new Error('设备或发布文件已变化，请重新预检。');
       ticket = await invokeCommand('workbench_firmware_prepare', {
-        deviceId: selected.device.id,
+        deviceId: fresh.device.id,
         candidateId: bound.id,
         postAction: 'reboot',
       });
@@ -906,7 +949,7 @@ export function ImagerPage({
               }
               board={board}
               boardName={boardName}
-              selectedDeviceId={selected?.device.id ?? null}
+              busy={locked}
               onTargetChange={selectTarget}
               onDetected={setCount}
               active={active}

@@ -454,6 +454,29 @@ pub fn save_project(db: &Connection, project: &ProjectConfig) -> Result<i64> {
 }
 
 pub fn list_devices(db: &Connection) -> Result<Vec<DeviceConfig>> {
+    query_devices(db, None)
+}
+
+// Task targets preserve a physical endpoint for preflight, execution and history.
+// Only explicitly configured boards belong in the advanced workspace.
+pub fn basic_flash_target(
+    db: &Connection,
+    name: &str,
+    vendor: &str,
+    kind: &str,
+    path: &str,
+    port: &str,
+) -> Result<DeviceConfig> {
+    let key =
+        serde_json::to_vec(&(name, vendor, kind, path, port)).expect("string tuple serializes");
+    let uid = format!("imager-usb:{}", hex::encode(Sha256::digest(key)));
+    let id = db.query_row("INSERT INTO devices (board_uid,name,chip_vendor,flasher_kind,flasher_path,usb_binding)
+         VALUES (?1,?2,?3,?4,?5,?6) ON CONFLICT(board_uid) DO UPDATE SET board_uid=excluded.board_uid RETURNING id",
+         params![uid,name,vendor,kind,path,port], |row| row.get(0))?;
+    device_by_id(db, id)
+}
+
+fn query_devices(db: &Connection, id: Option<i64>) -> Result<Vec<DeviceConfig>> {
     let mut statement = db.prepare(
         "SELECT id,board_uid,name,chip_vendor,serial_port,serial_vid,serial_pid,serial_number,baud_rate,\
          flasher_kind,flasher_path,flasher_args,power_controller,power_channel,\
@@ -463,10 +486,10 @@ pub fn list_devices(db: &Connection) -> Result<Vec<DeviceConfig>> {
          serial_interface_number,power_controller_interface_number,usb_binding,adb_serial,board_image_path,\
          serial_console_type,serial_login_mode,serial_login_username,serial_login_prompt,\
          serial_password_prompt,serial_shell_prompt,serial_auto_login,camera_binding \
-         FROM devices ORDER BY name",
+         FROM devices WHERE ( ?1 IS NULL AND board_uid NOT GLOB 'imager-usb:*') OR id=?1 ORDER BY name",
     )?;
     let rows = statement
-        .query_map([], |row| {
+        .query_map([id], |row| {
             Ok(DeviceConfig {
                 id: row.get(0)?,
                 board_uid: row.get(1)?,
@@ -781,15 +804,27 @@ pub fn project_by_id(db: &Connection, id: i64) -> Result<ProjectConfig> {
 }
 
 pub fn device_by_id(db: &Connection, id: i64) -> Result<DeviceConfig> {
-    list_devices(db)?
+    query_devices(db, Some(id))?
         .into_iter()
-        .find(|value| value.id == Some(id))
+        .next()
         .ok_or(rusqlite::Error::QueryReturnedNoRows)
 }
 
 #[cfg(test)]
 mod device_tests {
     use super::*;
+
+    #[test]
+    fn basic_targets_reuse_only_the_same_endpoint_and_stay_out_of_the_board_list() {
+        let db = Connection::open_in_memory().unwrap();
+        migrate(&db).unwrap();
+        let resolve = |port| basic_flash_target(&db, "F101", "allwinner", "openixcli", "", port).unwrap();
+        let first = resolve("1:9.3");
+        assert_eq!(first.id, resolve("1:9.3").id);
+        assert_ne!(first.id, resolve("1:9.4").id);
+        assert_eq!(device_by_id(&db, first.id.unwrap()).unwrap().usb_binding, "1:9.3");
+        assert!(list_devices(&db).unwrap().is_empty());
+    }
 
     #[test]
     fn rockchip_device_round_trips_through_migrated_database() {

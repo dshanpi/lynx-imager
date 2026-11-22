@@ -18,12 +18,9 @@ Var LynxPreviousInstallDir
   ${EndIf}
 !macroend
 
+!include "${__FILEDIR__}\imager-process-guard.nsh"
 !macro LynxRequireIdleProcesses
-  !insertmacro LynxRejectRunning "lynx-imager.exe"
-  !insertmacro LynxRejectRunning "openixcli.exe"
-  !insertmacro LynxRejectRunning "openrockcli.exe"
-  !insertmacro LynxRejectRunning "uuu.exe"
-  !insertmacro LynxRejectRunning "dfu-util.exe"
+  !insertmacro ImagerRequireIdle
 !macroend
 
 ; Replace Tauri's default force-close path for both install and uninstall.

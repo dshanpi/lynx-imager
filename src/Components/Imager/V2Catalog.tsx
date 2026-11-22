@@ -31,6 +31,9 @@ export type V2ImageSource = 'catalog' | 'local' | 'recent';
 type Identity = { sizeBytes: number; sha256: string };
 const chipPackages: Record<string, [string, string]> = {
   f101: ['F101', 'ALLWINNER'],
+  rk3576: ['RK3576', 'ROCKCHIP'],
+  'nxp-imx6ull': ['i.MX6ULL', 'NXP'],
+  stm32mp157: ['MP157', 'ST'],
   't153-emmc': ['T153', 'ALLWINNER'],
   'nxp-imx': ['i.MX', 'NXP'],
   stm32mp1: ['STM32MP1', 'ST'],

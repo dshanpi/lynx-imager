@@ -78,7 +78,6 @@ const ACTIVE_INTERFACE_SCAN_INTERVAL_MS = 5_000;
 const BACKGROUND_INTERFACE_SCAN_INTERVAL_MS = 15_000;
 const SERIAL_PRESENCE_INTERVAL_MS = 2_500;
 const TUNNEL_STATUS_INTERVAL_MS = 3_000;
-const GATEWAY_WATCHDOG_INTERVAL_MS = 15_000;
 
 function stableSnapshot<T>(current: T, next: T): T {
   return JSON.stringify(current) === JSON.stringify(next) ? current : next;
@@ -732,15 +731,27 @@ export const Workbench: React.FC<WorkbenchProps> = ({
 
   useEffect(() => {
     if (!isActive) return;
-    scanInterfaces().catch((value) => setError(formatErrorMessage(value)));
+    let active = true;
+    const refreshPorts = async () => {
+      try {
+        const ports = await listSerialPorts();
+        if (!active) return;
+        setSerialPorts((current) => stableSnapshot(current, ports));
+        if (settingsOpen) setEditorSerialPorts((current) => stableSnapshot(current, ports));
+      } catch (error) {
+        if (active) setError(formatErrorMessage(error));
+      }
+    };
+    void refreshPorts();
     const timer = window.setInterval(
-      () => {
-        scanInterfaces().catch(() => undefined);
-      },
+      refreshPorts,
       settingsOpen ? ACTIVE_INTERFACE_SCAN_INTERVAL_MS : BACKGROUND_INTERFACE_SCAN_INTERVAL_MS
     );
-    return () => window.clearInterval(timer);
-  }, [isActive, scanInterfaces, settingsOpen]);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [isActive, settingsOpen]);
 
   useEffect(() => {
     if (!isActive) return;
@@ -756,45 +767,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
   useEffect(() => {
     if (!isActive || !projects.length) return;
     let cancelled = false;
-    const ensureGateways = () =>
-      Promise.all(
-        projects.map((item) =>
-          invokeCommand('gateway_start', {
-            port: item.localGatewayPort,
-            projectId: item.id,
-            deviceId: item.deviceId,
-          })
-        )
-      );
-    const restore = async () => {
-      await ensureGateways();
-      const running = await invokeCommand('workbench_list_tunnel_statuses');
-      const activeProjectIds = new Set(
-        running
-          .filter((item) =>
-            ['connecting', 'verifying', 'connected', 'host_key_required'].includes(item.state)
-          )
-          .map((item) => item.projectId)
-      );
-      await Promise.allSettled(
-        projects
-          .filter((item) => item.id && !activeProjectIds.has(item.id))
-          .map((item) => invokeCommand('workbench_start_tunnel', { projectId: item.id! }))
-      );
-      const statuses = await invokeCommand('workbench_list_tunnel_statuses');
-      if (!cancelled) {
-        setTunnelStatuses((current) => stableSnapshot(current, statuses));
-        setRemoteMcpError('');
-      }
-    };
-    restore().catch((value) => {
-      if (!cancelled) {
-        setError(formatErrorMessage(value));
-        setTunnelStatuses([]);
-        setRemoteMcpError(formatErrorMessage(value));
-      }
-    });
-    const timer = window.setInterval(() => {
+    const refreshStatuses = () =>
       invokeCommand('workbench_list_tunnel_statuses')
         .then((statuses) => {
           if (!cancelled) {
@@ -808,14 +781,11 @@ export const Workbench: React.FC<WorkbenchProps> = ({
             setRemoteMcpError(formatErrorMessage(value));
           }
         });
-    }, TUNNEL_STATUS_INTERVAL_MS);
-    const gatewayWatchdog = window.setInterval(() => {
-      ensureGateways().catch(() => undefined);
-    }, GATEWAY_WATCHDOG_INTERVAL_MS);
+    void refreshStatuses();
+    const timer = window.setInterval(refreshStatuses, TUNNEL_STATUS_INTERVAL_MS);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
-      window.clearInterval(gatewayWatchdog);
     };
   }, [isActive, projects]);
 
@@ -1162,17 +1132,20 @@ export const Workbench: React.FC<WorkbenchProps> = ({
       if (linkedProjects.length) {
         setBoardSaveFeedback('单板已保存，正在重载 Gateway…');
         const gatewayResults = await Promise.allSettled(
-          linkedProjects.map((item) =>
-            invokeCommand(
-              'gateway_start',
-              {
-                port: item.localGatewayPort,
-                projectId: item.id,
-                deviceId: id,
-              },
-              { timeoutMs: GATEWAY_RELOAD_TIMEOUT_MS }
-            )
-          )
+          linkedProjects.map(async (item) => {
+            if (!item.id) return;
+            const scope = { projectId: item.id, deviceId: id };
+            const status = await invokeCommand('gateway_channel_status', scope);
+            if (status.running) {
+              await invokeCommand(
+                'gateway_start',
+                { ...scope, port: item.localGatewayPort },
+                {
+                  timeoutMs: GATEWAY_RELOAD_TIMEOUT_MS,
+                }
+              );
+            }
+          })
         );
         const failedGateways = gatewayResults.flatMap((result) =>
           result.status === 'rejected' ? [ipcFailureDetail(result.reason)] : []
@@ -1211,11 +1184,7 @@ export const Workbench: React.FC<WorkbenchProps> = ({
         return;
       }
 
-      setMessage(
-        linkedProjects.length
-          ? `单板“${saved.name}”已保存，Gateway 已重载。`
-          : `单板“${saved.name}”已保存。`
-      );
+      setMessage(`单板“${saved.name}”已保存。`);
       setBoardSaveFeedback('保存成功');
       if (settingsSessionRef.current === settingsSession) setSettingsOpen(false);
     } finally {

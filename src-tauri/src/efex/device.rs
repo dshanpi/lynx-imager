@@ -123,5 +123,6 @@ pub fn create_context_for(device_id: u32) -> Result<libefex::Context, EfexError>
 }
 
 pub fn get_context(device_id: u32) -> Result<libefex::Context, EfexError> {
+    crate::flash_owner::check_start("openixcli").map_err(EfexError::hardware_busy)?;
     create_context_for(device_id)
 }

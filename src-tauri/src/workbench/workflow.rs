@@ -79,6 +79,7 @@ pub(crate) fn start_workflow(
         (host, project, device)
     };
     let safety = app.state::<crate::hardware_safety::HardwareSafetyState>();
+    crate::flash_owner::check_start(&device.flasher_kind)?;
     let hardware_guard = safety.try_begin_scoped(
         "Linux 工作台",
         "自动工作流",
@@ -270,6 +271,7 @@ fn run(
     })?;
 
     step(state, app, task_id, "serial_release", || {
+        crate::flash_owner::check_start(&device.flasher_kind)?;
         release_serial(serial, device)
     })?;
     step(state, app, task_id, "enter_flash_mode", || {

@@ -6,6 +6,7 @@ import type { WorkbenchFlasherDevice } from '../../Platform/IPC/contracts/Workbe
 import { formatErrorMessage } from '../../Utils';
 import { EMPTY_LINUX_DEVICE, LINUX_CHIP_VENDORS } from '../Workbench/linuxWorkbenchModel';
 import { uniqueUsbTarget } from './BasicPlan';
+import { DriverSetup } from './DriverSetup';
 import './V2Interface.css';
 
 export interface V2InterfaceProps {
@@ -21,17 +22,20 @@ export interface V2InterfaceProps {
   boardName: string;
   routeLabel: string;
   vendorTarget?: ReactNode;
-  selectedDeviceId: number | null;
   fixedDeviceId?: number | null;
   onTargetChange: (profile: WorkbenchDevice | null, usb: WorkbenchFlasherDevice | null) => void;
   onOpenAdvanced: () => void;
   onDetected?: (count: number | null) => void;
   active?: boolean;
+  busy?: boolean;
 }
 
 const usbId = (usb: WorkbenchFlasherDevice) =>
   [usb.vid, usb.pid].map((n) => n.toString(16).padStart(4, '0')).join(':');
-const usbLocation = (usb: WorkbenchFlasherDevice) => `USB ${usbId(usb)} · ${usb.key}`;
+function portLabel(usb: WorkbenchFlasherDevice) {
+  const chain = Array.from(usb.key.matchAll(/#usb\((\d+)\)/gi), (match) => match[1]).join('.');
+  return chain ? `USB 端口 ${chain}` : `USB 总线 ${usb.bus} · 端口 ${usb.port}`;
+}
 const modeLabel = (mode: string) =>
   ({ 'fel/fes': 'FEL / FES', loader: 'Loader', maskrom: 'Maskrom' })[mode.toLowerCase()] ?? mode;
 const scannerPath = (profile: WorkbenchDevice) =>
@@ -54,12 +58,12 @@ export function V2Interface({
   boardName,
   routeLabel,
   vendorTarget,
-  selectedDeviceId,
   fixedDeviceId,
   onTargetChange,
   onOpenAdvanced,
   onDetected,
   active = true,
+  busy = false,
 }: V2InterfaceProps) {
   const platform = LINUX_CHIP_VENDORS.find((p) => p.value === board.chipVendor)!;
   const [found, setFound] = useState<WorkbenchFlasherDevice[]>([]);
@@ -69,11 +73,14 @@ export function V2Interface({
   const [picked, setPicked] = useState('');
   const [loading, setLoading] = useState(false);
   const [scanned, setScanned] = useState(false);
-  const [binding, setBinding] = useState(false);
   const [error, setError] = useState('');
   const [help, setHelp] = useState(false);
+  const [installing, setInstalling] = useState(false);
+  const [driverMessage, setDriverMessage] = useState('');
+  const installLock = useRef(false);
+  const currentView = useRef(0);
+  const resumeScan = useRef<(() => Promise<void>) | null>(null);
   const sequence = useRef(0);
-  const bindLock = useRef(false);
   const callbacks = useRef({ onTargetChange, onDetected });
   useEffect(() => {
     callbacks.current = { onTargetChange, onDetected };
@@ -103,6 +110,7 @@ export function V2Interface({
     [board.chipVendor, platform.flasher, fixedDeviceId]
   );
   const refresh = useCallback(async () => {
+    if (installLock.current) return;
     const seq = ++sequence.current;
     setLoading(true);
     setScanned(false);
@@ -138,6 +146,9 @@ export function V2Interface({
     }
   }, [allProfiles, scanDevices, requestedPath, profilePaths, fixedDeviceId]);
   useEffect(() => {
+    const view = ++currentView.current;
+    setHelp(false);
+    setDriverMessage('');
     if (!active) {
       setFound([]);
       setPicked('');
@@ -151,6 +162,7 @@ export function V2Interface({
     const generation = sequence;
     let cancelled = false;
     let release: (() => void) | undefined;
+    resumeScan.current = refresh;
     void refresh();
     void subscribeUsbHotplug(() => {
       if (!cancelled) void refresh();
@@ -161,12 +173,39 @@ export function V2Interface({
       })
       .catch(() => {});
     return () => {
+      if (currentView.current === view) currentView.current++;
+      resumeScan.current = null;
       generation.current++;
       cancelled = true;
       release?.();
     };
   }, [active, refresh, board.id, boardName]);
 
+  async function installDriver(infPath?: string) {
+    if (installLock.current || busy) return;
+    const view = currentView.current;
+    installLock.current = true;
+    setInstalling(true);
+    setDriverMessage('');
+    sequence.current++;
+    setFound([]);
+    setPicked('');
+    setLoading(false);
+    setScanned(true);
+    setError('');
+    callbacks.current.onTargetChange(null, null);
+    callbacks.current.onDetected?.(null);
+    try {
+      const message = await invokeCommand('imager_install_driver', { vendor: board.chipVendor, infPath });
+      if (view === currentView.current) setDriverMessage(message);
+    } catch (e) {
+      if (view === currentView.current) setDriverMessage(formatErrorMessage(e));
+    } finally {
+      installLock.current = false;
+      setInstalling(false);
+      void resumeScan.current?.();
+    }
+  }
   if (!active) return null;
   const detecting = loading || (!scanned && !error);
   const usb = found.find((d) => d.key === picked);
@@ -177,75 +216,37 @@ export function V2Interface({
     (!fixedDeviceId || p.id === fixedDeviceId);
   const modeOk = (d: WorkbenchFlasherDevice) =>
     board.chipVendor !== 'rockchip' || ['loader', 'maskrom'].includes(d.mode.toLowerCase());
-  const profile = usb && deviceMatches(usb).find((p) => allowed(p) && p.id === selectedDeviceId);
   function chooseUsb(d: WorkbenchFlasherDevice) {
     setError('');
     setPicked(d.key);
     const options = deviceMatches(d).filter(allowed);
-    if (options.length === 1 && modeOk(d)) callbacks.current.onTargetChange(options[0], d);
-    else callbacks.current.onTargetChange(null, null);
-  }
-  async function bindNew(d: WorkbenchFlasherDevice) {
-    if (bindLock.current || fixedDeviceId || loading) return;
-    bindLock.current = true;
-    setBinding(true);
-    setError('');
-    const seq = sequence.current;
-    try {
-      const [current, saved] = await Promise.all([scanDevices(probedPath), allProfiles()]);
-      if (seq !== sequence.current) return;
-      const live = uniqueUsbTarget(d.key, platform.flasher, current);
-      if (live.vid !== d.vid || live.pid !== d.pid || live.mode !== d.mode || live.chip !== d.chip)
-        throw new Error('设备身份或模式已变化，请重新检测。');
-      if (saved.some((p) => matches(p, live, current)))
-        throw new Error('该物理接口已有绑定，请重新检测后选择。');
-      const id = await invokeCommand('workbench_save_device', {
-        device: {
-          ...EMPTY_LINUX_DEVICE,
-          name: boardName,
-          chipVendor: board.chipVendor,
-          flasherKind: platform.flasher,
-          flasherPath: probedPath,
-          usbBinding: live.key,
-        },
-      });
-      const updated = await allProfiles();
-      if (seq !== sequence.current) return;
-      setProfiles(updated);
-      const created = updated.find(
-        (p) => p.id === id && p.chipVendor === board.chipVendor && matches(p, live, current)
-      );
-      if (!created) throw new Error('已保存绑定，请重新检测并确认目标。');
-      callbacks.current.onTargetChange(modeOk(live) ? created : null, modeOk(live) ? live : null);
-    } catch (e) {
-      if (seq === sequence.current) setError(formatErrorMessage(e));
-    } finally {
-      bindLock.current = false;
-      setBinding(false);
+    if (!modeOk(d) || (fixedDeviceId != null && !options.length)) {
+      callbacks.current.onTargetChange(null, null);
+      return;
     }
+    // Reuse a unique matching setup, otherwise select just this physical port.
+    const profile = options.length === 1 ? options[0] : {
+      ...EMPTY_LINUX_DEVICE, name: boardName, chipVendor: board.chipVendor,
+      flasherKind: platform.flasher, flasherPath: probedPath, usbBinding: d.key,
+    };
+    callbacks.current.onTargetChange(profile, d);
   }
 
   const rk = board.chipVendor === 'rockchip';
-  const choices = usb ? deviceMatches(usb).filter(allowed) : [];
   const customPaths = profilePaths(profiles).filter(Boolean);
-  const hasTarget = !!profile && !!usb && modeOk(usb);
+  const hasTarget = !!usb && modeOk(usb);
   const renderDevices = (
     <section className={'vi-box vi-devices' + (rk ? ' vi-device-rk' : '')} aria-label="检测设备">
       <div className="vi-bar">
         <h3>
-          {rk ? (
-            <i className={'vi-dot' + (found.length ? ' ok' : '')} />
-          ) : (
-            <b className="vi-number">1</b>
-          )}
-          {rk ? (scanned ? `已识别 ${found.length} 台设备` : '检测设备') : '检测设备'}
+          {scanned ? `可用设备（${found.length}）` : '检测设备'}
         </h3>
         {customPaths.length > 0 && fixedDeviceId == null && (
           <select
             aria-label="检测与烧录使用的工具"
             title={probedPath || '内置烧录工具'}
             style={{ maxWidth: 'min(100%, 28ch)' }}
-            disabled={detecting || binding}
+            disabled={detecting || busy || installing}
             value={probedPath}
             onChange={(e) => {
               callbacks.current.onTargetChange(null, null);
@@ -261,51 +262,34 @@ export function V2Interface({
             ))}
           </select>
         )}
-        <button type="button" disabled={detecting || binding} onClick={() => void refresh()}>
+        <button type="button" disabled={detecting || busy || installing} onClick={() => void refresh()}>
           <LynxIcon name="refresh" size={16} />
           {detecting ? '检测中…' : '重新检测'}
         </button>
-        {!rk && (
-          <button type="button" aria-expanded={help} onClick={() => setHelp(!help)}>
-            <LynxIcon name="info" size={16} />
-            驱动帮助
-          </button>
-        )}
+        <button type="button" aria-expanded={help} disabled={installing || busy} onClick={() => setHelp(!help)}>
+          <LynxIcon name="download" size={16} /> 安装驱动
+        </button>
       </div>
       <div className="vi-device-list" aria-live="polite">
-        {found.map((d, i) => {
-          const saved = deviceMatches(d);
-          const selectable = !fixedDeviceId || saved.some(allowed);
+        {found.map((d) => {
+          const saved = deviceMatches(d).filter(allowed);
+          const selectable = (!fixedDeviceId || saved.length > 0) && modeOk(d);
           return (
             <label key={d.key} className={'vi-device' + (picked === d.key ? ' chosen' : '')}>
-              <input
-                type="radio"
-                name="vi-usb-target"
-                checked={picked === d.key}
-                onChange={() => chooseUsb(d)}
-                disabled={binding || !selectable}
-              />
-              {!rk && <LynxIcon name="plug" size={24} />}
+              <input type="radio" name="vi-usb-target" checked={picked === d.key}
+                onChange={() => chooseUsb(d)} disabled={busy || installing || !selectable} />
               <span className="vi-usb-identity">
-                <strong>{saved.find(allowed)?.name || `USB 设备 #${i + 1}`}</strong>
-                <small title={usbLocation(d)}>{usbLocation(d)}</small>
+                <strong>{saved.length === 1 ? saved[0].name : platform.label + ' USB 设备'}</strong>
+                <small title={d.key}>{portLabel(d)}</small>
               </span>
-              <span className={'vi-chip' + (rk ? ' purple' : '')}>{modeLabel(d.mode)}</span>
-              {!rk && (
-                <span className="vi-owner" title={saved.map((p) => p.name).join('、')}>
-                  {saved.length ? '已绑定' : '待绑定'}
-                </span>
-              )}
-              <span className="vi-connected">
-                <LynxIcon name="check-circle" size={16} />
-                已发现
-              </span>
+              <span className="vi-chip">{modeLabel(d.mode)}</span>
+              {!modeOk(d) && <small>需要 Maskrom 或 Loader 模式</small>}
             </label>
           );
         })}
         {found.length === 0 && (
           <p className="vi-empty">
-            {detecting
+            {installing ? '正在处理驱动安装…' : detecting
               ? '正在枚举 USB 设备…'
               : error
                 ? '检测未能完成，请检查连接或烧录工具。'
@@ -321,64 +305,13 @@ export function V2Interface({
           </button>
         </div>
       )}
-      {usb && !profile && (
-        <div className="vi-binding">
-          {!choices.length && deviceMatches(usb).length > 0 && (
-            <p>此接口已有其他工具或平台的绑定。请选择该配置使用的烧录工具。</p>
-          )}
-          {choices.length > 1 ? (
-            <label>
-              已保存的绑定{' '}
-              <select
-                value=""
-                onChange={(e) => {
-                  const p = choices.find((item) => item.id === Number(e.target.value));
-                  if (p && modeOk(usb)) callbacks.current.onTargetChange(p, usb);
-                }}
-              >
-                <option value="">选择单板配置…</option>
-                {choices.map((p) => (
-                  <option key={p.id} value={p.id!}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            !deviceMatches(usb).length &&
-            !fixedDeviceId && (
-              <button type="button" disabled={binding} onClick={() => void bindNew(usb)}>
-                {binding ? '正在保存…' : `将此接口绑定到 ${boardName}`}
-              </button>
-            )
-          )}
-          {!modeOk(usb) && (
-            <span role="status">
-              此完整 eMMC 路线需要 Maskrom 或 Loader 模式。当前检测为 {modeLabel(usb.mode)}。
-            </span>
-          )}
-          {!!deviceMatches(usb).length && choices.length === 0 && (
-            <span>此接口的已保存绑定与当前目标不符。</span>
-          )}
-        </div>
-      )}
       {error && (
         <p role="alert" className="vi-error">
           {error}
         </p>
       )}
-      {help && (
-        <div className="vi-help">
-          <strong>USB 连接与驱动</strong>
-          <p>
-            确认 USB 数据线与供电正常，按该板说明进入 {board.mode}
-            ，然后重新检测。自定义烧录器和接口绑定可在设备设置检查。
-          </p>
-          <button type="button" onClick={onOpenAdvanced}>
-            查看设备设置
-          </button>
-        </div>
-      )}
+      {help && <DriverSetup vendor={board.chipVendor} mode={board.mode} installing={installing} onInstall={(infPath) => void installDriver(infPath)} />}
+      {driverMessage && <p className="vi-help" role="status">{driverMessage}</p>}
     </section>
   );
 
@@ -397,30 +330,9 @@ export function V2Interface({
         <p>
           {found.length > 1
             ? '请按实际接线选择目标；相同的 VID 和 PID 可以对应不同开发板。'
-            : '使用开发板的 USB 下载口，按板级说明进入下载模式后匹配实际端口。'}
+            : '用数据线连接开发板的下载口，进入下载模式后选择设备。'}
         </p>
       </header>
-      <div className="r3-wire">
-        <span>
-          <LynxIcon name="desktop" size={24} />
-          <strong>运行 LYNX 的电脑</strong>
-        </span>
-        <span className="r3-wire-path">
-          {usb
-            ? usb.key
-            : detecting
-              ? '正在枚举'
-              : found.length
-                ? found.length + ' 个候选端口'
-                : '等待设备'}
-        </span>
-        <span>
-          <LynxIcon name="board" size={24} />
-          <strong>
-            {boardName} · {board.mode}
-          </strong>
-        </span>
-      </div>
       <div className="r3-connect-columns">
         {renderDevices}
         <section className="r3-connect-facts">
@@ -428,10 +340,10 @@ export function V2Interface({
           {usb ? (
             <dl>
               {[
-                ['物理端口', usb.key],
+                ['连接位置', portLabel(usb)],
                 ['VID : PID', usbId(usb)],
                 ['实际模式', modeLabel(usb.mode)],
-                ['板卡配置', profile?.name || '等待绑定'],
+                ['目标板型', boardName],
                 ['本次路线', routeLabel],
                 ['目标存储', board.storage + ' · 配置值'],
               ].map(([label, value]) => (
@@ -445,13 +357,13 @@ export function V2Interface({
             <ol>
               <li>使用数据线连接开发板的 USB 下载口。</li>
               <li>按板级说明进入 {board.mode} 模式并重新检测。</li>
-              <li>选择实际端口。调试串口可用于稍后观察启动。</li>
+              <li>点击要烧写的设备，然后进入下一步。</li>
             </ol>
           )}
+          {usb && <details className="vi-port-path"><summary>完整 USB 路径</summary><code>{usb.key}</code></details>}
         </section>
       </div>
       {vendorTarget}
-      {hasTarget && <p className="vi-info">提交前将再次检查文件、接口和已保存的设备绑定。</p>}
     </section>
   );
 }

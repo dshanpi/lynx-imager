@@ -14,6 +14,7 @@ window.__imagerSimulation = sim;
 export async function invoke(cmd, args = {}, options) {
   sim.calls.push({ cmd, args });
   if (Object.hasOwn(sim.responses, cmd)) return sim.responses[cmd];
+  if (cmd === 'imager_install_driver') throw Error('驱动安装需要模拟系统响应');
   if (cmd === 'plugin:dialog|open') {
     const p = sim.nextFile;
     sim.nextFile = null;

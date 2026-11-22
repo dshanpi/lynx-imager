@@ -14,7 +14,7 @@ use std::{
     thread::{self, JoinHandle},
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter, State};
 
 const WIDTH: usize = 240;
 const HEIGHT: usize = 240;
@@ -43,8 +43,6 @@ pub struct HardwareMonitorStartRequest {
     pub device_index: u32,
     #[serde(default)]
     pub serial_number: String,
-    #[serde(skip)]
-    auto_select_unique: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -275,6 +273,7 @@ fn start_monitor(
     diagnostics: Arc<diagnostics::DiagnosticState>,
     request: HardwareMonitorStartRequest,
 ) -> Result<HardwareMonitorSnapshot, String> {
+    crate::flash_owner::check_ch347()?;
     let stale_worker = {
         let mut runtime = state
             .runtime
@@ -345,65 +344,6 @@ pub fn hardware_monitor_stop(
     state.snapshot()
 }
 
-/// Start the read-only monitor at application startup. Auto selection is only
-/// allowed when exactly one CH347F is visible, so a later hotplug never causes
-/// the worker to jump between multiple adapters.
-pub fn start_default(app: AppHandle) {
-    let state = app.state::<Arc<HardwareMonitorState>>().inner().clone();
-    #[cfg(debug_assertions)]
-    if std::env::var("LYNX_TEST_DISABLE_HARDWARE_AUTOSTART").as_deref() == Ok("1") {
-        state.publish(&app, |snapshot| {
-            snapshot.state = "stopped".to_owned();
-            snapshot.error_code = Some("ISOLATED_UI_TEST_NO_HARDWARE".to_owned());
-            snapshot.error = Some("隔离界面测试已暂停自动硬件监视".to_owned());
-        });
-        return;
-    }
-    let ch347 = app.state::<Arc<ch347::Ch347State>>().inner().clone();
-    let supervisor = app
-        .state::<Arc<supervisor::SupervisorState>>()
-        .inner()
-        .clone();
-    let diagnostics = app
-        .state::<Arc<diagnostics::DiagnosticState>>()
-        .inner()
-        .clone();
-    let request = HardwareMonitorStartRequest {
-        device_index: 0,
-        serial_number: String::new(),
-        auto_select_unique: true,
-    };
-    if let Err(error) = start_monitor(app, state, ch347, supervisor, diagnostics, request) {
-        log::warn!("default hardware monitor could not start: {error}");
-    }
-}
-
-fn resolve_monitor_device(
-    state: &ch347::Ch347State,
-    request: &HardwareMonitorStartRequest,
-) -> Result<u32, String> {
-    if !request.auto_select_unique {
-        return ch347::commands::resolve_device_index_core(
-            state,
-            request.device_index,
-            &request.serial_number,
-        );
-    }
-    let devices = ch347::commands::list_devices_core(state);
-    if devices.len() != 1 {
-        return Err(if devices.is_empty() {
-            "CH347F_DEVICE_NOT_FOUND".to_owned()
-        } else {
-            "CH347F_DEVICE_SELECTION_REQUIRED".to_owned()
-        });
-    }
-    devices[0]
-        .get("index")
-        .and_then(serde_json::Value::as_u64)
-        .and_then(|index| u32::try_from(index).ok())
-        .ok_or_else(|| "CH347F_DEVICE_INDEX_INVALID".to_owned())
-}
-
 fn run_worker(
     app: AppHandle,
     state: Arc<HardwareMonitorState>,
@@ -425,7 +365,11 @@ fn run_worker(
             wait_cancelled(&cancel, Duration::from_millis(100));
             continue;
         }
-        let resolved = resolve_monitor_device(&ch347, &request);
+        let resolved = ch347::commands::resolve_device_index_core(
+            &ch347,
+            request.device_index,
+            &request.serial_number,
+        );
         match resolved.and_then(|index| {
             run_connected_session(
                 &app,
@@ -451,6 +395,18 @@ fn run_worker(
                 {
                     wait_cancelled(&cancel, Duration::from_millis(50));
                 }
+            }
+            Err(error)
+                if matches!(
+                    error_code(&error),
+                    "CH347_OWNER_UNKNOWN" | "FLASH_OWNER_UNKNOWN"
+                ) =>
+            {
+                state.publish(&app, |snapshot| {
+                    snapshot.error_code = Some(error_code(&error).to_owned());
+                    snapshot.error = Some(safe_error(&error));
+                });
+                break;
             }
             Err(error) if !cancel.load(Ordering::Acquire) => {
                 failures = failures.saturating_add(1);
@@ -521,6 +477,7 @@ fn run_connected_session(
         if hardware_safety::activity_may_be_active_nonblocking(app) {
             return Err("HARDWARE_MONITOR_PREEMPTED".to_owned());
         }
+        crate::flash_owner::check_ch347()?;
         let started = Instant::now();
         let channels: Vec<_> = (0..4)
             .map(|channel| read_channel(ch347, index, channel, &mut identified[channel]))
@@ -584,7 +541,9 @@ impl DeviceSession {
 impl Drop for DeviceSession {
     fn drop(&mut self) {
         let bl_mask = 1u8 << 3;
-        let _ = ch347::commands::gpio_set_core(&self.state, self.index, bl_mask, bl_mask, 0);
+        if crate::flash_owner::check_ch347().is_ok() {
+            let _ = ch347::commands::gpio_set_core(&self.state, self.index, bl_mask, bl_mask, 0);
+        }
         let _ = ch347::commands::close_core(&self.state, self.index);
     }
 }

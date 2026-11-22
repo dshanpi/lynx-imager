@@ -13,6 +13,7 @@ pub struct ImageEntry {
     main_type: String,
     subtype: String,
     size_bytes: u64,
+    stored_bytes: u64,
     offset: u64,
 }
 
@@ -25,9 +26,11 @@ pub struct ImageInspection {
     header_hex: String,
     app_hex: String,
     egon_at_zero: bool,
+    boot0_bytes: Option<u64>,
     spl_at8192: bool,
     container_version: Option<u32>,
     entries: Vec<ImageEntry>,
+    layout: Option<crate::imager_layout::Layout>,
 }
 
 #[derive(Debug, Serialize)]
@@ -37,6 +40,7 @@ pub struct ImageReference {
     sha256: String,
     size_bytes: Option<u64>,
     application_offset: Option<u64>,
+    parameters_offset: Option<u64>,
     application_bytes: Option<u64>,
     board_model: Option<String>,
     file_name: Option<String>,
@@ -77,10 +81,12 @@ fn inspect(path: &Path) -> Result<ImageInspection, String> {
         known_f101_loader: false,
         header_hex: hex::encode(&head[..head.len().min(16)]),
         app_hex: hex::encode(app),
+        boot0_bytes: crate::imager_layout::boot0_bytes(&mut f, &head, before.len()),
         egon_at_zero: head.get(4..12) == Some(b"eGON.BT0"),
         spl_at8192: spl.get(4..12) == Some(b"eGON.BT0") && spl.get(20..23) == Some(b"SPL"),
         container_version: None,
         entries: Vec::new(),
+        layout: None,
     };
     if head.starts_with(b"IMAGEWTY") {
         let version = head.get(8..12).ok_or("IMAGEWTY 文件头截断")?;
@@ -127,7 +133,12 @@ fn inspect(path: &Path) -> Result<ImageInspection, String> {
             {
                 return Err(format!("IMAGEWTY 条目范围无效：{}", item.filename));
             }
+            if item.filename.eq_ignore_ascii_case("sunxi_mbr.fex") && stored.min(original) >= 16384 {
+                let content = sample(&mut f, offset, 16384)?;
+                result.layout = crate::imager_layout::sunxi(&content);
+            }
             result.entries.push(ImageEntry {
+                stored_bytes: stored,
                 name: item.filename,
                 main_type: item.maintype.trim().to_owned(),
                 subtype: item.subtype.trim().to_owned(),
@@ -136,6 +147,7 @@ fn inspect(path: &Path) -> Result<ImageInspection, String> {
             });
         }
     }
+    if result.container_version.is_none() { result.layout = crate::imager_layout::disk(&mut f, before.len()); }
     f.seek(SeekFrom::Start(0)).map_err(|e| e.to_string())?;
     let digest = hash_reader(&mut f).map_err(|e| e.to_string())?;
     let after = f.metadata().map_err(|e| e.to_string())?;
@@ -188,6 +200,7 @@ fn read_reference(path: &Path) -> Result<ImageReference, String> {
             img.get("sizeBytes").or_else(|| doc.get("image_bytes")),
             "镜像大小",
         )?,
+        parameters_offset: doc.pointer("/layout/parametersOffset").and_then(unsigned),
         application_offset: optional_number(
             doc.pointer("/layout/applicationOffset")
                 .or_else(|| doc.get("physical_app_offset")),

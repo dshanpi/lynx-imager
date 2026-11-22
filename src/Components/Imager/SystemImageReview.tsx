@@ -16,6 +16,7 @@ import {
   referenceProblem,
   sourceProblem,
 } from './imageReviewModel';
+import { ImageLayout, awLayouts } from './ImageLayout';
 import './SystemImageReview.css';
 
 const basename = (s: string) => s.split(/[\\/]/).pop() || s;
@@ -246,7 +247,9 @@ export function AllwinnerRoute({ board, route, onRoute, candidate }: V2SystemPic
   return (
     <fieldset className="imager-aw-route">
       <legend className="v2c-visually-hidden">系统类型</legend>
-      <span className="image-route-label" aria-hidden="true">系统类型</span>
+      <span className="image-route-label" aria-hidden="true">
+        系统类型
+      </span>
       {(['vendor', mainline].filter(Boolean) as BasicRoute[]).map((r) => (
         <label key={r}>
           <input
@@ -305,14 +308,6 @@ export function SystemImageReview(props: V2SystemPickerProps) {
     busy?: boolean;
     error?: string;
   }>({});
-  const reviewKey = JSON.stringify([
-    imagePath,
-    identity?.sha256,
-    needsRam && loaderPath,
-    needsRam && loaderIdentity?.sha256,
-  ]);
-  const [acceptedKey, setAcceptedKey] = useState('');
-  const accepted = !!identity && (!needsRam || !!loaderIdentity) && acceptedKey === reviewKey;
   const pending = useRef(0);
   useEffect(
     () => () => {
@@ -332,7 +327,6 @@ export function SystemImageReview(props: V2SystemPickerProps) {
       });
       if (!path || id !== pending.current) return;
       setComparison({});
-      setAcceptedKey('');
       setManual({ busy: true });
       const reference = await invokeCommand('imager_read_image_reference', { path });
       if (id === pending.current) setManual({ name: basename(path), path, reference });
@@ -347,6 +341,7 @@ export function SystemImageReview(props: V2SystemPickerProps) {
         sha256: manifest.image.sha256,
         sizeBytes: manifest.image.sizeBytes,
         applicationOffset: manifest.layout.applicationOffset,
+        parametersOffset: manifest.layout.parametersOffset,
         applicationBytes: null,
         boardModel: manifest.boardModel,
         fileName: manifest.image.fileName,
@@ -369,7 +364,6 @@ export function SystemImageReview(props: V2SystemPickerProps) {
         ],
       });
       if (!path || id !== pending.current) return;
-      setAcceptedKey('');
       setComparison({ path, busy: true });
       const result = await invokeCommand('imager_compare_application', {
         imagePath,
@@ -403,6 +397,7 @@ export function SystemImageReview(props: V2SystemPickerProps) {
     conflict ||
     profile ||
     ramProblem ||
+    (needsRam && !loaderMatch && loaderIdentity ? 'RAM 引导包与发布清单的大小或指纹不符。' : '') ||
     '';
   const ready =
     !!identity &&
@@ -411,7 +406,6 @@ export function SystemImageReview(props: V2SystemPickerProps) {
         !problem &&
         !manual.busy &&
         !comparison.busy &&
-        (!!manifest || accepted) &&
         (!needsRam || (!!loader.report && loaderMatch && loader.report.sha256 !== report.sha256))
       : true);
   useEffect(() => {
@@ -594,32 +588,26 @@ export function SystemImageReview(props: V2SystemPickerProps) {
               {problem || '系统镜像与引导包内容相同，请分别选择写入文件及 RAM 引导来源。'}
             </p>
           )}
-          {aw && !manifest && !!imagePath && (
-            <label className="imager-image-confirm">
-              <input
-                type="checkbox"
-                checked={accepted}
-                disabled={!identity || (needsRam && !loaderIdentity)}
-                onChange={(e) => setAcceptedKey(e.target.checked ? reviewKey : '')}
-              />
-              <span>
-                已依据板卡配套资料核对 {boardName} 的镜像用途、存储介质
-                {needsRam ? '和引导来源' : ''}。
-              </span>
-            </label>
-          )}
-          {aw && (!!imagePath || !!loaderPath) && !problem && (
+          {aw && (!!imagePath || !!loaderPath) && !problem && !bothSame && (
             <small role="status">
               {ready
                 ? '当前文件可进入设备连接。'
-                : !identity && imagePath
-                  ? '正在读取系统镜像…'
-                  : identity && !report
-                    ? '正在分析文件内容…'
-                    : needsRam && !loader.report
-                      ? '等待有效的 RAM 引导来源。'
-                      : '请核对板型配套资料。'}
+                : !imagePath
+                  ? '请选择系统镜像。'
+                  : !identity || !report
+                    ? '正在分析系统镜像…'
+                    : needsRam && !loaderPath
+                      ? '请选择 RAM 引导包。'
+                      : needsRam && !loader.report
+                        ? '正在检查引导组件…'
+                        : '正在核对参考文件…'}
             </small>
+          )}
+          {aw && report && (
+            <ImageLayout
+              key={report.sha256 + route}
+              views={awLayouts(report, conflict ? null : reference, route === 'mainline_spinor')}
+            />
           )}
         </>
       )}

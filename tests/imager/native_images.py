@@ -70,12 +70,6 @@ def next_enabled(ui, expected):
             "Next " + ("enabled" if expected else "blocked"))
 
 
-def accept(ui):
-    ui.wait(lambda:ui.js("const e=document.querySelector('.imager-image-confirm input'); return !!e&&!e.disabled"), "file checks available")
-    ui.click(".imager-image-confirm input")
-    next_enabled(ui, True)
-
-
 def route(ui, name):
     ui.click('input[name="aw-system-route"][value="' + name + '"]')
 
@@ -94,7 +88,7 @@ def return_to_files(ui, label, escape=False):
     else:
         ui.click(".imager-review-page button","返回文件选择")
     ui.wait(lambda:ui.js("return !document.querySelector('.imager-review-page') && !!document.querySelector('.v2c-tabs')?.getClientRects().length && document.activeElement?.textContent.trim()===arguments[0]",label), 'restore picker and trigger focus')
-    assert ui.js("return !!document.querySelector('.imager-image-confirm input')?.getClientRects().length"), 'confirmation remains available'
+    assert ui.js("return !document.querySelector('.imager-image-review input[type=checkbox]')")
 
 
 def prepare_f101(ui, fixtures):
@@ -105,7 +99,7 @@ def prepare_f101(ui, fixtures):
     ui.pick(paths["loader"], "选择引导包…")
     ui.pick(paths["ref"], "选择参考清单…")
     ui.wait(lambda:ui.js("return document.querySelector('.imager-image-reference small')?.innerText==='BUILD-INFO.json'"), "parsed build reference")
-    accept(ui)
+    next_enabled(ui, True)
     return paths
 
 
@@ -213,13 +207,13 @@ def run(ui, fixtures):
     route(ui, "vendor")
     ui.pick(files["factory"], "选择镜像…")
     ui.text("将这个包改作 RAM 引导来源")
-    next_enabled(ui, False)
+    next_enabled(ui, True)
     ui.save("aw-source-role")
     ui.click("button", "将这个包改作 RAM 引导来源")
     ui.text("factory-nor.img")
     next_enabled(ui, False)
     ui.pick(files["raw"], "选择镜像…")
-    accept(ui)
+    next_enabled(ui, True)
 
     files = prepare_f101(ui, fixtures)
     assert ui.js("""
@@ -236,22 +230,20 @@ def run(ui, fixtures):
     ui.save("aw-fes-source")
     return_to_files(ui,"检查引导组件",escape=True)
     next_enabled(ui,True)
-    ui.click(".imager-image-confirm input")
-    next_enabled(ui,False)
     ui.click("button", "分析系统镜像")
     inspector(ui,"image")
     ui.text("清单声明的文件布局")
     ui.text(hashlib.sha256(files["raw"].read_bytes()).hexdigest())
-    next_enabled(ui,False)
+    next_enabled(ui,True)
     ui.pick(files["app"], "选择应用文件并比对…")
     ui.text("与镜像应用区逐字节一致")
     ui.save("aw-f101-analysis")
     return_to_files(ui,"分析系统镜像")
-    next_enabled(ui,False)
+    next_enabled(ui,True)
     ui.click(".imager-file-details summary")
     ui.text(hashlib.sha256(files["raw"].read_bytes()).hexdigest())
     ui.click(".imager-file-details summary")
-    accept(ui)
+    next_enabled(ui, True)
     # The recent-source picker must re-read the path and request its separate RAM source.
     ui.click(".v2c-tabs button:nth-child(3)")
     ui.click(".v2c-recent-row")
@@ -266,7 +258,7 @@ def run(ui, fixtures):
     assert not submissions(ui)
     ui.pick(files["ref"], "更换参考清单…")
     ui.wait(lambda:ui.js("return document.querySelector('.imager-image-reference small')?.innerText==='BUILD-INFO.json'"), "recovered build reference")
-    accept(ui)
+    next_enabled(ui, True)
 
     local(ui, "f101")
     ui.pick(files["unknown"], "选择镜像…")
@@ -283,7 +275,7 @@ def run(ui, fixtures):
     local(ui, "f101")
     route(ui, "vendor")
     ui.pick(files["factory"], "选择镜像…")
-    accept(ui)
+    next_enabled(ui, True)
     ui.save("aw-factory")
     submit(ui,files["factory"],"vendor")
 
@@ -291,7 +283,7 @@ def run(ui, fixtures):
     route(ui, "mainline_nand")
     ui.pick(files["nand"], "选择镜像…")
     ui.pick(files["loader"], "选择引导包…")
-    accept(ui)
+    next_enabled(ui, True)
     ui.save("aw-mainline-nand")
     submit(ui,files["nand"],"mainline_nand",files["loader"])
 
@@ -306,7 +298,7 @@ def run(ui, fixtures):
     local(ui, "t153-emmc")
     ui.pick(files["emmc"], "选择镜像…")
     ui.pick(files["loader"], "选择引导包…")
-    accept(ui)
+    next_enabled(ui, True)
     ui.save("aw-mainline-emmc")
     submit(ui,files["emmc"],"mainline_emmc",files["loader"])
 
@@ -330,7 +322,7 @@ def run(ui, fixtures):
     ui.pick(files["app"],"选择应用文件并比对…")
     ui.text("与镜像应用区逐字节一致")
     return_to_files(ui,"分析系统镜像")
-    accept(ui)
+    next_enabled(ui, True)
     review_target(ui)
     content=bytearray(files["app"].read_bytes())
     content[-1]^=1

@@ -9,6 +9,14 @@ pub struct EfexError {
 }
 
 impl EfexError {
+    pub(crate) fn hardware_busy(message: String) -> Self {
+        Self {
+            code: -33,
+            name: "DeviceBusy".to_owned(),
+            message,
+        }
+    }
+
     pub fn from_libefex(error: &libefex::EfexError) -> Self {
         Self::from_libefex_with_device_id(error, None)
     }

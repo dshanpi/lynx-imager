@@ -1111,6 +1111,7 @@ fn resolve_current_allwinner_endpoint(
 }
 
 fn scan_current_allwinner_endpoint(usb_location: &str) -> Result<CurrentAllwinnerEndpoint, String> {
+    crate::flash_owner::check("openixcli")?;
     let devices = libefex::Context::scan_usb_devices()
         .map_err(|error| format!("ALLWINNER_FEL_ENDPOINT_SCAN:{error}"))?;
     resolve_current_allwinner_endpoint(usb_location, &devices)
@@ -2825,6 +2826,7 @@ impl LynxMcp {
             "Mainline FEL boot requires the desktop-hosted LYNX Gateway.".to_owned()
         })?;
         let safety = app_handle.state::<crate::hardware_safety::HardwareSafetyState>();
+        crate::flash_owner::check_start("openixcli")?;
         let hardware_guard = safety.try_begin_scoped(
             "Linux MCP",
             "Allwinner 主线 FEL 启动",
@@ -3556,6 +3558,7 @@ impl LynxMcp {
         let app_handle = self.app_handle.as_ref().ok_or_else(|| {
             "Allwinner FEL entry requires the desktop-hosted LYNX Gateway.".to_owned()
         })?;
+        crate::flash_owner::check_start("openixcli")?;
         let hardware_guard = match existing_guard {
             Some(guard) => guard,
             None => {
@@ -3863,6 +3866,7 @@ impl LynxMcp {
         let app_handle = self.app_handle.as_ref().ok_or_else(|| {
             "K230 upgrade mode requires the desktop-hosted LYNX Gateway.".to_owned()
         })?;
+        crate::flash_owner::check_start("k230")?;
         crate::hardware_safety::ensure_idle(app_handle, "K230 进入烧录模式")?;
         let safety = app_handle.state::<crate::hardware_safety::HardwareSafetyState>();
         let _hardware_guard = safety.try_begin(

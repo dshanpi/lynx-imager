@@ -352,6 +352,7 @@ impl LynxMcp {
             .app_handle
             .as_ref()
             .ok_or_else(|| "ROCKCHIP_LOADER_DESKTOP_REQUIRED".to_owned())?;
+        crate::flash_owner::check_start("openrockcli")?;
         crate::hardware_safety::ensure_idle(app, "Rockchip 进入 Loader")?;
         crate::workbench::flasher::resolve_executable(app, "openrockcli", &scope.flasher_path)?;
         let guard = app

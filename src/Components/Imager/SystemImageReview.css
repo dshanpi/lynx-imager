@@ -32,8 +32,7 @@
   background: var(--vc-tint);
   border-color: var(--vc-accent);
 }
-.imager-aw-route input,
-.imager-image-confirm input {
+.imager-aw-route input {
   accent-color: var(--vc-accent);
 }
 .imager-image-review {
@@ -84,19 +83,6 @@
   display: block;
   color: var(--vc-sub);
   font-size: 12px;
-}
-.imager-image-confirm {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 32px;
-  cursor: pointer;
-}
-.imager-image-confirm input {
-  width: 16px;
-  height: 16px;
-  flex: none;
-  scroll-margin-block: 16px;
 }
 .imager-image-problem {
   border-inline-start: 3px solid var(--lynx-danger);

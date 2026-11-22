@@ -476,6 +476,43 @@ pub fn workbench_list_devices(
 }
 
 #[command]
+pub fn imager_resolve_flash_target(
+    state: State<'_, Arc<WorkbenchState>>,
+    name: String,
+    chip_vendor: String,
+    flasher_kind: String,
+    flasher_path: String,
+    usb_binding: String,
+) -> Result<DeviceConfig, String> {
+    validate_device_vendor(&name, &chip_vendor, &flasher_kind)?;
+    if usb_binding.trim().is_empty() {
+        return Err("请选择 USB 端口。".to_owned());
+    }
+    let db = state.db.lock().map_err(|e| e.to_string())?;
+    if !flasher_path.is_empty()
+        && !storage::list_devices(&db)
+            .map_err(|e| e.to_string())?
+            .iter()
+            .any(|d| {
+                d.chip_vendor == chip_vendor
+                    && d.flasher_kind == flasher_kind
+                    && d.flasher_path == flasher_path
+            })
+    {
+        return Err("烧录工具配置已变化，请重新检测。".to_owned());
+    }
+    storage::basic_flash_target(
+        &db,
+        &name,
+        &chip_vendor,
+        &flasher_kind,
+        &flasher_path,
+        &usb_binding,
+    )
+    .map_err(|e| e.to_string())
+}
+
+#[command]
 pub fn workbench_list_platforms() -> Vec<PlatformSpec> {
     platform_catalog().to_vec()
 }

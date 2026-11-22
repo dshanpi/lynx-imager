@@ -126,7 +126,7 @@ def run(ui, fixtures):
         diag = Path(tmp) / 'diag.json'
         ui.fixture('plugin:dialog|save', str(diag))
         ui.click('.v2w-failure-actions button','导出诊断记录')
-        wait(diag.exists,'native diagnostic export')
+        ui.text('已导出 diag.json')
         data = json.loads(diag.read_text())
         assert data['status'] == 'failed' and any('UsbTransfer' in l for l in data['logTail'])
         assert data['parameters']['imageSha256'] == digest

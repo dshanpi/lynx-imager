@@ -573,6 +573,8 @@ export interface IpcCommandMap
   /** Get file size in bytes */
   get_file_size: IpcCommandSpec<{ path: string }, number>;
   imager_file_identity: IpcCommandSpec<{ path: string }, { sizeBytes: number; sha256: string }>;
+  imager_driver_info: IpcCommandSpec<{vendor:string}, {platform:string;ids:string[]}>;
+  imager_install_driver: IpcCommandSpec<{ vendor: string; infPath?: string }, string>;
   imager_inspect_image: IpcCommandSpec<{ path: string }, import('./contracts/ImagerImage').ImageInspection>;
   imager_read_image_reference: IpcCommandSpec<{ path: string }, import('./contracts/ImagerImage').ImageReference>;
   imager_compare_application: IpcCommandSpec<{ imagePath:string; applicationPath:string; offset:number; expectedBytes:number|null }, import('./contracts/ImagerImage').AppComparison>;
