@@ -48,7 +48,7 @@ class Desktop:
         path.write_bytes(base64.b64decode(self.call('GET', self.session+'/screenshot')))
 
     def find(self,selector,label=None):
-        return self.js("return [...document.querySelectorAll(arguments[0])].find(e=>e.getClientRects().length&&!e.disabled&&(!arguments[1]||e.innerText.trim()===arguments[1]||e.getAttribute('aria-label')===arguments[1]))||null",selector,label)
+        return self.js("return [...document.querySelectorAll(arguments[0])].find(e=>e.getClientRects().length&&!e.matches(':disabled')&&(!arguments[1]||e.innerText.trim()===arguments[1]||e.getAttribute('aria-label')===arguments[1]))||null",selector,label)
 
     def click(self,selector,label=None):
         e=wait(lambda:self.find(selector,label),str((selector,label)))
