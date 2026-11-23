@@ -248,11 +248,12 @@ def run(ui, fixtures):
     ui.text(hashlib.sha256(files["raw"].read_bytes()).hexdigest())
     ui.click(".imager-file-details summary")
     next_enabled(ui, True)
-    # The recent-source picker must re-read the path and request its separate RAM source.
+    # A recent mainline image restores its matching RAM loader and revalidates both files.
     ui.click(".v2c-tabs button:nth-child(3)")
     ui.click(".v2c-recent-row")
     ui.text(files["raw"].name)
-    next_enabled(ui, False)
+    ui.text(files["loader"].name)
+    next_enabled(ui, True)
 
     files=prepare_f101(ui, fixtures)
     ui.pick(files["wrong"], "更换参考清单…")
