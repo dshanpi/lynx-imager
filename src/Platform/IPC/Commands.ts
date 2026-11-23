@@ -579,6 +579,10 @@ export interface IpcCommandMap
     { path: string },
     import('./contracts/ImagerImage').ImageInspection
   >;
+  imager_prepare_f101_xip: IpcCommandSpec<
+    { applicationPath: string; applicationSha256: string; bootSourcePath: string },
+    string
+  >;
   imager_read_image_reference: IpcCommandSpec<
     { path: string },
     import('./contracts/ImagerImage').ImageReference

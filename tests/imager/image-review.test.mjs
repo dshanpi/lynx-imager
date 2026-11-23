@@ -81,6 +81,12 @@ test('reference validation distinguishes file digest, model and application boun
   assert.match(check({ sha256: 'de'.repeat(32) }), /SHA-256/);
   assert.match(check({ sizeBytes: 600000 }), /大小/);
   assert.match(check({ boardModel: 'T113-Pro' }), /板型/);
+  const checkT153 = (boardModel) =>
+    model.referenceProblem({ ...ref, boardModel }, raw, 'mainline_emmc', 'T153 Omnigate', [
+      'Omnigate T153',
+    ]);
+  assert.equal(checkT153('omnigate-t153'), '');
+  assert.match(checkT153('T153 Other Board'), /板型/);
   assert.match(check({ applicationOffset: 0 }), /偏移/);
   assert.match(check({ applicationBytes: 999999 }), /超出/);
 });

@@ -309,9 +309,13 @@ export function SystemImageReview(props: V2SystemPickerProps) {
     error?: string;
   }>({});
   const pending = useRef(0);
+  const packageRequest = useRef(0);
+  const [packaging, setPackaging] = useState(false);
+  const [packError, setPackError] = useState('');
   useEffect(
     () => () => {
       pending.current++;
+      packageRequest.current++;
     },
     []
   );
@@ -348,7 +352,41 @@ export function SystemImageReview(props: V2SystemPickerProps) {
       }
     : (manual.reference ?? null);
   const report = image.report;
-  const conflict = reference && report ? referenceProblem(reference, report, route, boardName) : '';
+  const canPackage =
+    !manifest &&
+    board.id === 'f101' &&
+    route === 'mainline_spinor' &&
+    /\.bin$/i.test(imagePath) &&
+    !!report &&
+    !report.egonAtZero &&
+    !report.containerVersion;
+  async function packageApplication() {
+    if (!canPackage || !report || packaging) return;
+    const id = ++packageRequest.current;
+    setPackaging(true);
+    setPackError('');
+    try {
+      const bootSourcePath = await open({
+        multiple: false,
+        directory: false,
+        title: '选择 F101 XIP 启动文件或配套整片镜像',
+        filters: [{ name: 'F101 XIP 启动来源', extensions: ['bin', 'img'] }],
+      });
+      if (!bootSourcePath || id !== packageRequest.current) return;
+      const path = await invokeCommand('imager_prepare_f101_xip', {
+        applicationPath: imagePath,
+        applicationSha256: report.sha256,
+        bootSourcePath,
+      });
+      if (id === packageRequest.current) props.onImagePath(path);
+    } catch (error) {
+      if (id === packageRequest.current) setPackError(formatErrorMessage(error));
+    } finally {
+      if (id === packageRequest.current) setPackaging(false);
+    }
+  }
+  const conflict =
+    reference && report ? referenceProblem(reference, report, route, boardName, board.aliases) : '';
   async function chooseApplication() {
     const offset = reference?.applicationOffset;
     if (offset == null || conflict) return;
@@ -455,7 +493,7 @@ export function SystemImageReview(props: V2SystemPickerProps) {
               {!props.vendorControls && (
                 <>
                   <div>
-                    <h3>{aw ? awRouteText[route]?.[1] || '系统镜像' : '系统镜像'}</h3>
+                    <h3>{canPackage ? '本地应用 BIN' : awRouteText[route]?.[1] || '系统镜像'}</h3>
                     <code>
                       <LynxIcon name="document" size={16} />
                       {basename(imagePath)}
@@ -469,18 +507,22 @@ export function SystemImageReview(props: V2SystemPickerProps) {
                     <LynxIcon name="database" size={20} />
                     <div>
                       <strong>
-                        {route === 'mainline_spinor'
-                          ? '写入 SPI NOR'
-                          : route === 'mainline_nand'
-                            ? '写入 NAND 组件'
-                            : route === 'mainline_emmc'
-                              ? '写入 eMMC'
-                              : '安装厂商系统'}
+                        {canPackage
+                          ? '待合成整片镜像'
+                          : route === 'mainline_spinor'
+                            ? '写入 SPI NOR'
+                            : route === 'mainline_nand'
+                              ? '写入 NAND 组件'
+                              : route === 'mainline_emmc'
+                                ? '写入 eMMC'
+                                : '安装厂商系统'}
                       </strong>
                       <small>
-                        {route === 'mainline_spinor'
-                          ? '物理起点 0x000000'
-                          : awRouteText[route]?.[2]}
+                        {canPackage
+                          ? '应用区偏移 0x080000'
+                          : route === 'mainline_spinor'
+                            ? '物理起点 0x000000'
+                            : awRouteText[route]?.[2]}
                       </small>
                     </div>
                   </div>
@@ -537,7 +579,9 @@ export function SystemImageReview(props: V2SystemPickerProps) {
                 <small>
                   {loaderIdentity
                     ? '板型配套包 · ' + loaderIdentity.sizeBytes.toLocaleString() + ' B'
-                    : '选择配套原厂包，提取 FES 与 U-Boot。'}
+                    : loaderPath
+                      ? props.loaderError || '正在读取引导包。'
+                      : '必选 · 请选择含 FES 和 U-Boot 的板卡配套引导包。'}
                 </small>
               </div>
               {!imagePath && (
@@ -588,6 +632,21 @@ export function SystemImageReview(props: V2SystemPickerProps) {
               {problem || '系统镜像与引导包内容相同，请分别选择写入文件及 RAM 引导来源。'}
             </p>
           )}
+          {canPackage && (
+            <div className="imager-image-reference">
+              <div>
+                <b>将 Zephyr 应用合成为整片镜像</b>
+                <small>
+                  适用于 YuzukiNeko F101 XIP 应用。选择配套的 xip-boot_spi.bin
+                  或整片镜像作为启动来源，应用放在 SPI NOR 的 0x080000。
+                </small>
+                {packError && <small role="alert">{packError}</small>}
+              </div>
+              <button type="button" disabled={packaging} onClick={() => void packageApplication()}>
+                {packaging ? '正在准备镜像…' : '选择启动来源并合成…'}
+              </button>
+            </div>
+          )}
           {aw && (!!imagePath || !!loaderPath) && !problem && !bothSame && (
             <small role="status">
               {ready
@@ -606,7 +665,11 @@ export function SystemImageReview(props: V2SystemPickerProps) {
           {aw && report && (
             <ImageLayout
               key={report.sha256 + route}
-              views={awLayouts(report, conflict ? null : reference, route === 'mainline_spinor')}
+              views={awLayouts(
+                report,
+                conflict ? null : reference,
+                route === 'mainline_spinor' && !profile
+              )}
             />
           )}
         </>

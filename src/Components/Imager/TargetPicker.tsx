@@ -258,14 +258,14 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
               )}
               {choice && part.vendor !== 'allwinner' && (
                 <label className="v2c-select-model">
-                  具体板型
+                  具体板型（选填）
                   {part.vendor === 'rockchip' && !!part.profile?.aliases.length ? (
                     <select
                       aria-label="具体 RK 板型"
                       value={boardName}
                       onChange={(e) => onBoardName(e.target.value)}
                     >
-                      <option value="">选择实际开发板</option>
+                      <option value="">使用芯片型号 {part.name}</option>
                       {part.profile?.aliases.map((a) => (
                         <option key={a}>{a}</option>
                       ))}
@@ -274,7 +274,7 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
                     <input
                       aria-label="具体板型"
                       value={boardName}
-                      placeholder="输入板卡丝印或资料中的型号"
+                      placeholder={`默认使用 ${part.name}`}
                       onChange={(e) => onBoardName(e.target.value)}
                     />
                   )}

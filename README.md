@@ -1,8 +1,10 @@
 # LYNX Imager
 
-LYNX Imager 是面向开发板系统镜像烧录的开源桌面软件。它用基础向导帮助普通用户完成烧录，用高级工作台保留 SPI NOR、NAND、eMMC、Loader 和结束动作等专业能力，并把 AI 作为受策略保护的调用入口。
+在 Windows 或 Ubuntu 上给开发板烧写系统镜像。选好主控芯片和板上的存储介质，向导会列出适用的镜像类型，以及这次烧录需要的引导文件。
 
-当前仓库已经从离线 UI 原型进入 Tauri 桌面工程阶段：前端采用 React + TypeScript + Vite，桌面后端采用 Rust + Tauri 2，烧录与设备能力沿用现有 OpenixCLI、FEL/FES、USB、串口、ADB 和 MCP IPC 边界。
+**v0.1-rc5 预发行版**　 [下载 Windows x64 安装包（.exe）](https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc5/LYNX-Imager_0.1.0-rc.5_windows-x64-setup.exe) · [下载 Ubuntu amd64 安装包（.deb）](https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc5/LYNX-Imager_0.1.0-rc.5_linux-amd64.deb) · [发行说明与校验文件](https://github.com/dshanpi/lynx-imager/releases/tag/v0.1-rc5)
+
+![LYNX Imager 在 Ubuntu 上选择全志 F101 的目标存储。选中 SPI NOR 后，可查看对应的厂商固件包和主线整盘镜像两种烧录路线。](docs/images/flash-target-rc4.png)
 
 ## 工作区
 
@@ -17,6 +19,8 @@ Windows x64 用户下载 NSIS 安装包，Ubuntu amd64 用户下载 Debian 安�
 应用启动后会检查更新，也可在设置中手动检查。发现较高版本后，经用户确认下载完整包，并用 Imager 内置公钥校验。Ubuntu 安装 Debian 更新时可能要求系统授权。[发布门禁](docs/engineering/imager-release.md)
 
 ## 开发
+
+桌面前端使用 React、TypeScript 和 Vite，后端使用 Rust 和 Tauri 2。烧录和设备通信沿用 OpenixCLI、FEL/FES、USB、串口、ADB 和 MCP IPC 接口。
 
 ```bash
 npm install

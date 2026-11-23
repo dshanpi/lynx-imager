@@ -259,6 +259,7 @@ pub fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Syn
         crate::imager_drivers::imager_driver_info,
         crate::imager_drivers::imager_install_driver,
         crate::imager_inspect::imager_inspect_image,
+        crate::imager_f101_xip::imager_prepare_f101_xip,
         crate::imager_inspect::imager_read_image_reference,
         crate::imager_inspect::imager_compare_application,
         crate::firmware::commands::firmware_parse_image,

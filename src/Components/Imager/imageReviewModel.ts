@@ -44,8 +44,12 @@ export function sourceProblem(route: BasicRoute, image: ImageInspection): string
     )
       return '未识别到 NAND Boot0 和 Boot1 组件，请选择板卡配套的 NAND 组件包。';
   } else if (route === 'mainline_spinor') {
-    if (!image.egonAtZero || image.sizeBytes <= 0x80000 || image.containerVersion)
-      return 'F101 需要物理起点带 eGON 启动头、覆盖 0x080000 应用区的完整 SPI NOR 镜像。';
+    if (image.containerVersion)
+      return '选中的是 IMAGEWTY 包。要安装厂商系统，请切换系统类型；要写主线系统，请更换为完整 SPI NOR 镜像。';
+    if (!image.egonAtZero)
+      return '文件开头缺少 eGON.BT0 启动头，无法从地址 0 写入。请更换为板卡配套的完整 SPI NOR 镜像。';
+    if (image.sizeBytes <= 0x80000)
+      return '文件在应用区起点 0x080000 之前或该处结束，请选择包含应用数据的完整 SPI NOR 镜像。';
   } else if (route === 'mainline_emmc' && !image.splAt8192) {
     return '没有在文件偏移 0x2000 找到此 eMMC 路线要求的 eGON.BT0 与 SPL 标记。';
   }
@@ -56,7 +60,8 @@ export function referenceProblem(
   ref: ImageReference,
   image: ImageInspection,
   route: BasicRoute,
-  board: string
+  board: string,
+  aliases: readonly string[] = []
 ): string {
   if (ref.sha256.toLowerCase() !== image.sha256.toLowerCase())
     return '镜像 SHA-256 与参考值不同，请更换系统镜像或选择正确的清单。';
@@ -65,7 +70,7 @@ export function referenceProblem(
   if (ref.boardModel) {
     const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
     const match =
-      norm(ref.boardModel) === norm(board) ||
+      [board, ...aliases].map(norm).includes(norm(ref.boardModel)) ||
       (norm(board) === 'f101' &&
         ['yuzukineko', 'yuzukihdneko', 'f101s3'].includes(norm(ref.boardModel)));
     if (!match) return '清单声明的板型与当前选择不同：' + ref.boardModel;

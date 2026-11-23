@@ -8,7 +8,7 @@ Unicode true
 !endif
 
 !ifndef OUTPUT_FILE
-  !define OUTPUT_FILE "..\release\windows\LYNX_0.1.0-rc.4_x64-setup.exe"
+  !define OUTPUT_FILE "..\release\windows\LYNX_0.1.0-rc.5_x64-setup.exe"
 !endif
 
 !ifndef PRODUCT_NAME
@@ -18,7 +18,7 @@ Unicode true
   !define PRODUCT_BRAND "DshanPI LYNX Imager"
 !endif
 !ifndef PRODUCT_VERSION
-  !define PRODUCT_VERSION "0.1.0-rc.4"
+  !define PRODUCT_VERSION "0.1.0-rc.5"
 !endif
 !ifndef PRODUCT_FILE_VERSION
   !define PRODUCT_FILE_VERSION "0.1.0.0"

@@ -21,6 +21,8 @@ interface RouteProps {
   selection: VendorSelection;
   onChange: (next: VendorSelection) => void;
   inspection?: VendorInspection | null;
+  fileIssue?: string;
+  loaderError?: string;
   imagePath: string;
   loaderPath: string;
   onChooseImage: () => void;
@@ -59,6 +61,8 @@ export function VendorRoutePanel({
   selection: s,
   onChange,
   inspection,
+  fileIssue,
+  loaderError,
   imagePath,
   loaderPath,
   onChooseImage,
@@ -127,14 +131,24 @@ export function VendorRoutePanel({
                 ))}
               </dl>
             ) : (
-              result.blockers.length === 0 && <p>未发现可静态列出的文件引用。</p>
+              !fileIssue && <p>未发现可静态列出的文件引用。</p>
             )}
             {result.blockers.map((text, i) => (
               <p className="vendor-issue" key={i}>
                 {text}
               </p>
             ))}
+            {fileIssue && !result.blockers.includes(fileIssue) && (
+              <p className="vendor-issue" role="alert">
+                {fileIssue}
+              </p>
+            )}
           </div>
+        )}
+        {s.route === 'rk-emmc' && loaderError && (
+          <p className="vendor-issue" role="alert">
+            Loader 读取失败：{loaderError}
+          </p>
         )}
       </section>
       <aside className="vendor-detail vendor-context" aria-label="本次写入目标">

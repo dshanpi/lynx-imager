@@ -121,7 +121,7 @@ def run(ui, fixtures):
     # Submit every configuration through the real confirmation UI. The isolated
     # test build intercepts the write IPC before any board adapter can run.
     cases = [
-        ('rk-update','rk3576','RK3576 EVB','rockchip','厂商 update.img','rk'),
+        ('rk-update','rk3576','','rockchip','厂商 update.img','rk'),
         ('rk-emmc','rk3588','RK3588-EVB1','rockchip','主线 eMMC 整盘','raw'),
         ('nxp-uuu','nxp-imx6ull','i.MX6ULL EVK','nxp','UUU 脚本','uuu'),
         ('nxp-configured','nxp-imx','i.MX8MP-EVK','nxp','单板已保存配置','wic'),

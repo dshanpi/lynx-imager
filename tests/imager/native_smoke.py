@@ -158,8 +158,8 @@ def run(binary, out):
             web.click('button[data-model="RK3588S"]')
             web.click('button[data-medium="eMMC"]')
             assert web.js("""return [...document.querySelector('select[aria-label="具体 RK 板型"]').options]
-              .some(o=>o.value==='LubanCat-4 (RK3588S)') && document.querySelector('.v2-foot-actions .v2-primary').disabled""")
-            checked("RK 系列内筛选、主控识别帮助、未适配介质和具体板型门禁")
+              .some(o=>o.value==='LubanCat-4 (RK3588S)') && !document.querySelector('.v2-foot-actions .v2-primary').disabled""")
+            checked("RK 系列内筛选、主控识别帮助、未适配介质和选填板型")
             web.click(".target-vendors button", "恩智浦")
             assert web.js("""return [...document.querySelectorAll('[data-model]')].map(e=>e.dataset.model).sort().join(',')==='i.MX6ULL,i.MX8,i.MX9'""")
             keys(web, "\ue009", "k")  # Control+K via real WebDriver keyboard events.

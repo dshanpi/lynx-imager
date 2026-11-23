@@ -19,7 +19,7 @@ mockIPC(
     qa.calls.push(cmd);
     switch (cmd) {
       case 'plugin:app|version':
-        return '0.1.0-rc.4';
+        return '0.1.0-rc.5';
       case 'get_system_proxy':
         return null;
       case 'plugin:updater|check':
@@ -71,19 +71,23 @@ mockIPC(
       case 'workbench_scan_flasher_devices':
         return qa.usb.filter((d) => d.flasherKind === args.kind);
       case 'imager_file_identity':
+        if (args.path === qa.unreadableFile) throw Error('测试文件不可读取');
+        if (args.path.endsWith('/zephyr.bin'))
+          return { sizeBytes: 5946116, sha256: '3c'.repeat(32) };
         return {
           sizeBytes: args.path.endsWith('/system.img') ? 614400 : 1024,
           sha256: (args.path.endsWith('/loader.img') ? '2b' : '1a').repeat(32),
         };
       case 'imager_inspect_image': {
+        const applicationOnly = args.path.endsWith('/zephyr.bin');
         const loader = args.path.endsWith('/loader.img');
         return {
           knownF101Loader: false,
-          sizeBytes: loader ? 1024 : 614400,
-          sha256: (loader ? '2b' : '1a').repeat(32),
+          sizeBytes: applicationOnly ? 5946116 : loader ? 1024 : 614400,
+          sha256: (applicationOnly ? '3c' : loader ? '2b' : '1a').repeat(32),
           headerHex: '00 00',
           appHex: '01',
-          egonAtZero: !loader,
+          egonAtZero: !loader && !applicationOnly,
           splAt8192: false,
           containerVersion: loader ? 768 : null,
           entries: loader
@@ -106,6 +110,14 @@ mockIPC(
             : [],
         };
       }
+      case 'imager_prepare_f101_xip':
+        if (
+          args.applicationPath !== 'C:/qa/zephyr.bin' ||
+          args.applicationSha256 !== '3c'.repeat(32) ||
+          args.bootSourcePath !== 'C:/qa/xip-boot_spi.bin'
+        )
+          throw Error('未找到此 F101 XIP 配置的启动段。');
+        return 'C:/qa/system.img';
       case 'imager_read_image_reference':
         return {
           documentSha256: 'ab'.repeat(32),
@@ -125,7 +137,7 @@ mockIPC(
           bytes: 1024,
           format: 'RKFW',
           items: [],
-          alternates: [],
+          alternates: qa.fileAlternates || [],
           dependencies: [],
           blockers: [],
         };

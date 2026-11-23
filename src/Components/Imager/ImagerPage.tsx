@@ -271,7 +271,7 @@ export function ImagerPage({
   const [step, setStep] = useState<BasicStep>(1);
   const [boardId, setBoardId] = useState<string | null>(null);
   const [choice, setChoice] = useState<TargetChoice | null>(null);
-  const [rkBoard, setRkBoard] = useState('');
+  const [boardVariant, setBoardVariant] = useState('');
   const [routeOverride, setRouteOverride] = useState<BasicRoute | null>(null);
   const [selection, setSelection] = useState<VendorSelection | null>(null);
   const [reviewReady, setReviewReady] = useState(false);
@@ -298,6 +298,7 @@ export function ImagerPage({
   const lock = useRef(false);
   const reviewingUsb = useRef<WorkbenchFlasherDevice | null>(null);
   const [watchReady, setWatchReady] = useState(false);
+  const [watchError, setWatchError] = useState('');
   const dropRef = useRef<HTMLDivElement>(null);
   const preset = BOARD_PRESETS.find((b) => b.id === boardId);
   const routeKey = selection
@@ -309,12 +310,14 @@ export function ImagerPage({
     preset && routeKey
       ? {
           ...preset,
+          aliases: choice ? profiles[choice.model]?.aliases : undefined,
           route: routeKey,
           needsLoader: selection ? vendorNeedsLoader(selection.route) : routeKey !== 'vendor',
           storage: choice?.medium ?? preset.storage,
         }
       : undefined;
-  const boardName = rkBoard || board?.name || '';
+  const boardName =
+    boardVariant.trim() || (board?.chipVendor === 'allwinner' ? board.name : choice?.model) || '';
   const vendorRoute = selection?.route;
   const [inspected, setInspected] = useState<{
     key: string;
@@ -349,7 +352,6 @@ export function ImagerPage({
   const terminal = !!taskId && task.id === taskId && ended(task.status);
   const running = !!taskId && !terminal;
   const locked = !!busy || running;
-  const hasBoard = !!choice && !!board && (board.chipVendor === 'allwinner' || !!rkBoard.trim());
   const statusText = taskId
     ? stateName(task.status)
     : busy || (failedPreflight ? '未提交烧录' : target ? '等待确认' : '就绪');
@@ -366,6 +368,7 @@ export function ImagerPage({
   // A second board can reconnect to the same USB port with the same VID/PID.
   useEffect(() => {
     setWatchReady(false);
+    setWatchError('');
     if (!watchTarget) return;
     let current = true;
     let release: (() => void) | undefined;
@@ -399,14 +402,14 @@ export function ImagerPage({
         }
       })
       .catch((error) => {
-        if (current) setError('无法监听设备连接变化：' + formatErrorMessage(error));
+        if (current) setWatchError('无法监听设备连接变化：' + formatErrorMessage(error));
       });
     return () => {
       current = false;
       reviewingUsb.current = null;
       release?.();
     };
-  }, [watchTarget]);
+  }, [watchTarget, interfaceRevision]);
   useEffect(() => {
     onStatusChange?.({ target: statusTarget, task: statusText });
   }, [statusTarget, statusText, onStatusChange]);
@@ -434,17 +437,17 @@ export function ImagerPage({
     const vendor = BOARD_PRESETS.find((p) => p.id === id)?.chipVendor;
     setSelection(vendor && vendor !== 'allwinner' ? defaultVendorSelection(vendor) : null);
     setRouteOverride(null);
-    setRkBoard('');
+    setBoardVariant('');
     setSource('local');
     setSelected(null);
     setCount(null);
   }
   function selectVariant(name: string) {
-    if (name === rkBoard) return;
+    if (name === boardVariant) return;
     invalidate();
     clearFiles();
     setSelected(null);
-    setRkBoard(name);
+    setBoardVariant(name);
   }
   function changeSource(value: V2ImageSource) {
     if (value === source) return;
@@ -482,8 +485,7 @@ export function ImagerPage({
     if (candidate || next === routeKey) return;
     setRouteOverride(next);
     if (source === 'catalog' && next !== 'mainline_spinor') setSource('local');
-    setReviewReady(false);
-    setLoaderPath('');
+    clearFiles();
     setSelected(null);
     invalidate();
   }
@@ -796,21 +798,22 @@ export function ImagerPage({
     inspectionError ||
     image?.error ||
     (candidate && image?.value && !imageValid ? '镜像 SHA-256 与清单不符。' : '');
+  const vendorFileIssue = selection && inspection ? vendorGate(selection, inspection) : '';
+  const targetIssue =
+    step === 3 && selection && selected
+      ? vendorGate(selection, inspection, selected.usb, 'target', selected.device)
+      : '';
   const filesReady =
     reviewReady &&
     imageValid &&
     (!board?.needsLoader || loaderValid) &&
-    (!selection || (!!inspection && !vendorGate(selection, inspection, undefined, 'files')));
+    (!selection || (!!inspection && !vendorFileIssue));
   const enabled =
     step === 1
-      ? hasBoard
+      ? !!choice && !!board
       : step === 2
         ? filesReady && (source !== 'catalog' || !!candidate)
-        : watchReady &&
-          !!selected &&
-          filesReady &&
-          (!selection ||
-            !vendorGate(selection, inspection, selected.usb, 'target', selected.device));
+        : watchReady && !!selected && filesReady && !targetIssue;
   const stepDetails = [
     boardName,
     baseName(imagePath),
@@ -870,7 +873,7 @@ export function ImagerPage({
             <V2BoardPicker
               choice={choice}
               onChoice={chooseHardware}
-              boardName={rkBoard}
+              boardName={boardVariant}
               onBoardName={selectVariant}
             />
           )}
@@ -914,6 +917,8 @@ export function ImagerPage({
                     vendor={board.chipVendor}
                     selection={selection}
                     inspection={inspection}
+                    fileIssue={vendorFileIssue}
+                    loaderError={loader?.error}
                     onChange={changeVendor}
                     imagePath={imagePath}
                     loaderPath={loaderPath}
@@ -1015,9 +1020,14 @@ export function ImagerPage({
             />
           )}
         </fieldset>
-        {!failedPreflight && (error || (step === 3 && loader?.error)) && (
+        {targetIssue && !failedPreflight && (
+          <p role="status" className="vi-help">
+            {targetIssue}
+          </p>
+        )}
+        {!failedPreflight && (error || (step === 3 && (watchError || loader?.error))) && (
           <p role="alert" className="v2-engine-error">
-            {error || loader?.error}
+            {error || watchError || loader?.error}
             {step === 3 && (
               <button
                 type="button"

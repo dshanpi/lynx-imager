@@ -71,6 +71,40 @@ def test_write(page, outcome, results, capture):
                    ('完成后打开报告' if outcome=='success' else '失败后返回检测'))
 
 
+def test_target_matrix(page, results):
+    expected = {
+        'T113': ('SPI NAND',), 'T153': ('eMMC',), 'F101': ('SPI NOR',),
+        'RK3576': ('eMMC',), 'RK3588': ('eMMC',), 'RK3588S': ('eMMC',),
+        'i.MX6ULL': ('eMMC', 'SD'), 'i.MX8': ('eMMC', 'SD'), 'i.MX9': ('eMMC', 'SD'),
+        'STM32MP1': ('eMMC', 'SD'), 'STM32MP157': ('eMMC', 'SD'),
+        'K230': ('SPI NOR', 'SPI NAND', 'eMMC', 'SD'),
+    }
+    next_step = page.locator('.v2-foot-actions .v2-primary')
+    blocked = []
+    for chip, supported in expected.items():
+        page.get_by_role('searchbox', name='搜索芯片型号或板名').fill(chip)
+        page.locator(f'[data-model="{chip}"]').click()
+        expect(next_step).to_be_disabled()
+        for medium in ('SPI NOR', 'SPI NAND', 'eMMC', 'SD'):
+            option = page.locator(f'[data-medium="{medium}"]')
+            if medium not in supported:
+                expect(option).to_be_disabled()
+                continue
+            option.click()
+            if next_step.is_disabled():
+                blocked.append((chip, medium))
+                continue
+            next_step.click()
+            summary = page.locator('.image-target-summary')
+            expect(summary).to_contain_text(medium)
+            expect(summary.locator('strong')).to_contain_text(chip)
+            expect(next_step).to_be_disabled()
+            page.locator('#v2-step-1').click()
+            expect(option).to_have_attribute('aria-pressed', 'true')
+    assert not blocked, f'已选择受支持介质却不能继续：{blocked}'
+    results.append(f'{len(expected)} 个芯片、{sum(map(len, expected.values()))} 种可用组合：板名留空进入选镜像，返回后目标一致，其余介质禁用')
+
+
 def test_pages(page, results, capture):
     def tab(label):
         page.locator('.imager-app-tabs').get_by_role('button', name=label, exact=True).click()
@@ -87,6 +121,62 @@ def test_pages(page, results, capture):
 
     def save():
         page.locator('.settings-footer .settings-btn-primary').click()
+
+    test_target_matrix(page, results)
+    # Reproduce the RC3 picker path without entering an EVB or board alias.
+    next_step = page.locator('.v2-foot-actions .v2-primary')
+    page.locator('.target-vendors').get_by_role('button', name='瑞芯微').click()
+    page.locator('.target-families').get_by_role('button', name='RK35 系列').click()
+    page.locator('[data-model="RK3576"]').click()
+    expect(next_step).to_be_disabled()
+    for medium in ('SPI NOR', 'SPI NAND', 'SD'):
+        expect(page.locator(f'[data-medium="{medium}"]')).to_be_disabled()
+    page.locator('[data-medium="eMMC"]').click()
+    expect(page.get_by_role('textbox', name='具体板型')).to_have_value('')
+    expect(next_step).to_be_enabled()
+    capture('rk3576-emmc-ready')
+    next_step.click()
+    expect(page.locator('.v2-basic')).to_have_attribute('data-step', '2')
+    expect(next_step).to_be_disabled()
+    page.locator('.vendor-switch').get_by_role('button', name='主线 eMMC 整盘').click()
+    page.evaluate("pageFixture.nextFile='C:/qa/disk.img'")
+    button('选择文件').click()
+    expect(next_step).to_be_disabled()
+    page.evaluate("pageFixture.nextFile=pageFixture.unreadableFile='C:/qa/missing-loader.bin'")
+    page.get_by_role('button', name='选择 Loader').click()
+    expect(page.get_by_role('alert')).to_contain_text('Loader 读取失败')
+    expect(next_step).to_be_disabled()
+    page.evaluate("pageFixture.nextFile='C:/qa/loader.bin'")
+    page.get_by_role('button', name='更换 Loader').click()
+    expect(next_step).to_be_enabled()
+    page.locator('.vendor-switch').get_by_role('button', name='厂商 update.img').click()
+    page.evaluate("pageFixture.nextFile='C:/qa/rockchip-update.img'")
+    button('选择文件').click()
+    expect(next_step).to_be_enabled()
+    page.evaluate("""() => {
+        const invoke = window.__TAURI_INTERNALS__.invoke;
+        pageFixture.failUsbWatch = true;
+        window.__TAURI_INTERNALS__.invoke = (cmd,args,...rest) => {
+            if (pageFixture.failUsbWatch && cmd === 'plugin:event|listen' && args.event === 'usb-hotplug')
+                return Promise.reject('QA hotplug unavailable');
+            return invoke(cmd,args,...rest);
+        };
+        pageFixture.usb=[{key:'1:2',flasherKind:'openrockcli',vid:0x2207,pid:0x3576,bus:1,
+                          port:'2',mode:'loader',chip:'RK3576',dfuAlternates:[]}];
+    }""")
+    next_step.click()
+    expect(page.locator('.v2-basic')).to_have_attribute('data-step', '3')
+    page.locator('.vi-device').click()
+    alert = page.get_by_role('alert').filter(has_text='无法监听设备连接变化')
+    expect(alert).to_be_visible()
+    expect(next_step).to_be_disabled()
+    page.evaluate('pageFixture.failUsbWatch=false')
+    alert.get_by_role('button', name='重新检测设备').click()
+    page.locator('.vi-device').click()
+    expect(next_step).to_be_enabled()
+    results.append('USB 监听失败后选择设备仍显示原因；重新检测可恢复预检')
+    results.append('RK3576：板型留空，选择 eMMC 后进入选镜像；主线整盘需要 Loader，厂商包可进入设备连接')
+    page.reload()
 
     # Select actual model and medium for each vendor and return through the wizard.
     for vendor,family,model,medium in [
@@ -115,12 +205,28 @@ def test_pages(page, results, capture):
             expect(page.locator('.v2-foot-actions .v2-primary')).to_be_disabled()
         if model=='F101':
             page.locator('input[name="aw-system-route"][value="mainline_spinor"]').check()
-            for name, action in [('system.img','选择镜像…'),('loader.img','选择引导包…'),
+            page.evaluate("pageFixture.nextFile='C:/qa/zephyr.bin'")
+            button('选择镜像…').click()
+            expect(page.get_by_role('alert')).to_contain_text('文件开头缺少 eGON.BT0')
+            expect(page.get_by_text('必选 · 请选择含 FES 和 U-Boot 的板卡配套引导包。')).to_be_visible()
+            expect(page.get_by_text('连续写入 SPI NOR',exact=False)).to_have_count(0)
+            expect(page.locator('.v2-foot-actions .v2-primary')).to_be_disabled()
+            assemble=button('选择启动来源并合成…')
+            page.evaluate('pageFixture.nextFile=null')
+            assemble.click()
+            expect(assemble).to_be_enabled()
+            page.evaluate("pageFixture.nextFile='C:/qa/loader.img'")
+            assemble.click()
+            expect(page.get_by_text('未找到此 F101 XIP 配置的启动段。')).to_be_visible()
+            expect(page.locator('.v2-foot-actions .v2-primary')).to_be_disabled()
+            page.evaluate("pageFixture.nextFile='C:/qa/xip-boot_spi.bin'")
+            assemble.click()
+            expect(page.locator('.imager-image-line').first).to_contain_text('system.img')
+            expect(page.locator('.v2-foot-actions .v2-primary')).to_be_disabled()
+            for name, action in [('loader.img','选择引导包…'),
                                  ('BUILD-INFO.json','选择参考清单…')]:
                 page.evaluate('file => pageFixture.nextFile=file','C:/qa/'+name)
                 button(action).click()
-                if name == 'system.img':
-                    expect(page.locator('.v2-foot-actions .v2-primary')).to_be_disabled()
                 if name == 'loader.img':
                     expect(page.locator('.v2-foot-actions .v2-primary')).to_be_enabled()
                     assert page.evaluate('pageFixture.lastDialog.defaultPath') == 'C:/qa/'
@@ -138,6 +244,16 @@ def test_pages(page, results, capture):
                 expect(button(trigger)).to_be_focused()
             expect(page.locator('.imager-image-review input[type=checkbox]')).to_have_count(0)
             expect(page.locator('.v2-foot-actions .v2-primary')).to_be_enabled()
+            page.locator('input[name="aw-system-route"][value="vendor"]').check()
+            expect(button('选择镜像…')).to_be_visible()
+            expect(page.locator('.v2-foot-actions .v2-primary')).to_be_disabled()
+            page.locator('input[name="aw-system-route"][value="mainline_spinor"]').check()
+            expect(page.locator('.v2-foot-actions .v2-primary')).to_be_enabled()
+            page.locator('.v2c-tabs').get_by_role('button',name='最近使用').click()
+            page.locator('.v2c-recent-row').filter(has_text='system.img').click()
+            expect(page.locator('.image-desk-loader,.imager-image-line').filter(has_text='loader.img')).to_be_visible()
+            expect(page.locator('.v2-foot-actions .v2-primary')).to_be_enabled()
+            results.append('F101 厂商与主线路线独立恢复；手动点最近镜像同时恢复并复核该条目的 RAM Loader')
             page.reload()
             page.locator('.target-vendors').get_by_role('button',name=vendor).click()
             page.locator('.target-families').get_by_role('button',name=family+' 系列').click()
@@ -178,6 +294,62 @@ def test_pages(page, results, capture):
                 routes.nth(i).click()
                 expect(page.locator('.v2-foot-actions .v2-primary')).to_be_disabled()
                 capture(model+'-route-'+str(i+1))
+            if model == 'STM32MP1':
+                page.evaluate("pageFixture.fileAlternates=[0,2]; pageFixture.nextFile='C:/qa/multi.dfu'")
+                button('选择文件').click()
+                expect(page.get_by_role('alert')).to_contain_text('一个明确的 DFU Alternate')
+                expect(next_step).to_be_disabled()
+                page.evaluate("pageFixture.fileAlternates=[2]; pageFixture.nextFile='C:/qa/single.dfu'")
+                button('更换文件').click()
+                expect(next_step).to_be_enabled()
+                page.evaluate("""pageFixture.usb=[{key:'1:3',flasherKind:'dfu-util',vid:0x0483,pid:0xdf11,
+                    bus:1,port:'3',mode:'dfu',chip:'STM32MP1',dfuAlternates:[
+                    {number:0,name:'boot'},{number:2,name:'root'}]}]""")
+                next_step.click()
+                page.locator('.vi-device').click()
+                alternate = page.locator('.vendor-field select')
+                alternate.select_option('0')
+                expect(page.get_by_role('status').filter(has_text='与容器内目标不一致')).to_be_visible()
+                expect(next_step).to_be_disabled()
+                alternate.select_option('2')
+                expect(next_step).to_be_enabled()
+                page.locator('#v2-step-2').click()
+                results.append('STM32 多目标镜像及接口不匹配均显示原因，更换镜像并选对接口后恢复')
+            if model == 'i.MX8':
+                routes.nth(1).click()
+                page.evaluate("""pageFixture.nextFile='C:/qa/disk.wic';
+                    pageFixture.usb=[{key:'1:3',flasherKind:'uuu',vid:0x1fc9,pid:1,bus:1,
+                    port:'3',mode:'sdp',chip:'i.MX8',dfuAlternates:[]}]""")
+                button('选择文件').click()
+                next_step.click()
+                page.locator('.vi-device').click()
+                expect(next_step).to_be_disabled()
+                expect(page.get_by_role('status').filter(has_text='UUU 内置 -b 配方')).to_be_visible()
+                page.locator('#v2-step-2').click()
+                routes.nth(0).click()
+                page.evaluate("pageFixture.nextFile='C:/qa/flash.uuu'")
+                button('选择文件').click()
+                next_step.click()
+                page.locator('.vi-device').click()
+                expect(next_step).to_be_enabled()
+                page.locator('#v2-step-2').click()
+                results.append('NXP 缺保存配方时提示所需参数，改用独立 UUU 脚本可以预检')
+            if model == 'K230':
+                routes.nth(1).click()
+                page.evaluate("""pageFixture.nextFile='C:/qa/k230.img';
+                    pageFixture.usb=[3,4].map(p=>({key:'1:'+p,flasherKind:'k230',vid:0x29f1,pid:1,
+                    bus:1,port:String(p),mode:'loader',chip:'K230',dfuAlternates:[]}))""")
+                button('选择文件').click()
+                next_step.click()
+                expect(page.locator('.vi-device')).to_have_count(2)
+                for row in page.locator('.vi-device').all():
+                    row.click()
+                    expect(next_step).to_be_disabled()
+                    page.locator('.vendor-field select').select_option('sdcard')
+                    expect(next_step).to_be_enabled()
+                expect(page.locator('.vi-device').nth(1).get_by_role('radio')).to_be_checked()
+                page.locator('#v2-step-2').click()
+                results.append('K230 两台设备依次选择，同一介质的确认只对当前端口生效')
         page.locator('.v2-foot-actions').get_by_role('button',name='上一步',exact=False).click()
         results.append(vendor+'：目标、介质、'+'、'.join(sources)+'与返回')
 

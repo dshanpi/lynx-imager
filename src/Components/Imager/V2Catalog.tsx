@@ -21,6 +21,7 @@ import './V2Catalog.css';
 export interface V2Board {
   id: string;
   name: string;
+  aliases?: readonly string[];
   chipVendor: WorkbenchDevice['chipVendor'];
   chip: string;
   storage: string;
@@ -221,7 +222,7 @@ function RecentFiles({
   clear,
 }: {
   items: Recent[];
-  choose: (v: string) => void;
+  choose: (item: Recent) => void;
   clear: () => void;
 }) {
   return (
@@ -237,7 +238,7 @@ function RecentFiles({
           <button
             type="button"
             key={r.path}
-            onClick={() => choose(r.path)}
+            onClick={() => choose(r)}
             className="v2c-recent-row"
             title={r.path}
           >
@@ -368,9 +369,11 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
     writeRecent(next);
     setRecent(next);
   }
-  function chooseRecent(path: string) {
-    onSource('local');
-    onImagePath(path);
+  function chooseRecent(item: Recent) {
+    onRestore(
+      item.path,
+      item.scope === memoryScope && typeof item.loaderPath === 'string' ? item.loaderPath : ''
+    );
   }
   const manifest = inspected?.entry.manifest || candidate?.manifest;
   const hasCatalog = board.id === 'f101' && props.route === 'mainline_spinor';

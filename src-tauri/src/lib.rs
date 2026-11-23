@@ -22,6 +22,7 @@ mod hardware_monitor;
 mod hardware_safety;
 mod hotplug;
 mod imager_drivers;
+mod imager_f101_xip;
 mod imager_inspect;
 mod imager_layout;
 mod invoke_handler;
