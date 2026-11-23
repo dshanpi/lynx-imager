@@ -105,7 +105,6 @@ function verifyWindowsInstaller(path) {
     'bin/openrockcli.exe',
     'bin/uuu.exe',
     'bin/dfu-util.exe',
-    'pyembed/python.exe',
     'openocd/bin/openocd.exe',
   ];
   // The MSVC build links WebView2LoaderStatic.lib; the Windows install/launch gate
@@ -125,13 +124,14 @@ function verifyWindowsInstaller(path) {
     'Windows installer contains forbidden RA6M5 offline resources.'
   );
   for (const name of [
+    'pyembed/',
     'site-packages/pyocd/',
     '.lynx-pyocd.json',
     'site-packages/cmsis_pack_manager/',
   ]) {
     requireValue(
       !listing.includes(name),
-      `Windows installer contains forbidden RA6M5 offline resource ${name}.`
+      `Windows installer contains forbidden bundled resource ${name}.`
     );
   }
   const forbidden = ['bin/uuu', 'bin/openixcli', 'bin/openrockcli', 'bin/libusb-1.0.so.0'];

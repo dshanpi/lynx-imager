@@ -26,7 +26,7 @@ src-tauri/resources/binaries/*
 !src-tauri/resources/binaries/openrockcli-LICENSE
 src-tauri/resources/windows/
 
-# Reproducible embedded Python runtimes are downloaded during packaging.
+# Downloaded runtimes for bundled and optional development tools.
 src-tauri/resources/runtime/
 
 # Editor directories and files

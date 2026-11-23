@@ -58,30 +58,4 @@ if (marker.target !== target || marker.version !== '0.12.0-7') {
   );
 }
 
-const pythonRoot = join(scriptDir, '..', 'src-tauri', 'resources', 'runtime', target, 'pyembed');
-const pythonMarkerPath = join(pythonRoot, '.lynx-runtime.json');
-const legacyPyocdMarkerPath = join(pythonRoot, '.lynx-pyocd.json');
-if (!existsSync(pythonMarkerPath)) {
-  throw new Error(`Packaging aborted: verified Python runtime is missing for ${target}.`);
-}
-const pythonMarker = JSON.parse(readFileSync(pythonMarkerPath, 'utf8'));
-const expectedPythonLayout = target === 'linux-x86_64' ? 4 : 3;
-if (
-  pythonMarker.target !== target ||
-  pythonMarker.version !== '3.12.13' ||
-  pythonMarker.layout !== expectedPythonLayout
-) {
-  throw new Error(
-    `Packaging aborted: Python runtime marker mismatch for ${target}: ${JSON.stringify(pythonMarker)}.`
-  );
-}
-if (existsSync(legacyPyocdMarkerPath)) {
-  throw new Error(
-    `Packaging aborted: legacy pyOCD runtime is still present for ${target}; rebuild the core Python runtime.`
-  );
-}
-
-console.log(
-  `Package configuration validated: main window is visible; OpenOCD ${marker.version}, ` +
-    `and core Python ${pythonMarker.version} are ready for ${target}; RA6M5 pyOCD resources are external.`
-);
+console.log(`Package configuration validated for ${target}; OpenOCD ${marker.version} is ready.`);

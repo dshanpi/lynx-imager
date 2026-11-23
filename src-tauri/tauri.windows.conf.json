@@ -1,7 +1,6 @@
 {
   "bundle": {
     "resources": {
-      "resources/runtime/windows-x86_64/pyembed": "pyembed",
       "resources/runtime/windows-x86_64/openocd": "openocd",
       "resources/binaries/openixcli.exe": "bin/openixcli.exe",
       "resources/binaries/openrockcli.exe": "bin/openrockcli.exe",

@@ -1,6 +1,6 @@
 [package]
 name = "lynx-imager"
-version = "0.1.0-rc.3"
+version = "0.1.0-rc.4"
 description = "DshanPI LYNX embedded development and production tool."
 authors = ["DshanPI"]
 edition = "2021"

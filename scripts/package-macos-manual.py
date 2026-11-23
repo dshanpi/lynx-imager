@@ -81,8 +81,8 @@ def main():
             if dependency.startswith('/') and not dependency.startswith(('/System/Library/', '/usr/lib/')):
                 raise SystemExit('External library in ' + str(item.relative_to(app)) + ': ' + dependency)
 
-    run(str(app / 'Contents/Resources/pyembed/bin/python3'), '-B', '-c',
-        'import multiprocessing, sqlite3, ssl')
+    if (app / 'Contents/Resources/pyembed').exists():
+        raise SystemExit('Unexpected embedded Python runtime in the app bundle')
     run('codesign', '--force', '--sign', '-', '--options', '0', str(app))
     run('codesign', '--verify', '--deep', '--strict', str(app))
     (stage / 'Applications').symlink_to('/Applications')
@@ -107,7 +107,7 @@ def main():
     (output / 'SHA256SUMS.txt').write_text(digest(dmg) + '  ' + dmg.name + '\n')
     check = {'version':args.version, 'architecture':'arm64', 'dmg':dmg.name,
              'bytes':dmg.stat().st_size, 'sha256':digest(dmg), 'machoDependencyChecks':checked,
-             'externalNonSystemAbsoluteLibraries':0, 'embeddedPythonImports':'PASS',
+             'externalNonSystemAbsoluteLibraries':0, 'embeddedPythonAbsent':True,
              'adHocSignature':'PASS', 'readOnlyDmgMount':'PASS', 'mountedBinaryDigest':'PASS',
              'notarization':'NOT VERIFIED', 'updaterSignature':'NOT VERIFIED',
              'nativeDesktopSmoke':'NOT VERIFIED', 'cleanInstallUpgrade':'NOT VERIFIED'}

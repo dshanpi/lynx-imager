@@ -1,11 +1,11 @@
 {
   "name": "lynx-imager",
   "private": true,
-  "version": "0.1.0-rc.3",
+  "version": "0.1.0-rc.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/fetch-python-runtime.mjs && node scripts/fetch-openocd-runtime.mjs && node scripts/fetch-ch347-runtime.mjs && node scripts/sync-version.js && node scripts/check-input-safety.mjs && node scripts/check-ui-scale.mjs && node scripts/validate-ui-constraints.mjs && node scripts/validate-skills-index.mjs && node scripts/validate-package-config.js && vite build",
+    "build": "node scripts/fetch-openocd-runtime.mjs && node scripts/fetch-ch347-runtime.mjs && node scripts/sync-version.js && node scripts/check-input-safety.mjs && node scripts/check-ui-scale.mjs && node scripts/validate-ui-constraints.mjs && node scripts/validate-skills-index.mjs && node scripts/validate-package-config.js && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
     "init": "node scripts/init.js",

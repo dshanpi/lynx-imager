@@ -1,7 +1,6 @@
 {
   "bundle": {
     "resources": {
-      "resources/runtime/darwin-aarch64/pyembed": "pyembed",
       "resources/runtime/darwin-aarch64/openocd": "openocd",
       "resources/binaries/openixcli": "bin/openixcli",
       "resources/binaries/openrockcli": "bin/openrockcli",
