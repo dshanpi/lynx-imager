@@ -88,7 +88,10 @@
   border-radius: var(--lynx-radius-control);
 }
 @media (max-width: 570px) {
-  .v2-basic .v2-foot-actions { grid-column: 1; grid-row: 3; }
+  .v2-basic .v2-foot-actions {
+    grid-column: 1;
+    grid-row: 3;
+  }
 }
 .v2-basic .v2c-layout {
   --vc-ink: var(--v2-ink);
@@ -305,7 +308,10 @@
   min-height: 28px;
   padding: 3px 9px;
 }
-.r3-connect .vi-device-list { gap: 0; margin: 0; }
+.r3-connect .vi-device-list {
+  gap: 0;
+  margin: 0;
+}
 .r3-connect .vi-device {
   display: grid;
   grid-template-columns: 16px minmax(0, 1fr) auto;
@@ -317,17 +323,51 @@
   color: var(--v2-ink);
   cursor: pointer;
 }
-.r3-connect .vi-device:last-child { border-bottom: 0; }
-.r3-connect .vi-device.chosen { background: var(--v2-active); }
-.r3-connect .vi-device:focus-within { outline: 2px solid var(--color-primary); outline-offset: -2px; }
-.r3-connect .vi-usb-identity { display: grid; gap: 2px; }
-.r3-connect .vi-usb-identity strong { font: inherit; font-weight: 600; font-size: 14px; }
-.r3-connect .vi-usb-identity small, .vi-port-path { color: var(--v2-secondary); font-size: 12px; }
-.r3-connect .vi-chip { font-size: 12px; color: var(--v2-secondary); background: var(--v2-tint); }
-.r3-connect .vi-bar button { display: inline-flex; align-items: center; gap: 5px; }
-.vi-port-path { padding: 8px 12px; }
-.vi-port-path summary { cursor: pointer; }
-.vi-port-path code { display: block; margin-top: 5px; overflow-wrap: anywhere; }
+.r3-connect .vi-device:last-child {
+  border-bottom: 0;
+}
+.r3-connect .vi-device.chosen {
+  background: var(--v2-active);
+}
+.r3-connect .vi-device:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+.r3-connect .vi-usb-identity {
+  display: grid;
+  gap: 2px;
+}
+.r3-connect .vi-usb-identity strong {
+  font: inherit;
+  font-weight: 600;
+  font-size: 14px;
+}
+.r3-connect .vi-usb-identity small,
+.vi-port-path {
+  color: var(--v2-secondary);
+  font-size: 12px;
+}
+.r3-connect .vi-chip {
+  font-size: 12px;
+  color: var(--v2-secondary);
+  background: var(--v2-tint);
+}
+.r3-connect .vi-bar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.vi-port-path {
+  padding: 8px 12px;
+}
+.vi-port-path summary {
+  cursor: pointer;
+}
+.vi-port-path code {
+  display: block;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+}
 .r3-connect-facts dd {
   overflow-wrap: anywhere;
 }
@@ -393,8 +433,15 @@
 .v2-basic :is(.target-picker, .v2c-system-layout, .r3-connect, .imager-review-page, .v2w-region) {
   font-size: var(--lynx-font-size-table);
 }
-.v2-basic :is(.target-hero h3, .v2c-board-banner h2, .v2c-page-heading h2,
-  .imager-review-heading h2, .r3-heading h2, .v2w-region h2) {
+.v2-basic
+  :is(
+    .target-hero h3,
+    .v2c-board-banner h2,
+    .v2c-page-heading h2,
+    .imager-review-heading h2,
+    .r3-heading h2,
+    .v2w-region h2
+  ) {
   font-size: var(--lynx-font-size-section-title);
   font-weight: 600;
   line-height: 1.5;
@@ -414,4 +461,6 @@
 .v2-basic .target-heading {
   flex-wrap: wrap;
 }
-.v2-basic .v2w-layout { padding: 0; }
+.v2-basic .v2w-layout {
+  padding: 0;
+}

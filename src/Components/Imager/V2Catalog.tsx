@@ -412,8 +412,8 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
         </div>
         {board.id === 'f101' && (
           <p>
-            YuzukiNeko · F101S3 参考配置　玄铁 C907 · RISC-V　16 MiB PSRAM　16 MiB SPI NOR　USB-C ·
-            FEL
+            YuzukiNeko · F101S3 参考配置 · 玄铁 C907 · RISC-V · 16 MiB PSRAM · 16 MiB SPI NOR ·
+            USB-C · FEL
           </p>
         )}
       </header>
@@ -568,7 +568,7 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
               </Notice>
             </DetailsPane>
             <DetailsPane title="镜像校验" glyph="shield">
-              <Facts rows={[['SHA-256', <CopyHash hash={manifest.image.sha256} />]]} />
+              <Facts rows={[['SHA-256', <CopyHash key="sha256" hash={manifest.image.sha256} />]]} />
               {candidate &&
               identity &&
               manifest.image.sha256 === identity.sha256 &&

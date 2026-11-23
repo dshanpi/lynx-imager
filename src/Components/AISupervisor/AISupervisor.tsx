@@ -17,7 +17,13 @@ import type {
   WorkbenchDevice,
   WorkbenchWorkflowStep,
 } from '../../Platform/IPC/Commands';
-import { PRESETS, ACTION_LABELS, defaultProvider, defaultPolicy, providerToDraft } from './supervisorConfiguration';
+import {
+  PRESETS,
+  ACTION_LABELS,
+  defaultProvider,
+  defaultPolicy,
+  providerToDraft,
+} from './supervisorConfiguration';
 import { DeviceFlowEditor } from './DeviceFlowEditor';
 import './AISupervisor.css';
 

@@ -196,7 +196,10 @@ export function V2Interface({
     callbacks.current.onTargetChange(null, null);
     callbacks.current.onDetected?.(null);
     try {
-      const message = await invokeCommand('imager_install_driver', { vendor: board.chipVendor, infPath });
+      const message = await invokeCommand('imager_install_driver', {
+        vendor: board.chipVendor,
+        infPath,
+      });
       if (view === currentView.current) setDriverMessage(message);
     } catch (e) {
       if (view === currentView.current) setDriverMessage(formatErrorMessage(e));
@@ -225,10 +228,17 @@ export function V2Interface({
       return;
     }
     // Reuse a unique matching setup, otherwise select just this physical port.
-    const profile = options.length === 1 ? options[0] : {
-      ...EMPTY_LINUX_DEVICE, name: boardName, chipVendor: board.chipVendor,
-      flasherKind: platform.flasher, flasherPath: probedPath, usbBinding: d.key,
-    };
+    const profile =
+      options.length === 1
+        ? options[0]
+        : {
+            ...EMPTY_LINUX_DEVICE,
+            name: boardName,
+            chipVendor: board.chipVendor,
+            flasherKind: platform.flasher,
+            flasherPath: probedPath,
+            usbBinding: d.key,
+          };
     callbacks.current.onTargetChange(profile, d);
   }
 
@@ -238,9 +248,7 @@ export function V2Interface({
   const renderDevices = (
     <section className={'vi-box vi-devices' + (rk ? ' vi-device-rk' : '')} aria-label="检测设备">
       <div className="vi-bar">
-        <h3>
-          {scanned ? `可用设备（${found.length}）` : '检测设备'}
-        </h3>
+        <h3>{scanned ? `可用设备（${found.length}）` : '检测设备'}</h3>
         {customPaths.length > 0 && fixedDeviceId == null && (
           <select
             aria-label="检测与烧录使用的工具"
@@ -262,11 +270,20 @@ export function V2Interface({
             ))}
           </select>
         )}
-        <button type="button" disabled={detecting || busy || installing} onClick={() => void refresh()}>
+        <button
+          type="button"
+          disabled={detecting || busy || installing}
+          onClick={() => void refresh()}
+        >
           <LynxIcon name="refresh" size={16} />
           {detecting ? '检测中…' : '重新检测'}
         </button>
-        <button type="button" aria-expanded={help} disabled={installing || busy} onClick={() => setHelp(!help)}>
+        <button
+          type="button"
+          aria-expanded={help}
+          disabled={installing || busy}
+          onClick={() => setHelp(!help)}
+        >
           <LynxIcon name="download" size={16} /> 安装驱动
         </button>
       </div>
@@ -276,8 +293,13 @@ export function V2Interface({
           const selectable = (!fixedDeviceId || saved.length > 0) && modeOk(d);
           return (
             <label key={d.key} className={'vi-device' + (picked === d.key ? ' chosen' : '')}>
-              <input type="radio" name="vi-usb-target" checked={picked === d.key}
-                onChange={() => chooseUsb(d)} disabled={busy || installing || !selectable} />
+              <input
+                type="radio"
+                name="vi-usb-target"
+                checked={picked === d.key}
+                onChange={() => chooseUsb(d)}
+                disabled={busy || installing || !selectable}
+              />
               <span className="vi-usb-identity">
                 <strong>{saved.length === 1 ? saved[0].name : platform.label + ' USB 设备'}</strong>
                 <small title={d.key}>{portLabel(d)}</small>
@@ -289,11 +311,13 @@ export function V2Interface({
         })}
         {found.length === 0 && (
           <p className="vi-empty">
-            {installing ? '正在处理驱动安装…' : detecting
-              ? '正在枚举 USB 设备…'
-              : error
-                ? '检测未能完成，请检查连接或烧录工具。'
-                : `未发现设备。请用数据线连接开发板，并进入 ${board.mode} 模式后重新检测。`}
+            {installing
+              ? '正在处理驱动安装…'
+              : detecting
+                ? '正在枚举 USB 设备…'
+                : error
+                  ? '检测未能完成，请检查连接或烧录工具。'
+                  : `未发现设备。请用数据线连接开发板，并进入 ${board.mode} 模式后重新检测。`}
           </p>
         )}
       </div>
@@ -310,8 +334,19 @@ export function V2Interface({
           {error}
         </p>
       )}
-      {help && <DriverSetup vendor={board.chipVendor} mode={board.mode} installing={installing} onInstall={(infPath) => void installDriver(infPath)} />}
-      {driverMessage && <p className="vi-help" role="status">{driverMessage}</p>}
+      {help && (
+        <DriverSetup
+          vendor={board.chipVendor}
+          mode={board.mode}
+          installing={installing}
+          onInstall={(infPath) => void installDriver(infPath)}
+        />
+      )}
+      {driverMessage && (
+        <p className="vi-help" role="status">
+          {driverMessage}
+        </p>
+      )}
     </section>
   );
 
@@ -360,7 +395,12 @@ export function V2Interface({
               <li>点击要烧写的设备，然后进入下一步。</li>
             </ol>
           )}
-          {usb && <details className="vi-port-path"><summary>完整 USB 路径</summary><code>{usb.key}</code></details>}
+          {usb && (
+            <details className="vi-port-path">
+              <summary>完整 USB 路径</summary>
+              <code>{usb.key}</code>
+            </details>
+          )}
         </section>
       </div>
       {vendorTarget}

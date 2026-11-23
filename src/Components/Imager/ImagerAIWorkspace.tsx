@@ -111,7 +111,11 @@ export function ImagerAIWorkspace({
                   aria-current={section === item.id ? 'page' : undefined}
                   onClick={() => setSection(item.id)}
                 >
-                  {item.id === 'notifications' ? <Alert20Regular aria-hidden="true" fontSize={16} /> : <LynxIcon name={item.icon} size={16} />}
+                  {item.id === 'notifications' ? (
+                    <Alert20Regular aria-hidden="true" fontSize={16} />
+                  ) : (
+                    <LynxIcon name={item.icon} size={16} />
+                  )}
                   {item.label}
                 </button>
               ))}

@@ -514,9 +514,7 @@
   --vi-ink: var(--v2-ink);
   --vi-soft-blue: var(--v2-active);
 }
-[data-theme='dark']
-  .vi-grid
-  :is(.vi-box, .vi-device, .vi-checks > ul > li, button, select) {
+[data-theme='dark'] .vi-grid :is(.vi-box, .vi-device, .vi-checks > ul > li, button, select) {
   background: var(--v2-paper);
 }
 [data-theme='dark']

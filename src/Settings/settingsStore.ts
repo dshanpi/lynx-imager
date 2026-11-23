@@ -95,7 +95,8 @@ function getDefaultSettings(): AppSettings {
 }
 
 /** Settings directory name in home folder */
-const SETTINGS_DIR = import.meta.env.VITE_LYNX_LOCAL_BUILD === '1' ? '.lynx-imager-local' : '.lynx-imager';
+const SETTINGS_DIR =
+  import.meta.env.VITE_LYNX_LOCAL_BUILD === '1' ? '.lynx-imager-local' : '.lynx-imager';
 
 /** Settings file name */
 const SETTINGS_FILE = 'settings.json';

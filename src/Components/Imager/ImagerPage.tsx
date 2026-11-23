@@ -240,7 +240,13 @@ async function checkTarget(selected: WorkbenchDevice) {
 async function resolveFlashTarget(device: WorkbenchDevice) {
   if (device.id != null) return device;
   const { name, chipVendor, flasherKind, flasherPath, usbBinding } = device;
-  return invokeCommand('imager_resolve_flash_target', { name, chipVendor, flasherKind, flasherPath, usbBinding });
+  return invokeCommand('imager_resolve_flash_target', {
+    name,
+    chipVendor,
+    flasherKind,
+    flasherPath,
+    usbBinding,
+  });
 }
 
 function sameUsb(a: WorkbenchFlasherDevice, b: WorkbenchFlasherDevice) {

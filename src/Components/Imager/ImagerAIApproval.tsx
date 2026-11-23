@@ -156,7 +156,11 @@ export function ImagerAIApproval({
     if (approve) {
       const currentDevice = devices.find((candidate) => candidate.id === device?.id);
       const fields = Object.keys(currentDevice || {}) as (keyof WorkbenchDevice)[];
-      if (!currentDevice || !device || fields.some((field) => currentDevice[field] !== device[field])) {
+      if (
+        !currentDevice ||
+        !device ||
+        fields.some((field) => currentDevice[field] !== device[field])
+      ) {
         reloadDevice();
         throw new Error('目标设备配置已变化，请重新核对接口与动作。');
       }

@@ -43,7 +43,10 @@ export function DriverSetup({
     if (!rockusb) return onInstall();
     try {
       setError('');
-      const path = await open({ title: '选择瑞芯微 Rockusb 驱动', filters: [{ name: 'Rockusb 驱动', extensions: ['inf'] }] });
+      const path = await open({
+        title: '选择瑞芯微 Rockusb 驱动',
+        filters: [{ name: 'Rockusb 驱动', extensions: ['inf'] }],
+      });
       if (typeof path === 'string') onInstall(path);
     } catch (e) {
       setError(formatErrorMessage(e));
@@ -53,13 +56,15 @@ export function DriverSetup({
     return <p className="vi-help">当前系统暂未提供驱动安装。</p>;
   return (
     <section className="vi-help" aria-label="下载口驱动安装">
-      <strong>{rockusb ? '瑞芯微 Rockusb 驱动' : windows ? 'Windows 下载口驱动' : 'Linux USB 访问规则'}</strong>
+      <strong>
+        {rockusb ? '瑞芯微 Rockusb 驱动' : windows ? 'Windows 下载口驱动' : 'Linux USB 访问规则'}
+      </strong>
       <p>
         {rockusb
           ? '解压瑞芯微官方 DriverAssistant 驱动包，选择与 Windows 架构匹配的 rockusb.inf。系统将验证驱动包并为匹配的下载口安装。'
           : windows
-          ? '首次使用将从官方源下载 Zadig。打开后按 USB ID 选择开发板的下载口，在目标驱动中选择 WinUSB 并安装。'
-          : '授权后，当前桌面用户可访问下列 USB 下载口。安装完成后请重新插拔开发板。'}
+            ? '首次使用将从官方源下载 Zadig。打开后按 USB ID 选择开发板的下载口，在目标驱动中选择 WinUSB 并安装。'
+            : '授权后，当前桌面用户可访问下列 USB 下载口。安装完成后请重新插拔开发板。'}
       </p>
       {windows && vendor === 'nxp' && (
         <p>
@@ -72,7 +77,13 @@ export function DriverSetup({
         <code>{info.ids.join(' · ')}</code>
       </details>
       <button type="button" disabled={installing} onClick={() => void selectDriver()}>
-        {installing ? '等待系统安装…' : rockusb ? '选择 Rockusb 驱动…' : windows ? '打开 WinUSB 安装器' : '安装 USB 访问规则'}
+        {installing
+          ? '等待系统安装…'
+          : rockusb
+            ? '选择 Rockusb 驱动…'
+            : windows
+              ? '打开 WinUSB 安装器'
+              : '安装 USB 访问规则'}
       </button>
       {error && <p role="alert">{error}</p>}
     </section>
