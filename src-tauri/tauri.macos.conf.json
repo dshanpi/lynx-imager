@@ -1,5 +1,8 @@
 {
   "bundle": {
+    "macOS": {
+      "minimumSystemVersion": "26.0"
+    },
     "resources": {
       "resources/runtime/darwin-aarch64/openocd": "openocd",
       "resources/binaries/openixcli": "bin/openixcli",
@@ -12,7 +15,14 @@
       "resources/binaries/libssl.3.dylib": "bin/libssl.3.dylib",
       "resources/binaries/libcrypto.3.dylib": "bin/libcrypto.3.dylib",
       "resources/binaries/libzstd.1.dylib": "bin/libzstd.1.dylib",
-      "resources/binaries/libtinyxml2.11.dylib": "bin/libtinyxml2.11.dylib"
+      "resources/binaries/libtinyxml2.11.dylib": "bin/libtinyxml2.11.dylib",
+      "resources/binaries/openixcli-LICENSE": "bin/openixcli-LICENSE",
+      "resources/binaries/uuu-LICENSE": "bin/uuu-LICENSE",
+      "resources/binaries/libusb-COPYING": "bin/libusb-COPYING",
+      "resources/binaries/openssl-LICENSE": "bin/openssl-LICENSE",
+      "resources/binaries/zstd-LICENSE": "bin/zstd-LICENSE",
+      "resources/binaries/tinyxml2-LICENSE": "bin/tinyxml2-LICENSE",
+      "resources/binaries/macos-runtime.json": "bin/macos-runtime.json"
     }
   }
 }

@@ -86,9 +86,9 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
   };
   const handle = useCallback((e: KeyboardEvent) => {
     if (
-      !e.ctrlKey ||
+      !(e.ctrlKey || e.metaKey) ||
       e.altKey ||
-      e.metaKey ||
+      (e.ctrlKey && e.metaKey) ||
       e.shiftKey ||
       e.key.toLowerCase() !== 'k' ||
       e.isComposing ||
@@ -139,7 +139,7 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
             ref={input}
             type="search"
             aria-label="搜索芯片型号或板名"
-            aria-keyshortcuts="Control+K"
+            aria-keyshortcuts="Control+K Meta+K"
             placeholder="搜索芯片型号或板名"
             value={query}
             onChange={(e) => {
@@ -150,7 +150,7 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
               }
             }}
           />
-          <kbd>Ctrl K</kbd>
+          <kbd>{/Mac/i.test(navigator.userAgent) ? '⌘ K' : 'Ctrl K'}</kbd>
         </label>
       </header>
       <div className="target-workspace">

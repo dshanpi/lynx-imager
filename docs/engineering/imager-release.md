@@ -1,5 +1,12 @@
 # LYNX Imager 发布与更新
 
+## macOS 手动安装候选通道
+
+`v0.1-rc6` 增加 macOS 26.0+ Apple Silicon 候选包，按 [macOS 构建说明](imager-macos.md) 执行。
+该候选包未 Apple 公证，采用 ad-hoc 包签名与独立 macOS 分发文件签名；不调用下述 Windows/Linux feed 生成器，不修改其公钥或 `latest.json`。
+先上传 Draft，再逐资产反向下载校验后公开为 Pre-release；不覆盖 rc5，不宣称其为正式公证版或本轮已验证 Windows/Linux 二进制。
+只有补齐 Apple 签名、公证、安装升级及硬件门禁后，才能转入正式 macOS 发布流程。
+
 ## 烧录目标
 
 厂商横栏依次提供全志、瑞芯微、恩智浦、意法半导体和嘉楠。选中厂商后，左栏显示系列，右侧列表显示该系列的型号、烧录路线和目标介质。全局搜索匹配芯片与板名，系列内搜索只筛选当前系列。支持矩阵由 `targetCatalog.ts` 维护。

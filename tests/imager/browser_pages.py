@@ -378,13 +378,14 @@ def test_pages(page, results, capture):
     page.get_by_test_id('settings-theme-mode').select_option('light')
     backend=page.get_by_role('combobox',name='USB 驱动',exact=True)
     original=backend.input_value()
-    changed='winusb' if original=='libusb' else 'libusb'
+    available=backend.locator('option').evaluate_all('(options)=>options.map(o=>o.value)')
+    changed=next((value for value in available if value != original),original)
     backend.select_option(changed)
     page.evaluate('pageFixture.backendChanges=[]')
     page.evaluate('pageFixture.failSettings=true')
     save()
     expect(page.get_by_test_id('settings-save-error')).to_contain_text('test settings write failed')
-    assert page.evaluate('pageFixture.backendChanges')==[changed,original]
+    assert page.evaluate('pageFixture.backendChanges')==([changed,original] if changed != original else [])
     page.evaluate('pageFixture.failSettings=false')
     page.evaluate('pageFixture.holdSave=true')
     save()
@@ -575,17 +576,24 @@ if __name__=='__main__':
     cli.add_argument('output',type=Path)
     cli.add_argument('--executable')
     cli.add_argument('--width',type=int,default=1280)
+    cli.add_argument('--height',type=int,default=768)
+    cli.add_argument('--platform',choices=['macos','windows'],default='macos')
+    cli.add_argument('--theme-screens',action='store_true')
     args=cli.parse_args()
     tests=Path(__file__).resolve().parent
     mocks=(tests.parents[1]/'node_modules/@tauri-apps/api/mocks.js').read_text(encoding='utf8').split('export {')[0]
     fixtures=(tests/'page-fixtures.js').read_text(encoding='utf8')
-    report={'runtime':'Chromium, in-memory IPC','width':args.width,'checks':[], 'pageErrors':[],'screens':[]}
+    report={'runtime':'Chromium, in-memory IPC','platform':args.platform,'width':args.width,
+            'height':args.height,'checks':[], 'pageErrors':[],'screens':[], 'geometry':[]}
     args.output.mkdir(parents=True,exist_ok=True)
     with ThreadingHTTPServer(('127.0.0.1',0),partial(SimpleHTTPRequestHandler,directory=args.dist)) as server, sync_playwright() as pw:
         Thread(target=server.serve_forever,daemon=True).start()
         url=f'http://127.0.0.1:{server.server_port}'
         browser=pw.chromium.launch(headless=True,executable_path=args.executable)
-        page=browser.new_page(locale='zh-CN',viewport={'width':args.width,'height':768})
+        agent=('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' if args.platform=='macos'
+               else 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)')
+        page=browser.new_page(locale='zh-CN',user_agent=agent,
+                              viewport={'width':args.width,'height':args.height})
         page.set_default_timeout(6000)
         page.add_init_script(script='(()=>{'+mocks+'\n'+fixtures+'})()')
         page.on('pageerror',lambda e:report['pageErrors'].append(str(e)))
@@ -596,12 +604,42 @@ if __name__=='__main__':
                 return
             overflow=page.evaluate('document.documentElement.scrollWidth - document.documentElement.clientWidth')
             assert overflow <= 1, (name, 'horizontal overflow', overflow)
+            geometry=page.evaluate('''() => {
+                const brand=document.querySelector('.imager-brand strong');
+                const rect=brand.getBoundingClientRect();
+                const header=document.querySelector('.imager-app-header').getBoundingClientRect();
+                const actions=[...document.querySelectorAll('.v2-foot-actions button,dialog[open] footer button')]
+                    .filter(e=>e.getClientRects().length).map(e=>{
+                      const r=e.getBoundingClientRect();
+                      return {text:e.textContent.trim(),x:r.x,y:r.y,right:r.right,bottom:r.bottom};
+                    });
+                return {brandHeight:rect.height,headerHeight:header.height,actions};
+            }''')
+            assert geometry['brandHeight'] <= 25, (name,'brand wrapped',geometry)
+            assert geometry['headerHeight'] == 44, (name,'navigation height',geometry)
+            for action in geometry['actions']:
+                assert action['x'] >= -1 and action['right'] <= args.width+1, (name,action)
+                assert action['y'] >= 0 and action['bottom'] <= args.height+1, (name,action)
+            report['geometry'].append({'page':name,**geometry})
             folder=args.output/'screens'
             folder.mkdir(exist_ok=True)
             page.screenshot(path=folder/(name+'.png'),animations='disabled')
+            if args.theme_screens:
+                themes=page.evaluate('''() => [...document.querySelectorAll('[data-theme]')].map(e=>{
+                    const theme=e.dataset.theme;
+                    e.dataset.theme=theme==='lynx-light'?'lynx-dark':theme==='light'?'dark':theme;
+                    return theme;
+                })''')
+                page.screenshot(path=folder/(name+'-dark.png'),animations='disabled')
+                page.evaluate('themes => [...document.querySelectorAll("[data-theme]")].forEach((e,i)=>e.dataset.theme=themes[i])',themes)
             report['screens'].append(name)
         try:
             page.goto(url)
+            page.locator('.imager-app-tabs button').first.click()
+            page.keyboard.press('Meta+k' if args.platform=='macos' else 'Control+k')
+            expect(page.get_by_role('searchbox',name='搜索芯片型号或板名')).to_be_focused()
+            report['checks'].append('当前平台搜索快捷键将焦点移至可见目标搜索框')
+            capture('target-home')
             test_pages(page,report['checks'],capture)
             assert not report['pageErrors'], report['pageErrors']
             report['passed']=True

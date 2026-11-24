@@ -7,6 +7,21 @@
   font-family: var(--font-ui);
   font-size: var(--font-body);
 }
+/* WebKit's native popup bezel can ignore min-height and shrink a 32px field. */
+#root .imager-themed select:not([multiple]):not([size]) {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: var(--size-control);
+  padding-right: 28px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    calc(100% - 13px) 50%,
+    calc(100% - 9px) 50%;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+}
 .imager-app-shell {
   --workspace-rail: var(--lynx-device-rail-width);
   --workspace-inset-top: var(--lynx-space-5);
@@ -33,17 +48,20 @@
 .imager-brand {
   width: calc(var(--workspace-rail) - 28px);
   flex: none;
-  gap: 9px;
-  font-size: 18px;
+  gap: 6px;
+  min-width: 0;
+  font-size: 16px;
 }
 .imager-brand svg {
-  width: 23px;
-  height: 23px;
+  width: 20px;
+  height: 20px;
+  flex: none;
   color: var(--color-brand);
 }
 .imager-brand strong {
   font-weight: 650;
   letter-spacing: -0.4px;
+  white-space: nowrap;
 }
 .imager-brand small {
   font-size: var(--font-caption);
@@ -95,6 +113,7 @@
   min-height: 32px;
   padding: 0 6px;
   font-size: 13px;
+  white-space: nowrap;
 }
 .imager-app-header button:hover {
   background: var(--color-selected);
@@ -149,8 +168,8 @@
   padding: 16px 22px;
 }
 .imager-themed .settings-section h3 {
-  font: 700 19px/1.4 var(--font-ui);
-  color: var(--color-brand);
+  font: 600 var(--font-section)/1.4 var(--font-ui);
+  color: var(--color-text);
   letter-spacing: 0;
 }
 .imager-themed .settings-item {
@@ -201,11 +220,14 @@
   font-size: var(--font-section);
 }
 .imager-records-content {
+  min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: 16px;
 }
 .imager-records-filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: end;
   margin-bottom: 12px;
@@ -235,6 +257,11 @@
   padding: 4px 8px;
   text-align: left;
   border-bottom: 1px solid var(--color-divider);
+  overflow-wrap: anywhere;
+}
+.imager-records pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 .imager-records th {
   background: var(--color-subtle);

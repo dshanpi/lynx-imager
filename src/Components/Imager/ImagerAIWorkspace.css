@@ -127,6 +127,8 @@
   overflow: auto;
   padding: var(--space-xl) var(--space-lg);
   scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+  container-type: inline-size;
 }
 .im-ai-body section,
 .im-ai-body form {
@@ -204,6 +206,27 @@
   align-items: center;
   gap: var(--space-sm);
   margin-top: var(--space-sm);
+}
+.im-ai-workspace button.im-ai-primary {
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.im-ai-workspace button.im-ai-primary:hover:enabled {
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  filter: brightness(0.94);
+}
+.im-ai-workspace button {
+  height: auto;
+  min-height: var(--size-control);
+  padding-block: 5px;
+  line-height: 1.4;
+}
+@container (max-width: 760px) {
+  .im-ai-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .im-ai-workspace button.im-ai-primary {
   color: var(--color-on-primary);
