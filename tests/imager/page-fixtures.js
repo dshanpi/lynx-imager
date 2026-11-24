@@ -19,7 +19,7 @@ mockIPC(
     qa.calls.push(cmd);
     switch (cmd) {
       case 'plugin:app|version':
-        return '0.1.0-rc.5';
+        return '0.1.0-rc.8';
       case 'get_system_proxy':
         return null;
       case 'plugin:updater|check':
