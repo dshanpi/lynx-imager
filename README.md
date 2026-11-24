@@ -8,7 +8,7 @@
 
 [macOS 构建、安装和签名说明](docs/engineering/imager-macos.md) · [紧凑列表变更与验证记录](docs/engineering/IMAGER-COMPACT-LIST-001.md)
 
-**v0.1-rc8 预发行版**　 [下载 Windows x64 安装包（.exe）](https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc8/LYNX-Imager_0.1.0-rc.8_windows-x64-setup.exe) · [下载 Ubuntu amd64 安装包（.deb）](https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc8/LYNX-Imager_0.1.0-rc.8_linux-amd64.deb) · [发行说明与校验文件](https://github.com/dshanpi/lynx-imager/releases/tag/v0.1-rc8)
+**v0.1-rc10 预发行版**　 [下载 Windows x64 安装包（.exe）](https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc10/LYNX-Imager_0.1.0-rc.10_windows-x64-setup.exe) · [下载 Ubuntu amd64 安装包（.deb）](https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc10/LYNX-Imager_0.1.0-rc.10_linux-amd64.deb) · [发行说明与校验文件](https://github.com/dshanpi/lynx-imager/releases/tag/v0.1-rc10)
 
 ![LYNX Imager 在 Ubuntu 上选择全志 F101 的目标存储。选中 SPI NOR 后，可查看对应的厂商固件包和主线整盘镜像两种烧录路线。](docs/images/flash-target-rc4.png)
 
