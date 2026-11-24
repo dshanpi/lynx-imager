@@ -4,6 +4,8 @@
 
 **macOS 26.0+ Apple Silicon 候选版**：本轮增加 macOS arm64 构建、随包工具和桌面布局优化。
 候选包使用 ad-hoc 签名，尚未 Apple 公证，未进入自动更新；不要将它视为已完成实机验收的稳定版。
+[下载 macOS arm64 DMG](https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc6/LYNX-Imager_0.1.0-rc.6_aarch64.dmg) · [rc6 发行说明、签名与 328 张模拟 UI 截图](https://github.com/dshanpi/lynx-imager/releases/tag/v0.1-rc6)
+
 [macOS 构建、安装和签名说明](docs/engineering/imager-macos.md) · [本轮变更与验收记录](docs/engineering/IMAGER-MAC-001.md)
 
 **v0.1-rc5 预发行版**　 [下载 Windows x64 安装包（.exe）](https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc5/LYNX-Imager_0.1.0-rc.5_windows-x64-setup.exe) · [下载 Ubuntu amd64 安装包（.deb）](https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc5/LYNX-Imager_0.1.0-rc.5_linux-amd64.deb) · [发行说明与校验文件](https://github.com/dshanpi/lynx-imager/releases/tag/v0.1-rc5)
