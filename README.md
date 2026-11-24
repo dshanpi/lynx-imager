@@ -2,11 +2,11 @@
 
 在 Windows 或 Ubuntu 上给开发板烧写系统镜像。选好主控芯片和板上的存储介质，向导会列出适用的镜像类型，以及这次烧录需要的引导文件。
 
-**macOS 26.0+ Apple Silicon 候选版**：本轮增加 macOS arm64 构建、随包工具和桌面布局优化。
+**macOS 26.0+ Apple Silicon 候选版**：rc9 采用绿色浅色烧录界面和紧凑芯片型号列表。
 候选包使用 ad-hoc 签名，尚未 Apple 公证，未进入自动更新；不要将它视为已完成实机验收的稳定版。
-[下载 macOS arm64 DMG](https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc6/LYNX-Imager_0.1.0-rc.6_aarch64.dmg) · [rc6 发行说明、签名与 328 张模拟 UI 截图](https://github.com/dshanpi/lynx-imager/releases/tag/v0.1-rc6)
+[下载 macOS arm64 DMG](https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc9/LYNX-Imager_0.1.0-rc.9_aarch64.dmg) · [rc9 发行说明、签名与校验文件](https://github.com/dshanpi/lynx-imager/releases/tag/v0.1-rc9)
 
-[macOS 构建、安装和签名说明](docs/engineering/imager-macos.md) · [本轮变更与验收记录](docs/engineering/IMAGER-MAC-001.md)
+[macOS 构建、安装和签名说明](docs/engineering/imager-macos.md) · [紧凑列表变更与验证记录](docs/engineering/IMAGER-COMPACT-LIST-001.md)
 
 **v0.1-rc8 预发行版**　 [下载 Windows x64 安装包（.exe）](https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc8/LYNX-Imager_0.1.0-rc.8_windows-x64-setup.exe) · [下载 Ubuntu amd64 安装包（.deb）](https://github.com/dshanpi/lynx-imager/releases/download/v0.1-rc8/LYNX-Imager_0.1.0-rc.8_linux-amd64.deb) · [发行说明与校验文件](https://github.com/dshanpi/lynx-imager/releases/tag/v0.1-rc8)
 

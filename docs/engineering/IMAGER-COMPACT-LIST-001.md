@@ -29,3 +29,9 @@
 - `native-compact-list.png`：当前原生运行截图。
 
 应用保持运行；本次原生走查未执行烧录，不替代硬件验收。版本仍为本地 rc7 工作版本，已发布的 rc7 资产未覆盖；未推送源码或启用 GitHub CI。
+
+## macOS rc9 发布整理
+
+用户随后授权整理上传发布。拉取远端发现 rc8 已发布 Windows/Ubuntu 安装包，因此将本地紧凑列表提交变基到 `badc32e`，保留远端测试改进及 `updates/latest.json`，本轮 macOS 使用新标签 `v0.1-rc9` / 应用版本 `0.1.0-rc.9`。
+
+本轮证据目录为 `artifacts/macos-rc9-20261124/`，使用本机编译、独立文件签名和 GitHub Draft 上传、反向下载核验后再公开的流程。GitHub CI 保持停用。仅版本元数据同步涉及 Cargo/Tauri 文件，后端业务未更改；不覆盖已发布资产、不替换 Windows/Linux OTA 密钥或更新清单。
