@@ -257,33 +257,34 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
             </>
           ) : (
             <>
-              <div className="target-subhead">
+              <div className="target-subhead target-list-toolbar">
                 <h4>{query ? '匹配的芯片' : '芯片型号'}</h4>
                 <small>{list.length} 款型号</small>
+                {!query && (
+                  <label className="target-series-search">
+                    <LynxIcon name="search" size={16} />
+                    <input
+                      type="search"
+                      aria-label="筛选当前系列型号"
+                      placeholder={'搜索 ' + family + ' 系列型号'}
+                      value={familyQuery}
+                      onChange={(e) => setFamilyQuery(e.target.value)}
+                    />
+                  </label>
+                )}
               </div>
-              {!query && (
-                <label className="target-series-search">
-                  <LynxIcon name="search" size={16} />
-                  <input
-                    type="search"
-                    aria-label="筛选当前系列型号"
-                    placeholder={'搜索 ' + family + ' 系列型号'}
-                    value={familyQuery}
-                    onChange={(e) => setFamilyQuery(e.target.value)}
-                  />
-                </label>
-              )}
               <div className="target-columns">
                 <span>芯片型号</span>
                 <span>烧录路线</span>
                 <span>目标存储</span>
+                <span>适配状态</span>
               </div>
               <div className="target-models">
                 {list.map((m) => (
                   <button
                     key={m.name}
                     data-model={m.name}
-                    className={m.profile ? 'target-model-card' : 'target-model-card is-unavailable'}
+                    className={m.profile ? 'target-model-row' : 'target-model-row is-unavailable'}
                     onClick={() => change(m.vendor, m.family, m.name)}
                   >
                     <LynxIcon name="board" size={20} />
@@ -291,19 +292,19 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
                       <strong>{m.name}</strong>
                       <small>{chipBrief[m.name] ?? m.profile?.aliases[0]}</small>
                     </span>
-                    <span className="target-model-route">
-                      {m.profile?.routes ?? '尚无适配路线'}
-                    </span>
+                    <span className="target-model-route">{m.profile?.routes ?? '—'}</span>
                     <small className="target-model-media">
-                      {m.profile?.media.join(' / ') ?? '存储配方待适配'}
+                      {m.profile?.media.join(' / ') ?? '—'}
                     </small>
+                    <span className="target-model-status">{m.profile ? '已适配' : '待适配'}</span>
                     <span aria-hidden="true">›</span>
                   </button>
                 ))}
               </div>
               {!!list.length && (
                 <p className="target-note">
-                  <LynxIcon name="info" size={16} /> “—” 表示当前型号尚无适配的烧录路线。
+                  <LynxIcon name="info" size={16} />{' '}
+                  待适配型号暂不支持烧录，可点击查看已收录的信息。
                 </p>
               )}
               {!list.length && <p role="status">未找到匹配型号，请核对丝印或尝试板名。</p>}
