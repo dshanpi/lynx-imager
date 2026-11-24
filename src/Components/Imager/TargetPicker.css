@@ -32,7 +32,6 @@
 }
 .target-heading,
 .target-subhead,
-.target-hero,
 .target-media button,
 .target-families button {
   display: flex;
@@ -155,21 +154,6 @@
   min-width: 0;
   padding: 14px 20px 20px;
 }
-.target-hero {
-  min-height: 83px;
-  border-bottom: 1px solid var(--lynx-border);
-  padding-bottom: 12px;
-}
-.target-hero h3 {
-  font-size: 20px;
-  margin: 3px 0;
-}
-.target-hero .v2c-board-art {
-  width: 102px;
-  height: 64px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
 .target-subhead {
   margin: 12px 0;
 }
@@ -291,20 +275,6 @@
 }
 .target-chip-help p {
   color: #e0eaf4;
-}
-.target-hero {
-  margin: -14px -20px 0;
-  padding: 14px 20px;
-  background: var(--lynx-bg-subtle);
-  min-height: 106px;
-}
-.target-hero figure {
-  margin: 0;
-  text-align: center;
-}
-.target-hero figcaption {
-  font-size: 12px;
-  color: var(--lynx-text-secondary);
 }
 .target-series-search {
   display: flex;

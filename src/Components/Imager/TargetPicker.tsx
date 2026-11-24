@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { LynxIcon } from '../../CoreUI';
-import { V2BoardArt } from './V2Catalog';
 import {
   manufacturers,
   mediaNames,
@@ -75,7 +74,6 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
           m.name.toLowerCase().includes(familyQuery.trim().toLowerCase())
       );
   const part = models.find((m) => m.name === model);
-  const hero = part ?? list.find((m) => m.profile);
   const change = (v: string, f: string, m = '') => {
     if (v !== vendorId || f !== family || m !== model) onChoice(null);
     setQuery('');
@@ -180,38 +178,10 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
           </details>
         </aside>
         <section className="target-main">
-          <header className="target-hero">
-            <div>
-              <small>
-                {query
-                  ? '全部厂商'
-                  : vendor.name + ' ' + vendor.brand + (part ? ' / ' + family + ' 系列' : '')}
-              </small>
-              <h3>{query ? '搜索结果' : (part?.name ?? family + ' 系列')}</h3>
-              <p>
-                {query
-                  ? '可按芯片丝印或开发板名称定位。'
-                  : part && vendor.id === 'allwinner'
-                    ? '按板上实际安装的存储器选择目标介质。'
-                    : vendor.tip}
-              </p>
-            </div>
-            {!query && hero?.profile && (
-              <figure>
-                <V2BoardArt id={hero.profile.preset} name={hero.name} />
-                <figcaption>
-                  {hero.name}{' '}
-                  {hero.profile.preset === 'rk3588' || hero.profile.preset === 't113-pro'
-                    ? '板卡示例'
-                    : '芯片示意'}
-                </figcaption>
-              </figure>
-            )}
-          </header>
           {part && !query ? (
             <>
               <div className="target-subhead">
-                <h4>目标存储</h4>
+                <h4>{part.name} · 目标存储</h4>
                 <button onClick={() => change(vendorId, family)}>返回型号列表</button>
               </div>
               <div className="target-media">

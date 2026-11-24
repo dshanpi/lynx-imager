@@ -40,7 +40,7 @@ def inspect(binary, out):
                 ("高级功能", "advanced", [".board-list", ".device-board-rail-heading h3", ".board-main",
                  ".adv-no-target", ".adv-no-target h2", ".imager-app-status"]),
                 ("烧录系统", "basic", [".v2-rail", ".v2-rail-title h2", ".v2-content",
-                 ".target-heading", ".target-hero h3", ".v2-foot"]),
+                 ".target-heading", ".target-page-heading h2", ".v2-foot"]),
             ]:
                 web.click('.imager-app-tabs button', page)
                 wait(lambda: web.find(selectors[3]), page)

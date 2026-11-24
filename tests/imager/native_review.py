@@ -96,7 +96,7 @@ class Review:
         layout=self.js("""const n=document.documentElement;
             const field=document.querySelector('.v2-control-area');
             const rail=document.querySelector('.v2-rail');
-            const title=[...field.querySelectorAll('.target-hero h3, h2')]
+            const title=[...field.querySelectorAll('.target-page-heading h2, h2')]
                 .find(e=>e.getClientRects().length);
             return {w:innerWidth,h:innerHeight,overflow:n.scrollWidth-n.clientWidth,
              railRight:rail.getBoundingClientRect().right, contentX:field.getBoundingClientRect().x,
