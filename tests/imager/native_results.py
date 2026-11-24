@@ -88,9 +88,12 @@ def run(ui, fixtures):
         ui.click('.v2w-boot-form summary')
         marker = 'F101-FLASH-PROBE-SIM'
         serial = marker + ' HEARTBEAT 1 uptime_ms=5018\n' + marker + ' HEARTBEAT 2 uptime_ms=10023'
-        ui.js("""const dt=new DataTransfer();dt.items.add(new File([arguments[0]],'coldboot.log',{type:'text/plain'}));
-          const el=document.querySelector('.v2w-boot-form input[type=file]');el.files=dt.files;
-          el.dispatchEvent(new Event('change',{bubbles:true}));""", serial)
+        serial_path = Path(tmp) / 'coldboot.log'
+        serial_path.write_text(serial, encoding='utf-8')
+        upload = ui.web.find('.v2w-boot-form input[type=file]')
+        element_id = upload['element-6066-11e4-a52e-4f735466cecf']
+        ui.web.call('POST', ui.web.session + '/element/' + element_id + '/value',
+                    {'text': str(serial_path)})
         enter(ui, '.v2w-boot-form input[placeholder]', 'SOME-OTHER-BUILD')
         ui.text('串口输出中未找到该标识')
         assert ui.js("return document.querySelector('.v2w-boot-form button').disabled")
