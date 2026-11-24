@@ -26,6 +26,7 @@ import { scheduleAutomaticUpdateCheck } from './Services/AutoUpdater';
 import { installDiagnosticReporter } from './Services/DiagnosticReporter';
 import { invokeCommand, subscribeEvent } from './Platform/IPC';
 import './Components/Imager/ImagerShell.css';
+import './Components/Imager/FlashLight.css';
 
 type Workspace = 'basic' | 'advanced' | 'ai';
 type WorkspaceStatus = { target: string; task: string };

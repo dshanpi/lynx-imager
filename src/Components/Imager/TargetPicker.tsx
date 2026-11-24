@@ -116,6 +116,10 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
   }, [handle]);
   return (
     <div className="target-picker">
+      <div className="target-page-heading">
+        <h2>选择你的烧录目标</h2>
+        <p>找到主控型号，再选择板上实际使用的存储器。</p>
+      </div>
       <header className="target-heading">
         <div className="target-vendors" aria-label="主控厂商">
           <span className="target-vendor-label">
@@ -309,6 +313,7 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
                   <button
                     key={m.name}
                     data-model={m.name}
+                    className={m.profile ? 'target-model-card' : 'target-model-card is-unavailable'}
                     onClick={() => change(m.vendor, m.family, m.name)}
                   >
                     <LynxIcon name="board" size={20} />
@@ -316,8 +321,12 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
                       <strong>{m.name}</strong>
                       <small>{chipBrief[m.name] ?? m.profile?.aliases[0]}</small>
                     </span>
-                    <span>{m.profile?.routes ?? '—'}</span>
-                    <small>{m.profile?.media.join(' / ') ?? '—'}</small>
+                    <span className="target-model-route">
+                      {m.profile?.routes ?? '尚无适配路线'}
+                    </span>
+                    <small className="target-model-media">
+                      {m.profile?.media.join(' / ') ?? '存储配方待适配'}
+                    </small>
                     <span aria-hidden="true">›</span>
                   </button>
                 ))}

@@ -1,0 +1,711 @@
+/* Flash workspace only. Other tools keep their existing appearance and theme. */
+#root .imager-themed .imager-app-shell.v2-basic-shell {
+  color-scheme: light;
+  --color-brand: #18764e;
+  --color-primary: #18764e;
+  --color-on-primary: #fff;
+  --color-background: #f3f6f3;
+  --color-sidebar: #f3f6f3;
+  --color-surface: #fff;
+  --color-subtle: #f5f8f5;
+  --color-selected: #e7f2eb;
+  --color-selection-line: #18764e;
+  --color-focus: #18764e;
+  --color-text: #24362c;
+  --color-muted: #596b60;
+  --color-border: #dbe4dc;
+  --color-divider: #e9eee9;
+  --color-control-border: #a5b5a9;
+  --color-connected: #247548;
+  --color-warning: #8d560b;
+  --color-warning-subtle: #fff6e5;
+  --color-error: #b93636;
+  --color-error-subtle: #fff0ed;
+  --color-success: #247548;
+  --color-success-subtle: #eaf5ee;
+  --lynx-bg-app: var(--color-background);
+  --lynx-bg-surface: #fff;
+  --lynx-bg-subtle: var(--color-subtle);
+  --lynx-bg-hover: #f0f6f1;
+  --lynx-bg-selected: var(--color-selected);
+  --lynx-bg-disabled: #f2f4f2;
+  --lynx-border: var(--color-border);
+  --lynx-border-strong: var(--color-control-border);
+  --lynx-divider: var(--color-divider);
+  --lynx-text-primary: var(--color-text);
+  --lynx-text-secondary: var(--color-muted);
+  --lynx-text-muted: #69786e;
+  --lynx-text-disabled: #748078;
+  --lynx-text-inverse: #fff;
+  --lynx-accent: var(--color-primary);
+  --lynx-accent-hover: #105c3b;
+  --lynx-accent-active: #d6eadd;
+  --lynx-accent-subtle: var(--color-selected);
+  --lynx-success: var(--color-connected);
+  --lynx-success-bg: var(--color-success-subtle);
+  --lynx-warning: var(--color-warning);
+  --lynx-warning-bg: var(--color-warning-subtle);
+  --lynx-danger: var(--color-error);
+  --lynx-danger-bg: var(--color-error-subtle);
+  --v2-paper: #fff;
+  --v2-tint: var(--color-background);
+  --v2-ink: var(--color-text);
+  --v2-secondary: var(--color-muted);
+  --v2-line: var(--color-border);
+  --v2-blue: var(--color-primary);
+  --v2-active: var(--color-selected);
+  --v2-green: var(--color-connected);
+  --v2-disabled: #e9eeea;
+  --v2-disabled-ink: #6e7d73;
+  --workspace-rail: 224px;
+  --size-titlebar: 66px;
+  --size-actions: 76px;
+  --size-statusbar: 28px;
+  --workspace-inset-top: 22px;
+  --workspace-inset-x: 24px;
+  --lynx-control-height: 38px;
+  --lynx-radius-control: 8px;
+  --font-ui: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei UI', sans-serif;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-background);
+}
+.v2-basic-shell ::selection {
+  background: #cce7d5;
+  color: #183d28;
+}
+.v2-basic-shell :is(input, textarea) {
+  caret-color: var(--color-primary);
+}
+.v2-basic-shell * {
+  scrollbar-color: #b5c4b8 transparent;
+  scrollbar-width: thin;
+}
+.v2-basic-shell > .imager-app-header {
+  background: #fff;
+  gap: 20px;
+  padding-inline: 24px;
+  border-color: var(--color-border);
+}
+.v2-basic-shell .imager-brand {
+  width: auto;
+  gap: 9px;
+  margin-right: 28px;
+}
+.v2-basic-shell .imager-brand strong {
+  font-size: 18px;
+  letter-spacing: -0.5px;
+}
+.v2-basic-shell .imager-brand svg {
+  width: 23px;
+  height: 23px;
+}
+.v2-basic-shell .imager-brand small {
+  font-size: 11px;
+}
+.v2-basic-shell .imager-app-tabs {
+  align-items: center;
+  gap: 6px;
+  grid-auto-columns: auto;
+}
+.v2-basic-shell .imager-app-tabs button {
+  height: 38px;
+  padding-inline: 20px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.v2-basic-shell .imager-app-tabs button.is-active {
+  color: #fff;
+  background: var(--color-primary);
+}
+.v2-basic-shell .imager-app-tabs button.is-active::after {
+  display: none;
+}
+.v2-basic-shell .imager-app-actions {
+  gap: 10px;
+}
+.v2-basic-shell .imager-app-actions button {
+  border-radius: 7px;
+  padding: 5px;
+}
+.v2-basic-shell .v2-rail {
+  padding: 26px 14px 16px;
+  border: 0;
+  background: var(--color-background);
+}
+.v2-basic-shell .v2-rail-title {
+  display: block;
+  min-height: 0;
+  margin: 0 10px 24px;
+  padding: 0;
+}
+.v2-basic-shell .v2-rail-title h2 {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+.v2-basic-shell .v2-rail-title p {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.v2-basic-shell .v2-rail nav button {
+  min-height: 68px;
+  padding: 12px;
+  gap: 12px;
+  border-radius: 10px;
+}
+.v2-basic-shell .v2-rail nav li {
+  margin-bottom: 12px;
+}
+.v2-basic-shell .v2-rail nav li:not(:last-child)::before {
+  left: 27px;
+  background: var(--v2-line);
+}
+.v2-basic-shell .v2-step-number {
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+}
+.v2-basic-shell .v2-rail [data-state='active'] .v2-step-number {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.v2-basic-shell .v2-basic input:is([type='checkbox'], [type='radio']) {
+  accent-color: var(--color-primary);
+}
+.v2-basic-shell .v2-step-label {
+  min-width: 0;
+}
+.v2-basic-shell .v2-step-label strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.v2-basic-shell .v2-step-label small {
+  max-width: 130px;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.v2-basic-shell .r3-help {
+  padding: 14px 10px 0;
+  margin-inline: 4px;
+}
+.v2-basic-shell .v2-content {
+  margin: 16px 20px 0 0;
+  padding: 24px;
+  border-radius: 16px 16px 0 0;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-bottom: 0;
+}
+.v2-basic-shell .v2-control-area {
+  scrollbar-gutter: stable;
+}
+.v2-basic-shell .v2-foot-actions {
+  margin-right: 20px;
+  padding: 16px 24px;
+  border: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-divider);
+  border-radius: 0 0 16px 16px;
+  gap: 12px;
+}
+.v2-basic-shell .flash-next-hint {
+  margin: 0 auto 0 0;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.v2-basic-shell .v2-foot-actions button {
+  min-height: 42px;
+  padding-inline: 20px;
+  border-radius: 8px;
+}
+.v2-basic-shell .v2-foot-actions button.v2-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.v2-basic-shell .v2-foot-actions button.v2-primary:disabled {
+  background: var(--v2-disabled);
+  border-color: var(--v2-disabled);
+  color: var(--v2-disabled-ink);
+}
+.v2-basic-shell .v2-foot-actions button:enabled:hover {
+  box-shadow: none;
+  border-color: var(--color-primary);
+}
+.v2-basic-shell .v2-foot-actions button.v2-primary:enabled:hover {
+  background: var(--lynx-accent-hover);
+}
+.v2-basic-shell .v2-foot {
+  border-top: 0;
+  padding: 0 22px;
+}
+.v2-basic-shell .v2-basic[data-step='4'] .v2-content {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  margin-bottom: 8px;
+}
+.v2-basic-shell .target-picker:has(.target-models) {
+  display: block;
+  max-height: none;
+}
+.v2-basic-shell .target-picker {
+  position: relative;
+}
+.v2-basic-shell .target-page-heading {
+  margin-bottom: 20px;
+  padding-right: 320px;
+}
+.v2-basic-shell .target-page-heading h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.5px;
+  line-height: 1.35;
+}
+.v2-basic-shell .target-page-heading p {
+  margin: 7px 0 0;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+.v2-basic-shell .target-heading {
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.v2-basic-shell .target-heading .imager-board-search {
+  position: absolute;
+  top: 4px;
+  right: 0;
+  flex: none;
+  width: 300px;
+  max-width: 100%;
+  height: 42px;
+  min-height: 42px;
+  background: var(--color-subtle);
+  border-color: var(--color-border);
+  border-radius: 8px;
+}
+.v2-basic-shell .imager-board-search input[type='search'] {
+  background: transparent;
+  color: var(--color-text);
+}
+.v2-basic-shell .target-vendor-label {
+  display: none;
+}
+.v2-basic-shell .target-vendors {
+  gap: 8px;
+}
+.v2-basic-shell .target-vendors button {
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #fff;
+  font-weight: 500;
+}
+.v2-basic-shell .target-vendors i {
+  border: 0;
+  background: var(--color-subtle);
+  color: var(--color-muted);
+}
+.v2-basic-shell .target-vendors button[aria-pressed='true'] {
+  background: var(--color-selected);
+  border-color: #70a886;
+  color: #155a3b;
+}
+.v2-basic-shell .target-vendors button[aria-pressed='true'] i {
+  background: var(--color-primary);
+  color: #fff;
+}
+.v2-basic-shell .target-workspace {
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  background: #fff;
+}
+.v2-basic-shell .target-families {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 0 16px;
+  color: var(--color-muted);
+  background: #fff;
+  border-bottom: 1px solid var(--color-divider);
+  overflow: visible;
+}
+.v2-basic-shell .target-families h3 {
+  font-size: 12px;
+  margin: 0 10px 0 0;
+  border: 0;
+  padding: 0;
+  font-weight: 500;
+}
+.v2-basic-shell .target-families button {
+  width: auto;
+  padding: 6px 10px;
+  font-size: 12px;
+  gap: 8px;
+  border-radius: 6px;
+}
+.v2-basic-shell .target-families button small {
+  color: inherit;
+  opacity: 0.8;
+}
+.v2-basic-shell .target-families button[aria-pressed='true'] {
+  background: var(--color-selected);
+  color: #155a3b;
+  font-weight: 600;
+}
+.v2-basic-shell .target-families button:hover {
+  background: var(--color-subtle);
+  color: var(--color-primary);
+}
+.v2-basic-shell .target-chip-help {
+  padding: 0;
+  margin: 0 0 0 auto;
+}
+.v2-basic-shell .target-chip-help summary {
+  width: fit-content;
+  border: 0;
+  padding: 0;
+  font-size: 12px;
+}
+.v2-basic-shell .target-chip-help p {
+  color: var(--color-muted);
+}
+.v2-basic-shell .target-main {
+  padding: 0;
+}
+.v2-basic-shell .target-main:has(.target-models) {
+  display: block;
+}
+.v2-basic-shell .target-hero {
+  margin: 0;
+  padding: 12px 0;
+  min-height: 84px;
+  background: #fff;
+  border-color: var(--color-divider);
+}
+.v2-basic-shell .target-hero h3 {
+  font-size: 22px;
+  font-weight: 650;
+  margin: 5px 0;
+}
+.v2-basic-shell .target-hero p {
+  font-size: 12px;
+}
+.v2-basic-shell .target-hero .v2c-board-art {
+  width: 110px;
+  height: 66px;
+  object-fit: contain;
+}
+.v2-basic-shell .target-hero figcaption {
+  font-size: 11px;
+}
+.v2-basic-shell .target-subhead {
+  margin: 18px 0 12px;
+}
+.v2-basic-shell .target-subhead h4 {
+  font-size: 15px;
+  font-weight: 600;
+}
+.v2-basic-shell .target-subhead button {
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 5px 9px;
+}
+.v2-basic-shell .target-series-search {
+  border-radius: 7px;
+  padding: 7px 10px;
+  border-color: var(--color-border);
+}
+.v2-basic-shell .target-columns {
+  display: none;
+}
+.v2-basic-shell .target-models {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  max-height: none;
+  overflow: visible;
+  margin-top: 12px;
+}
+.v2-basic-shell .target-models button {
+  position: relative;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) 10px;
+  grid-template-rows: auto auto auto;
+  align-content: start;
+  align-items: start;
+  gap: 5px 10px;
+  padding: 16px;
+  min-height: 116px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: #fff;
+  transition:
+    border-color 140ms ease-out,
+    background-color 140ms ease-out;
+}
+.v2-basic-shell .target-models button:hover {
+  border-color: #70a886;
+  background: var(--color-subtle);
+}
+.v2-basic-shell .target-models button > svg {
+  grid-column: 1;
+  grid-row: 1 / 4;
+  width: 23px;
+  height: 23px;
+  color: var(--color-primary);
+}
+.v2-basic-shell .target-models button > span:nth-child(2) {
+  grid-column: 2;
+  grid-row: 1;
+}
+.v2-basic-shell .target-models strong {
+  font-size: 17px;
+  font-weight: 650;
+  color: var(--color-text);
+}
+.v2-basic-shell .target-models button > span:nth-child(2) small {
+  margin-top: 4px;
+  font-size: 11px;
+}
+.v2-basic-shell .target-models .target-model-route {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+.v2-basic-shell .target-models .target-model-media {
+  grid-column: 2;
+  grid-row: 3;
+  font-size: 11px;
+  color: var(--color-muted);
+}
+.v2-basic-shell .target-models button > span:last-child {
+  grid-column: 3;
+  grid-row: 1;
+  color: var(--color-muted);
+}
+.v2-basic-shell .target-models button.is-unavailable {
+  background: #fafbf9;
+}
+.v2-basic-shell .target-models button.is-unavailable > svg {
+  color: var(--color-muted);
+}
+.v2-basic-shell .target-media {
+  gap: 12px;
+}
+.v2-basic-shell .target-media button {
+  min-height: 76px;
+  padding: 16px;
+  border-radius: 10px;
+  gap: 12px;
+}
+.v2-basic-shell .target-media button[aria-pressed='true'] {
+  border-color: #70a886;
+  color: #155a3b;
+}
+.v2-basic-shell .target-media button small {
+  margin-top: 3px;
+}
+.v2-basic-shell .target-prep {
+  margin-top: 20px;
+  padding-top: 18px;
+}
+.v2-basic-shell .target-prep > div {
+  margin-top: 9px;
+}
+.v2-basic-shell .target-main .v2c-select-model {
+  max-width: 540px;
+  margin-top: 18px;
+}
+.v2-basic-shell .target-note {
+  margin: 14px 0 4px;
+  font-size: 12px;
+}
+.v2-basic-shell .v2c-layout {
+  --vc-ink: var(--color-text);
+  --vc-sub: var(--color-muted);
+  --vc-line: var(--color-border);
+  --vc-panel: #fff;
+  --vc-soft: var(--color-subtle);
+  --vc-shade: var(--color-selected);
+  --vc-accent: var(--color-primary);
+  --vc-tint: var(--color-selected);
+}
+.v2-basic-shell .image-desk-title h2,
+.v2-basic-shell .r3-heading h2 {
+  font-size: 25px;
+  letter-spacing: -0.4px;
+}
+.v2-basic-shell .image-desk-title {
+  padding-bottom: 18px;
+}
+.v2-basic-shell .image-target-summary {
+  margin-top: 10px;
+}
+.v2-basic-shell .v2c-tabs button {
+  min-height: 36px;
+  border-radius: 7px;
+}
+.v2-basic-shell .v2c-tabs button[aria-pressed='true'] {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-selected);
+}
+.v2-basic-shell .v2c-drop {
+  background: var(--color-subtle);
+  border-color: #a9c4b3;
+  border-radius: 12px;
+}
+.v2-basic-shell :is(.vendor-detail, .image-file, .image-resource-panel) {
+  border-radius: 10px;
+}
+.v2-basic-shell .vendor-detail {
+  padding: 18px;
+  gap: 12px;
+}
+.v2-basic-shell .vendor-detail :is(button, input, select) {
+  border-radius: 7px;
+  min-height: 36px;
+}
+.v2-basic-shell .r3-connect {
+  gap: 20px;
+}
+.v2-basic-shell .r3-heading {
+  padding-bottom: 18px;
+}
+.v2-basic-shell .r3-wire {
+  border-radius: 12px;
+  background: var(--color-subtle);
+  padding: 20px;
+}
+.v2-basic-shell .r3-connect .vi-device {
+  border-radius: 10px;
+}
+.v2-basic-shell .r3-connect .vi-bar button {
+  min-height: 36px;
+  border-radius: 7px;
+}
+.v2-basic-shell .vi-grid {
+  --vi-border: var(--color-border);
+  --vi-muted: var(--color-muted);
+  --vi-ink: var(--color-text);
+  --vi-blue: var(--color-primary);
+  --vi-green: var(--color-connected);
+  --vi-soft-blue: var(--color-selected);
+}
+.v2-basic-shell .v2w-layout {
+  padding: 0;
+  gap: 18px;
+}
+.v2-basic-shell .v2w-card {
+  border-radius: 12px;
+  box-shadow: none;
+}
+.v2-basic-shell .v2w-region h2 {
+  font-size: 25px;
+}
+.v2-basic-shell .v2w-drawer {
+  border-radius: 14px;
+}
+.v2-basic-shell :is(.v2w-region, .v2w-drawer) {
+  --color-on-primary: #fff;
+}
+.v2-basic-shell .v2w-region :is(.v2w-button, .v2w-primary) {
+  min-height: 40px;
+  border-radius: 8px;
+}
+@media (max-width: 1160px) {
+  #root .imager-themed .imager-app-shell.v2-basic-shell {
+    --workspace-rail: 198px;
+  }
+  .v2-basic-shell > .imager-app-header {
+    gap: 12px;
+    padding-inline: 18px;
+  }
+  .v2-basic-shell .imager-brand {
+    gap: 6px;
+    margin-right: 12px;
+  }
+  .v2-basic-shell .imager-app-tabs button {
+    padding-inline: 15px;
+  }
+  .v2-basic-shell .imager-app-actions {
+    gap: 4px;
+  }
+  .v2-basic-shell .v2-content {
+    padding: 20px;
+    margin-right: 16px;
+  }
+  .v2-basic-shell .v2-foot-actions {
+    padding-inline: 20px;
+    margin-right: 16px;
+  }
+  .v2-basic-shell .v2-rail {
+    padding-inline: 10px;
+  }
+  .v2-basic-shell .v2-rail nav button {
+    padding-inline: 10px;
+    gap: 9px;
+  }
+  .v2-basic-shell .v2-step-label small {
+    max-width: 115px;
+  }
+  .v2-basic-shell .target-models {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+}
+@media (max-width: 850px) {
+  #root .imager-themed .imager-app-shell.v2-basic-shell {
+    --workspace-rail: 168px;
+  }
+  .v2-basic-shell .imager-brand small {
+    display: none;
+  }
+  .v2-basic-shell .imager-app-tabs button {
+    padding-inline: 10px;
+  }
+  .v2-basic-shell .imager-app-actions button {
+    font-size: 12px;
+  }
+  .v2-basic-shell .imager-app-actions button svg {
+    display: none;
+  }
+  .v2-basic-shell .v2-content {
+    padding: 16px;
+    margin: 12px 12px 0 0;
+  }
+  .v2-basic-shell .v2-foot-actions {
+    margin-right: 12px;
+    padding: 12px 16px;
+  }
+  .v2-basic-shell .flash-next-hint {
+    display: none;
+  }
+  .v2-basic-shell .target-vendors button {
+    padding: 7px 9px;
+  }
+  .v2-basic-shell .target-page-heading {
+    padding-right: 0;
+  }
+  .v2-basic-shell .target-heading {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .v2-basic-shell .target-heading .imager-board-search {
+    position: static;
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v2-basic-shell .target-models button {
+    transition: none;
+  }
+}

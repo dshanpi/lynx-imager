@@ -825,6 +825,7 @@ export function ImagerPage({
       <aside className="v2-rail">
         <div className="v2-rail-title">
           <h2>烧录系统</h2>
+          <p>四步完成系统写入</p>
         </div>
         <nav aria-label="烧录步骤">
           <ol>
@@ -1045,6 +1046,13 @@ export function ImagerPage({
       </div>
       {step < 4 && !failedPreflight && (
         <div className="v2-foot-actions">
+          <p className="flash-next-hint">
+            {step === 1
+              ? '选定型号与存储介质后继续'
+              : step === 2
+                ? '镜像及所需引导文件就绪后继续'
+                : '下一步只读预检，不会立即写入'}
+          </p>
           {step > 1 && (
             <button type="button" disabled={locked} onClick={() => back((step - 1) as BasicStep)}>
               ← 上一步
