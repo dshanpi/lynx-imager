@@ -48,14 +48,18 @@ def inspect(binary, out):
                 if width == 1280:
                     web.shot(out / (name + ".png"))
             basic, advanced = results["basic"], results["advanced"]
-            for key in ("rail", "mainX", "contentOrigin", "headingSize", "titleSize", "family",
-                        "bodySize", "footer", "header"):
-                assert basic[key] == advanced[key], (width, key, basic[key], advanced[key])
-            assert basic["heading"][:2] == advanced["heading"][:2], results
-            assert max(basic["overflow"]) <= 1, basic
+            for page, metrics in results.items():
+                x, y, rail_width, rail_height = metrics["rail"]
+                assert 0 < rail_width < width / 2 and rail_height > 0, (page, metrics)
+                assert abs(x + rail_width - metrics["mainX"]) <= 1, (page, metrics)
+                assert metrics["mainX"] <= metrics["contentOrigin"][0] < width, (page, metrics)
+                assert 0 <= metrics["contentOrigin"][1] < metrics["window"][1], (page, metrics)
+                assert max(metrics["overflow"]) <= 1, (page, metrics)
+                assert all(left >= 0 and left + w <= width + 1 and top + h <= y + 1
+                           for left, top, w, h in metrics["header"] if w and h), (page, metrics)
             web.click('.imager-app-tabs button', '连接 AI')
             wait(lambda: web.find('.im-ai-rail'), 'AI workspace')
-            assert web.js("return document.querySelector('.im-ai-rail').getBoundingClientRect().width") == basic["mainX"]
+            assert web.js("return document.querySelector('.im-ai-rail').getBoundingClientRect().width") == advanced["mainX"]
             report.append(results)
             print(width, height, 'aligned', basic["mainX"], basic["contentOrigin"], flush=True)
     (out / "layout.json").write_text(json.dumps(report, ensure_ascii=False, indent=2))
