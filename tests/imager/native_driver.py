@@ -52,6 +52,8 @@ class Desktop:
 
     def click(self,selector,label=None):
         e=wait(lambda:self.find(selector,label),str((selector,label)))
+        # WebKit's default scroll may leave controls behind the fixed action bar.
+        self.js("arguments[0].scrollIntoView({block:'center',inline:'nearest',behavior:'instant'})",e)
         self.call('POST',self.session+'/element/'+e['element-6066-11e4-a52e-4f735466cecf']+'/click',{})
 
     def shown(self, text):
