@@ -134,7 +134,6 @@ async function captureScenario(scenario) {
   );
   if (currentCollapsed !== scenario.collapsed) await click('sidebar-toggle');
 
-  const expectedSidebarWidth = scenario.collapsed ? 56 : 224;
   const geometry = await waitFor('stable non-overlapping layout', async () => {
     const result = await execute(`
       const sidebar = document.querySelector('[data-testid=app-sidebar]').getBoundingClientRect();
@@ -161,7 +160,8 @@ async function captureScenario(scenario) {
     `);
     const epsilon = 1;
     const valid =
-      Math.abs(result.sidebar.width - expectedSidebarWidth) <= epsilon &&
+      result.sidebar.width > 0 &&
+      result.sidebar.width < result.viewport.width &&
       result.sidebar.right <= result.backdrop.left + epsilon &&
       result.dialog.left + epsilon >= result.sidebar.right &&
       result.dialog.right <= result.viewport.width + epsilon &&

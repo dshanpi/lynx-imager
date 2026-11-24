@@ -1,4 +1,6 @@
-# SerialTool Skill Document
+# SerialTool Component Reference
+
+Historical implementation reference, not a UI design skill or layout requirement.
 
 ## Overview
 
@@ -187,18 +189,6 @@ serialTool
 ```
 
 Supported languages: zh-CN, zh-TW, en-US, ja-JP, ko-KR
-
-## Layout Configuration
-
-The three-panel layout uses flexbox with `flex-direction: row`:
-
-| Panel | Width | Position |
-|---|---|---|
-| SerialSettings (+ SendPanel) | 235px | Left |
-| SerialMonitor | flex: 1 | Center (fills remaining) |
-| MultiSendPanel | 225px (or 36px collapsed) | Right |
-
-Margins: 8px outer edges, 4-6px between panels
 
 ## State Management
 

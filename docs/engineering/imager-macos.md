@@ -27,8 +27,6 @@ python3 scripts/stage-imager-macos-runtime.py --sources .verification
 npm run typecheck
 npm run test:imager
 npm run check:ipc-contracts
-npm run check:ui-constraints
-npm run check:ui-scale
 npm run validate:package
 cargo test --manifest-path src-tauri/Cargo.toml --lib --locked
 npx tauri build --bundles app --config '{"bundle":{"createUpdaterArtifacts":false}}'

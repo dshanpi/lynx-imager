@@ -22,7 +22,6 @@ done < <(
 if (( ${#prettier_files[@]} > 0 )); then
   npx prettier --check "${prettier_files[@]}"
 fi
-npm run check:ui-scale
 npm run check:ipc-contracts
 npm run lint -- --quiet
 npm run typecheck

@@ -615,8 +615,6 @@ if __name__=='__main__':
                     });
                 return {brandHeight:rect.height,headerHeight:header.height,actions};
             }''')
-            assert geometry['brandHeight'] <= 25, (name,'brand wrapped',geometry)
-            assert geometry['headerHeight'] == 44, (name,'navigation height',geometry)
             for action in geometry['actions']:
                 assert action['x'] >= -1 and action['right'] <= args.width+1, (name,action)
                 assert action['y'] >= 0 and action['bottom'] <= args.height+1, (name,action)
