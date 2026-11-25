@@ -97,12 +97,25 @@ export function vendorFlashOptions(
     };
   return base;
 }
+const uuuRecipeMedium: Record<string, string> = {
+  emmc: 'eMMC',
+  emmc_all: 'eMMC',
+  sd: 'SD',
+  sd_all: 'SD',
+  qspi: 'SPI NOR',
+  nand: 'NAND',
+  fspinand: 'SPI NAND',
+  nvme_all: 'NVMe',
+  spl: 'RAM',
+};
+
 export function vendorGate(
   s: VendorSelection,
   inspection: VendorInspection | null | undefined,
   usb?: WorkbenchFlasherDevice | null,
   purpose: 'files' | 'target' = 'files',
-  profile?: WorkbenchDevice | null
+  profile?: WorkbenchDevice | null,
+  targetMedium?: string
 ): string {
   if (!inspection || inspection.route !== s.route) return '请选择该路线的输入文件并完成分析';
   if (inspection.blockers.length) return inspection.blockers[0];
@@ -126,19 +139,14 @@ export function vendorGate(
         !Array.isArray(a) ||
         a.length !== 2 ||
         a[0] !== '-b' ||
-        ![
-          'emmc',
-          'sd',
-          'emmc_all',
-          'sd_all',
-          'spl',
-          'qspi',
-          'nand',
-          'nvme_all',
-          'fspinand',
-        ].includes(a[1])
+        typeof a[1] !== 'string' ||
+        !Object.prototype.hasOwnProperty.call(uuuRecipeMedium, a[1])
       ) {
         return '请先在单板设置中保存适用于单个输入文件的 UUU 内置 -b 配方';
+      }
+      if (targetMedium) {
+        if (uuuRecipeMedium[a[1]] !== targetMedium)
+          return `当前目标是 ${targetMedium}，已保存的 UUU 配方 -b ${a[1]} 使用 ${uuuRecipeMedium[a[1]]}。请更换目标或单板配方。`;
       }
     } catch {
       return '单板 UUU 参数格式无效';

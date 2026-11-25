@@ -481,6 +481,7 @@ export function SystemImageReview(props: V2SystemPickerProps) {
   );
   const bothSame = needsRam && !!loader.report && loader.report.sha256 === report?.sha256;
   const detailReport = panel === 'loader' ? loader.report : report;
+  if (props.source === 'recent') return null;
   return (
     <section className="imager-image-review" aria-label="文件用途与分析">
       {!panel && (

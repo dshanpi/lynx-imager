@@ -97,7 +97,7 @@ class Review:
             const field=document.querySelector('.v2-control-area');
             const rail=document.querySelector('.v2-rail');
             const main=field.parentElement;
-            const title=[...field.querySelectorAll('.target-page-heading h2, h2')]
+            const title=[...field.querySelectorAll('h2')]
                 .find(e=>e.getClientRects().length);
             return {w:innerWidth,h:innerHeight,overflow:n.scrollWidth-n.clientWidth,
              railRight:rail.getBoundingClientRect().right, contentX:field.getBoundingClientRect().x,

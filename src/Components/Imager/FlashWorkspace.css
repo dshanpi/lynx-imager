@@ -163,20 +163,6 @@
 .v2c-board-card.selected {
   box-shadow: inset 3px 0 var(--vc-accent);
 }
-.v2c-board-card .v2c-board-art {
-  height: 40px;
-  max-width: 52px;
-}
-.v2c-board-card .v2c-chip-package {
-  height: 35px;
-  width: 43px;
-}
-.v2c-board-card .v2c-chip-package b {
-  font-size: 10px;
-}
-.v2c-board-card .v2c-chip-package small {
-  display: none;
-}
 .v2c-board-card .v2c-board-copy {
   display: grid;
   grid-template-columns: 1fr auto;

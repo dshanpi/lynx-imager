@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { LynxIcon } from '../../CoreUI';
 import './HostCardWriter.css';
+import { formatErrorMessage } from '../../Utils';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invokeCommand, subscribeEvent } from '../../Platform/IPC';
 import type { ImagerCard, ImagerCardImage } from '../../Platform/IPC/contracts/Workbench';
@@ -10,7 +11,7 @@ const size = (n: number) =>
 interface Props {
   model: string;
   step: number;
-  onStep: (step: 2 | 3 | 4) => void;
+  onStep: (step: 1 | 2 | 3 | 4) => void;
   run: (label: string, work: () => Promise<void>) => Promise<void>;
   onPath: (path: string) => void;
   busy: string;
@@ -23,6 +24,8 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
   const [progress, setProgress] = useState({ phase: '', bytes: 0 });
   const [issue, setIssue] = useState('');
   const generation = useRef(0);
+  const [scanRevision, setScanRevision] = useState(0);
+  const [scanning, setScanning] = useState(false);
   const historyKey = 'imager.sd-image.' + model;
   useEffect(() => {
     let last: string | null = null;
@@ -43,7 +46,10 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
         }
       })
       .catch(() => {
-        if (generation.current === version) setIssue('上次使用的镜像已不可用，请重新选择。');
+        if (generation.current === version) {
+          onPath('');
+          setIssue('上次使用的镜像已不可用，请重新选择。');
+        }
       });
     return () => {
       generation.current++;
@@ -59,14 +65,29 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
       void off.then((stop) => stop());
     };
   }, []);
-  async function list() {
+  useEffect(() => {
+    if (step !== 3) return;
+    let current = true;
+    setScanning(true);
     setIssue('');
     setCard(null);
     setCards([]);
-    const found = await invokeCommand('imager_card_list', {});
-    setCards(found);
-    if (!found.length) setIssue('未发现可写的 TF / SD 卡，请插入读卡器后重新检测。');
-  }
+    invokeCommand('imager_card_list', {})
+      .then((found) => {
+        if (!current) return;
+        setCards(found);
+        if (!found.length) setIssue('未发现可写的 TF / SD 卡，请插入读卡器后重新检测。');
+      })
+      .catch((e) => {
+        if (current) setIssue('读卡器检测失败：' + formatErrorMessage(e));
+      })
+      .finally(() => {
+        if (current) setScanning(false);
+      });
+    return () => {
+      current = false;
+    };
+  }, [step, scanRevision]);
   useEffect(() => {
     if (step === 2 || step === 3) {
       setFinished(false);
@@ -141,7 +162,7 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
         <div className="reader-list">
           <div className="reader-list-title">
             <h3>可写入的存储卡</h3>
-            <button disabled={!!busy} onClick={() => void run('检测读卡器', list)}>
+            <button disabled={scanning || !!busy} onClick={() => setScanRevision((i) => i + 1)}>
               <LynxIcon name="refresh" size={16} />
               重新检测
             </button>
@@ -264,20 +285,13 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
       {step === 2 && (busy || issue) && <p role="status">{busy ? busy + '…' : issue}</p>}
 
       <footer>
-        {step > 2 && !finished && (
-          <button disabled={!!busy} onClick={() => onStep(step === 4 ? 3 : 2)}>
+        {!finished && (
+          <button disabled={!!busy} onClick={() => onStep(step === 4 ? 3 : step === 3 ? 2 : 1)}>
             上一步
           </button>
         )}
         {step === 2 && (
-          <button
-            className="v2-primary"
-            disabled={!image || !!busy}
-            onClick={() => {
-              onStep(3);
-              void run('检测读卡器', list);
-            }}
-          >
+          <button className="v2-primary" disabled={!image || !!busy} onClick={() => onStep(3)}>
             下一步：选择读卡器
             <LynxIcon name="chevron-right" size={16} />
           </button>
@@ -285,7 +299,7 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
         {step === 3 && (
           <button
             className="v2-primary"
-            disabled={!card || !image || !!busy}
+            disabled={!card || !image || scanning || !!busy}
             onClick={() => onStep(4)}
           >
             下一步：确认写卡
@@ -296,14 +310,7 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
           image &&
           card &&
           (finished ? (
-            <button
-              onClick={() => {
-                onStep(3);
-                void run('检测读卡器', list);
-              }}
-            >
-              选择另一张卡
-            </button>
+            <button onClick={() => onStep(3)}>选择另一张卡</button>
           ) : (
             <button
               className="v2-primary"

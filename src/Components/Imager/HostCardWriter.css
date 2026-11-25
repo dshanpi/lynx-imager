@@ -18,8 +18,7 @@
   color: var(--color-muted);
   font-size: 12px;
 }
-.card-writer button,
-.emmc-maintenance button {
+.card-writer button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -33,8 +32,7 @@
   font: inherit;
   font-weight: 550;
 }
-.card-writer button:not(:disabled):hover,
-.emmc-maintenance button:not(:disabled):hover {
+.card-writer button:not(:disabled):hover {
   border-color: var(--color-primary);
 }
 .card-writer button.v2-primary {
@@ -42,13 +40,11 @@
   border-color: var(--color-primary);
   color: var(--color-on-primary);
 }
-.card-writer button:disabled,
-.emmc-maintenance button:disabled {
+.card-writer button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 .card-writer button:focus-visible,
-.emmc-maintenance :is(button, select):focus-visible,
 .reader-row:has(input:focus-visible) {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;

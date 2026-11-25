@@ -4,21 +4,6 @@
   align-items: start;
   gap: 14px;
 }
-.vendor-board {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  overflow-wrap: anywhere;
-}
-.vendor-board > :first-child {
-  width: 72px;
-  height: 48px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-.vendor-board strong {
-  font-size: 15px;
-}
 .vendor-context h3 {
   padding-bottom: 8px;
   border-bottom: 1px solid var(--v2-line);
@@ -175,7 +160,4 @@
 }
 .vendor-file-layout .vendor-context {
   background: var(--color-subtle);
-}
-.vendor-context .vendor-board {
-  padding-block: 6px;
 }

@@ -36,7 +36,6 @@ export interface V2WriteSnapshot {
   mode: string;
   verify: string;
   postAction: string;
-  boardArt?: ReactNode;
 }
 type Task = ReturnType<typeof useBasicTask>;
 interface Props {
@@ -154,11 +153,8 @@ function Heading({
 function Board({ snapshot: s }: { snapshot: V2WriteSnapshot }) {
   return (
     <div className="v2w-board">
-      {s.boardArt || <LynxIcon name="board" size={48} />}
-      <div>
-        <strong>{s.board}</strong>
-        <span>{s.chip}</span>
-      </div>
+      <strong>{s.board}</strong>
+      {s.chip !== s.board && <span>{s.chip}</span>}
     </div>
   );
 }
@@ -1000,15 +996,12 @@ export function V2Write(props: Props) {
         filters: [{ name: diagnostic ? '诊断记录' : '任务日志', extensions: [ext] }],
       });
       if (!dest) return;
-      // The board artwork is a React node and has no place in a diagnostic export.
-      const { boardArt: art, ...parameters } = snapshot;
-      void art;
       const digest = JSON.stringify(
         {
           taskId: task.id,
           status: task.status,
           phase: task.phase,
-          parameters,
+          parameters: snapshot,
           startedAt: task.startedAt,
           finishedAt: task.finishedAt,
           details: task.details,

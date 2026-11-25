@@ -1,6 +1,12 @@
 import { HostCardWriter } from './HostCardWriter';
 import { V2BoardPicker } from './TargetPicker';
-import { rockchipModels, profiles, type TargetChoice } from './targetCatalog';
+import {
+  allwinnerEmmcPreset,
+  allwinnerModels,
+  rockchipModels,
+  profiles,
+  type TargetChoice,
+} from './targetCatalog';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { open } from '@tauri-apps/plugin-dialog';
@@ -20,7 +26,7 @@ import { formatErrorMessage } from '../../Utils';
 import { linuxVendorLabel } from '../Workbench/linuxWorkbenchModel';
 import { ended, stateName, useBasicTask } from './BasicTask';
 import { flashOptions, uniqueUsbTarget, type BasicRoute } from './BasicPlan';
-import { imagePickerDirectory, V2BoardArt, V2SystemPicker, type V2ImageSource } from './V2Catalog';
+import { imagePickerDirectory, V2SystemPicker, type V2ImageSource } from './V2Catalog';
 import { V2Interface } from './V2Interface';
 import { V2Write, WritePreflightFailure, type PreflightContext } from './V2Write';
 import { VendorRoutePanel, VendorTargetPanel } from './VendorRoutePanel';
@@ -73,16 +79,16 @@ const BOARD_PRESETS: BoardPreset[] = [
     route: 'mainline_spinor',
     needsLoader: true,
   },
-  {
-    id: 't153-emmc',
-    name: 'T153 Omnigate',
+  ...allwinnerModels.map((model): BoardPreset => ({
+    id: allwinnerEmmcPreset(model),
+    name: model === 'T153' ? 'T153 Omnigate' : model,
     chipVendor: 'allwinner',
-    chip: '全志 · T153',
+    chip: '全志 · ' + model,
     storage: 'eMMC',
     mode: 'FEL',
     route: 'mainline_emmc',
     needsLoader: true,
-  },
+  })),
   ...rockchipModels.map((model): BoardPreset => ({
     id: model.toLowerCase(),
     name: model,
@@ -300,7 +306,10 @@ export function ImagerPage({
     preset && routeKey
       ? {
           ...preset,
-          aliases: choice ? profiles[choice.model]?.aliases : undefined,
+          aliases:
+            choice && preset.id === profiles[choice.model]?.preset
+              ? profiles[choice.model]?.aliases
+              : undefined,
           route: routeKey,
           needsLoader: selection ? vendorNeedsLoader(selection.route) : routeKey !== 'vendor',
           storage: choice?.medium ?? preset.storage,
@@ -373,7 +382,8 @@ export function ImagerPage({
       : busy || running
         ? 'working'
         : undefined;
-  const statusTarget = selected?.device.name || boardName || '未选择板子';
+  const statusTarget =
+    (choice?.reader ? choice.model : selected?.device.name || boardName) || '未选择板子';
   const watchTarget = active && !choice?.reader && step >= 3 && !taskId;
   // Keep the same subscription from interface detection through the confirmation drawer.
   // A second board can reconnect to the same USB port with the same VID/PID.
@@ -445,7 +455,12 @@ export function ImagerPage({
       !!choice?.reader === !!next?.reader
     )
       return;
-    const id = next ? (profiles[next.model]?.preset ?? null) : null;
+    const id =
+      next?.medium === 'eMMC' && allwinnerModels.includes(next.model)
+        ? allwinnerEmmcPreset(next.model)
+        : next
+          ? (profiles[next.model]?.preset ?? null)
+          : null;
     setChoice(next);
     invalidate();
     clearFiles();
@@ -470,7 +485,7 @@ export function ImagerPage({
   function changeSource(value: V2ImageSource) {
     if (value === source) return;
     invalidate();
-    clearFiles();
+    if (value === 'catalog' || source === 'catalog') clearFiles();
     setSelected(null);
     setSource(value);
   }
@@ -654,7 +669,7 @@ export function ImagerPage({
   async function checkVendor(targetUsb: WorkbenchFlasherDevice, profile: WorkbenchDevice) {
     if (!selection) return '';
     const fresh = await inspectVendorImage(selection.route, imagePath);
-    const reason = vendorGate(selection, fresh, targetUsb, 'target', profile);
+    const reason = vendorGate(selection, fresh, targetUsb, 'target', profile, choice?.medium);
     if (reason) throw new Error(reason);
     const signature = JSON.stringify(fresh);
     if (signature !== JSON.stringify(inspection))
@@ -819,7 +834,7 @@ export function ImagerPage({
   const vendorFileIssue = selection && inspection ? vendorGate(selection, inspection) : '';
   const targetIssue =
     step === 3 && selection && selected
-      ? vendorGate(selection, inspection, selected.usb, 'target', selected.device)
+      ? vendorGate(selection, inspection, selected.usb, 'target', selected.device, choice?.medium)
       : '';
   const filesReady =
     reviewReady &&
@@ -831,20 +846,19 @@ export function ImagerPage({
     step === 1
       ? !!choice && (!!board || cardReader)
       : step === 2
-        ? filesReady && (source !== 'catalog' || !!candidate)
+        ? filesReady && (source === 'local' || (source === 'catalog' && !!candidate))
         : watchReady && !!selected && filesReady && !targetIssue;
   const stepDetails = [
     choice?.reader ? choice.model : boardName,
     baseName(imagePath),
     selected?.usb.mode,
-    taskId ? stateName(task.status) : '确认并执行烧录',
+    taskId ? stateName(task.status) : cardReader ? '写入与回读校验' : '确认并执行烧录',
   ];
   return (
     <section className="v2-basic" aria-label="烧录系统" data-step={step}>
       <aside className="v2-rail">
         <div className="v2-rail-title">
           <h2>烧录系统</h2>
-          <p>四步完成系统写入</p>
         </div>
         <nav aria-label="烧录步骤">
           <ol>
@@ -864,7 +878,13 @@ export function ImagerPage({
                       {done ? <CheckmarkCircle20Regular /> : n}
                     </span>
                     <span className="v2-step-label">
-                      <strong>{cardReader && n === 3 ? '选择读卡器' : label}</strong>
+                      <strong>
+                        {cardReader && n === 3
+                          ? '选择读卡器'
+                          : cardReader && n === 4
+                            ? '写入存储卡'
+                            : label}
+                      </strong>
                       {step > 1 && !!stepDetails[i] && n <= step && <small>{stepDetails[i]}</small>}
                     </span>
                   </button>
@@ -879,9 +899,15 @@ export function ImagerPage({
             {
               [
                 '按板上丝印选定型号，这一步可以离线完成。',
-                '先选系统文件。使用独立 RAM 引导的路线还需要配套 Loader。',
-                '连接 USB 下载口，按实际接线选择物理端口；调试串口用于观察启动。',
-                '检查实际写入范围。结果页分别记录写入、校验、重启和启动证据。',
+                cardReader
+                  ? '选择要写到存储卡的整盘镜像。'
+                  : '先选系统文件。使用独立 RAM 引导的路线还需要配套 Loader。',
+                cardReader
+                  ? '插入读卡器，按磁盘名称和容量选择目标卡。'
+                  : '连接 USB 下载口，按实际接线选择物理端口；调试串口用于观察启动。',
+                cardReader
+                  ? '核对镜像与目标卡，写入后将自动回读校验。'
+                  : '检查实际写入范围。结果页分别记录写入、校验、重启和启动证据。',
               ][step - 1]
             }
           </p>
@@ -948,7 +974,6 @@ export function ImagerPage({
                   <VendorRoutePanel
                     dropRef={dropRef}
                     boardName={boardName}
-                    boardArt={<V2BoardArt id={board.id} name={boardName} />}
                     mode={board.mode}
                     vendor={board.chipVendor}
                     selection={selection}
@@ -1024,7 +1049,6 @@ export function ImagerPage({
                       ...(inspection ? [['输入格式', inspection.format] as [string, string]] : []),
                     ]
                   : undefined,
-                boardArt: <V2BoardArt id={board.id} name={boardName} />,
                 chip: board.chip,
                 vendor: linuxVendorLabel(board.chipVendor),
                 storage: board.storage,
@@ -1083,7 +1107,9 @@ export function ImagerPage({
         <div className="v2-foot-actions">
           <p className="flash-next-hint">
             {step === 1
-              ? '选定型号与存储介质后继续'
+              ? choice
+                ? choice.model + ' / ' + (choice.medium === 'SD' ? 'TF / SD' : choice.medium)
+                : '请选择芯片型号和目标存储'
               : step === 2
                 ? '镜像及所需引导文件就绪后继续'
                 : '下一步只读预检，不会立即写入'}
@@ -1120,7 +1146,7 @@ export function ImagerPage({
           </span>
           <span>
             <UsbPlug24Regular />
-            {count === null ? 'USB 未检测' : '检测到 ' + count + ' 台'}
+            {cardReader ? '电脑读卡器' : count === null ? 'USB 未检测' : '检测到 ' + count + ' 台'}
           </span>
           <span>
             <Layer24Regular />
@@ -1128,7 +1154,9 @@ export function ImagerPage({
               ? choice
                 ? choice.model + ' / ' + choice.medium
                 : '选择目标时无需连接 USB'
-              : boardName}
+              : cardReader
+                ? choice?.model + ' / TF / SD'
+                : boardName}
           </span>
         </div>
       </footer>

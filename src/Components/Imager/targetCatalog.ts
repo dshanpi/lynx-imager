@@ -32,7 +32,7 @@ export const manufacturers: Manufacturer[] = [
     mark: 'RK',
     tip: '核对芯片型号末尾的字母。RK3588 与 RK3588S 分别列出。',
     families: {
-      RK35: 'RK3588 RK3506 RK3528 RK3562 RK3566 RK3568 RK3568J RK3576 RK3588S',
+      RK35: 'RK3576 RK3588 RK3506 RK3528 RK3562 RK3566 RK3568 RK3568J RK3588S',
       RK33: 'RK3308 RK3326 RK3328 RK3368 RK3399 RK3399Pro',
       RK32: 'RK3228 RK3229 RK3288',
       RK31: 'RK3126 RK3128 RK3188',
@@ -70,9 +70,9 @@ type Profile = { preset: string; media: Medium[]; aliases: string[]; routes: str
 export const profiles: Record<string, Profile | undefined> = {
   T113: {
     preset: 't113-pro',
-    media: ['SPI NAND'],
+    media: ['SPI NAND', 'eMMC'],
     aliases: ['T113-Pro'],
-    routes: '厂商包 / 主线 NAND',
+    routes: '厂商包 / 主线 NAND / 主线整盘',
   },
   T153: {
     preset: 't153-emmc',
@@ -82,11 +82,16 @@ export const profiles: Record<string, Profile | undefined> = {
   },
   F101: {
     preset: 'f101',
-    media: ['SPI NOR'],
+    media: ['SPI NOR', 'eMMC'],
     aliases: ['YuzukiNeko'],
     routes: '厂商包 / 主线整盘',
   },
-  RK3576: { preset: 'rk3576', media: ['eMMC'], aliases: ['DshanPI-A1'], routes: 'update.img / 整盘' },
+  RK3576: {
+    preset: 'rk3576',
+    media: ['eMMC'],
+    aliases: ['DshanPI-A1'],
+    routes: 'update.img / 整盘',
+  },
   RK3588: {
     preset: 'rk3588',
     media: ['eMMC'],
@@ -126,9 +131,24 @@ export const profiles: Record<string, Profile | undefined> = {
     routes: 'KDImage / RAW',
   },
 };
-export const rockchipModels = Object.values(
-  manufacturers.find((m) => m.id === 'rockchip')!.families
-).flatMap((family) => family.split(' '));
+function vendorModels(vendor: string) {
+  return Object.values(manufacturers.find((m) => m.id === vendor)!.families).flatMap((family) =>
+    family.split(' ')
+  );
+}
+export const rockchipModels = vendorModels('rockchip');
+export const allwinnerModels = vendorModels('allwinner');
+export function allwinnerEmmcPreset(model: string) {
+  return model.toLowerCase() + '-emmc';
+}
+for (const model of allwinnerModels) {
+  profiles[model] ??= {
+    preset: allwinnerEmmcPreset(model),
+    media: ['eMMC'],
+    aliases: [],
+    routes: '厂商包 / 主线整盘',
+  };
+}
 for (const model of rockchipModels) {
   profiles[model] ??= {
     preset: model.toLowerCase(),

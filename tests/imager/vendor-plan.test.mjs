@@ -79,8 +79,14 @@ test('NXP only allows enumerated built-in recipe for a configured single image a
   assert.deepEqual(vendorFlashOptions(s, '', i).vendorSetup.dependencies, i.dependencies);
   s.route = 'nxp-configured';
   const usb = dev('uuu', 'sdps');
-  const gate = (flasherArgs) => vendorGate(s, inspect(s.route), usb, 'target', { flasherArgs });
+  const gate = (flasherArgs, medium) =>
+    vendorGate(s, inspect(s.route), usb, 'target', { flasherArgs }, medium);
   assert.equal(gate('["-b","emmc"]'), '');
+  assert.equal(gate('["-b","emmc_all"]', 'eMMC'), '');
+  assert.equal(gate('["-b","sd"]', 'SD'), '');
+  assert.match(gate('["-b","sd_all"]', 'eMMC'), /当前目标是 eMMC.*sd_all/);
+  assert.match(gate('["-b","emmc"]', 'SD'), /当前目标是 SD.*emmc/);
+  assert.match(gate('["-b","spl"]', 'eMMC'), /RAM/);
   for (const args of ['[]', 'not-json', '["-b","not-a-recipe"]', '["-b","emmc","unreviewed.bin"]'])
     assert.ok(gate(args));
 });

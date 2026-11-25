@@ -64,7 +64,7 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
   const [vendorId, setVendor] = useState(saved?.vendor ?? 'allwinner');
   const [family, setFamily] = useState(saved?.family ?? 'T');
   const [model, setModel] = useState(saved?.name ?? '');
-  const [familyQuery, setFamilyQuery] = useState('');
+  const [seriesOnly, setSeriesOnly] = useState(false);
   const [query, setQuery] = useState('');
   const input = useRef<HTMLInputElement>(null);
   const manual = useRef(false);
@@ -98,20 +98,25 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
     };
   }, [active, choice]);
   const vendor = manufacturers.find((v) => v.id === vendorId)!;
-  const list = query.trim()
-    ? searchModels(query)
-    : models.filter(
-        (m) =>
-          m.vendor === vendorId &&
-          m.family === family &&
-          m.name.toLowerCase().includes(familyQuery.trim().toLowerCase())
-      );
+  const searching = Boolean(query.trim());
+  const matches = searching ? searchModels(query) : models;
+  const list =
+    searching && !seriesOnly
+      ? matches
+      : matches.filter((m) => m.vendor === vendorId && m.family === family);
+  const entries = list.map((chip) => ({
+    chip,
+    media: Array.from(new Set([...(chip.profile?.media ?? []), 'SD'])).join(' / '),
+    route: chip.profile?.routes ?? 'SD 整盘镜像',
+  }));
+  const first = entries[0];
+  const sharedMedia = first && entries.every((entry) => entry.media === first.media) && first.media;
+  const sharedRoute = first && entries.every((entry) => entry.route === first.route) && first.route;
   const part = models.find((m) => m.name === model);
   const change = (v: string, f: string, m = '') => {
     manual.current = true;
     if (v !== vendorId || f !== family || m !== model) onChoice(null);
     setQuery('');
-    setFamilyQuery('');
     setVendor(v);
     setFamily(f);
     setModel(m);
@@ -130,6 +135,7 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
       return;
     if (
       e.target instanceof HTMLElement &&
+      e.target !== input.current &&
       e.target.closest('textarea, input, select, [contenteditable=true]')
     )
       return;
@@ -140,7 +146,9 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
     )
       return;
     e.preventDefault();
+    setSeriesOnly(false);
     input.current.focus();
+    input.current.select();
   }, []);
   useEffect(() => {
     document.addEventListener('keydown', handle);
@@ -148,47 +156,28 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
   }, [handle]);
   return (
     <div className="target-picker">
-      <div className="target-page-heading">
-        <div className="target-heading-copy">
-          <h2>选择烧录目标</h2>
-          <p>
-            {query.trim()
-              ? '正在所有厂商中查找匹配的型号和板名。'
-              : '按主控丝印找到型号，再选择板上使用的存储器。'}
-          </p>
-        </div>
-        {!query.trim() && (
-          <div className="target-package" aria-hidden="true">
-            <span>{vendor.brand}</span>
-            <strong>{part?.name || family + ' 系列'}</strong>
-          </div>
-        )}
-      </div>
       <header className="target-heading">
-        <div className="target-vendors" aria-label="主控厂商">
-          <span className="target-vendor-label">
-            <LynxIcon name="board" size={16} /> 主控厂商
-          </span>
-          {manufacturers.map((v) => (
-            <button
-              key={v.id}
-              aria-label={v.name}
-              aria-pressed={vendorId === v.id}
-              onClick={() => change(v.id, Object.keys(v.families)[0])}
-            >
-              <i aria-hidden="true">{v.mark}</i>
-              <span>{v.name}</span>
-            </button>
-          ))}
-        </div>
-        <label className="v2c-search imager-board-search">
+        <h2>选择烧录目标</h2>
+        <div className="v2c-search imager-board-search" role="search">
+          <select
+            aria-label="搜索范围"
+            value={seriesOnly ? 'series' : 'all'}
+            onChange={(event) => {
+              manual.current = true;
+              setSeriesOnly(event.target.value === 'series');
+              input.current?.focus();
+            }}
+          >
+            <option value="all">全部型号</option>
+            <option value="series">当前系列</option>
+          </select>
           <LynxIcon name="search" size={16} />
           <input
             ref={input}
             type="search"
-            aria-label="搜索芯片型号或板名"
+            aria-label={seriesOnly ? '筛选当前系列型号' : '搜索芯片型号或板名'}
             aria-keyshortcuts="Control+K Meta+K"
-            placeholder="搜索芯片型号或板名"
+            placeholder={seriesOnly ? '搜索 ' + family + ' 系列' : '搜索型号或板名'}
             value={query}
             onChange={(e) => {
               manual.current = true;
@@ -200,12 +189,26 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
             }}
           />
           <kbd>{/Mac/i.test(navigator.userAgent) ? '⌘ K' : 'Ctrl K'}</kbd>
-        </label>
+        </div>
       </header>
+      <div className="target-vendors" role="group" aria-label="主控厂商">
+        {manufacturers.map((v) => (
+          <button
+            key={v.id}
+            aria-label={v.name}
+            aria-pressed={vendorId === v.id}
+            onClick={() => change(v.id, Object.keys(v.families)[0])}
+          >
+            <strong>{v.name}</strong>
+            <span>{v.brand}</span>
+          </button>
+        ))}
+      </div>
       <div className="target-workspace">
         <aside className="target-families">
           <h3>
-            <LynxIcon name="branch" size={16} /> 芯片系列
+            <LynxIcon name="branch" size={16} />
+            芯片系列
           </h3>
           {Object.entries(vendor.families).map(([f, names]) => (
             <button
@@ -214,7 +217,8 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
               aria-pressed={family === f}
               onClick={() => change(vendorId, f)}
             >
-              {f} 系列 <small>{names.split(' ').length}</small>
+              <span>{f} 系列</span>
+              <small>{names.split(' ').length}</small>
             </button>
           ))}
           <details className="target-chip-help">
@@ -228,7 +232,12 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
           {part && !query ? (
             <>
               <div className="target-subhead">
-                <h4>{part.name} · 目标存储</h4>
+                <div>
+                  <small>
+                    {vendor.name} / {family} 系列
+                  </small>
+                  <h4>{part.name} · 目标存储</h4>
+                </div>
                 <button onClick={() => change(vendorId, family)}>返回型号列表</button>
               </div>
               <div className="target-media">
@@ -343,60 +352,55 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
           ) : (
             <>
               <div className="target-subhead target-list-toolbar">
-                <h4>{query ? '匹配的芯片' : '芯片型号'}</h4>
-                <small>{list.length} 款型号</small>
-                {!query && (
-                  <label className="target-series-search">
-                    <LynxIcon name="search" size={16} />
-                    <input
-                      type="search"
-                      aria-label="筛选当前系列型号"
-                      placeholder={'搜索 ' + family + ' 系列型号'}
-                      value={familyQuery}
-                      onChange={(e) => {
-                        manual.current = true;
-                        setFamilyQuery(e.target.value);
-                      }}
-                    />
-                  </label>
+                <div className="target-family-title">
+                  <h4>{searching ? '搜索结果' : family + ' 系列'}</h4>
+                  <span aria-live="polite">{list.length} 款型号</span>
+                </div>
+                {(sharedMedia || sharedRoute) && (
+                  <dl className="target-series-spec">
+                    {sharedMedia && (
+                      <div>
+                        <dt>存储</dt>
+                        <dd className="target-model-media">{sharedMedia}</dd>
+                      </div>
+                    )}
+                    {sharedRoute && (
+                      <div>
+                        <dt>镜像</dt>
+                        <dd>{sharedRoute}</dd>
+                      </div>
+                    )}
+                  </dl>
                 )}
               </div>
-              <div className="target-columns">
-                <span>芯片型号</span>
-                <span>烧录路线</span>
-                <span>目标存储</span>
-                <span>适配状态</span>
-              </div>
               <div className="target-models">
-                {list.map((m) => (
+                {entries.map(({ chip: m, media, route }) => (
                   <button
                     key={m.name}
                     data-model={m.name}
                     className={m.profile ? 'target-model-row' : 'target-model-row is-unavailable'}
                     onClick={() => change(m.vendor, m.family, m.name)}
                   >
-                    <LynxIcon name="board" size={20} />
-                    <span>
+                    <span className="target-model-name">
                       <strong>{m.name}</strong>
-                      <small>{chipBrief[m.name] ?? m.profile?.aliases[0]}</small>
+                      <small>
+                        {searching && !seriesOnly
+                          ? manufacturers.find((v) => v.id === m.vendor)?.name
+                          : (m.profile?.aliases[0] ?? chipBrief[m.name])}
+                      </small>
                     </span>
-                    <span className="target-model-route">{m.profile?.routes ?? 'SD 整盘镜像'}</span>
-                    <small className="target-model-media">
-                      {Array.from(new Set([...(m.profile?.media ?? []), 'SD'])).join(' / ')}
-                    </small>
-                    <span className="target-model-status">
-                      {m.vendor === 'rockchip' ? '通用 RockUSB' : m.profile ? '已适配' : '读卡器'}
+                    {(!sharedMedia || !sharedRoute) && (
+                      <span className="target-model-spec">
+                        {!sharedMedia && <span className="target-model-media">{media}</span>}
+                        {!sharedRoute && <span>{route}</span>}
+                      </span>
+                    )}
+                    <span className="target-row-arrow" aria-hidden="true">
+                      ›
                     </span>
-                    <span aria-hidden="true">›</span>
                   </button>
                 ))}
               </div>
-              {!!list.length && (
-                <p className="target-note">
-                  <LynxIcon name="info" size={16} /> TF / SD
-                  读卡器使用整盘镜像，开发板下载口支持的介质按型号列出。
-                </p>
-              )}
               {!list.length && <p role="status">未找到匹配型号，请核对丝印或尝试板名。</p>}
             </>
           )}

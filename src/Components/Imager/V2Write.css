@@ -142,22 +142,6 @@
   border-color: #b9c3d3;
 }
 .v2w-board {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  min-width: 0;
-}
-.v2w-board > :first-child:not(div:last-child) {
-  max-width: 96px;
-  max-height: 66px;
-  flex: none;
-  object-fit: contain;
-}
-.v2w-board > svg.basic-board-art {
-  width: 90px;
-  color: var(--vw-muted);
-}
-.v2w-board > div {
   min-width: 0;
 }
 .v2w-board strong,

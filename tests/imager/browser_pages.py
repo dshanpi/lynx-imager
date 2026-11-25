@@ -71,9 +71,46 @@ def test_write(page, outcome, results, capture):
                    ('完成后打开报告' if outcome=='success' else '失败后返回检测'))
 
 
+def test_emmc_families(page, results, capture):
+    next_step = page.locator('.v2-foot-actions .v2-primary')
+    for vendor, expected_count in [('全志', 46), ('瑞芯微', 30)]:
+        page.locator('.target-vendors').get_by_role('button', name=vendor, exact=True).click()
+        families = page.locator('.target-families button')
+        checked = set()
+        for index in range(families.count()):
+            families.nth(index).click()
+            rows = page.locator('.target-models [data-model]')
+            names = rows.evaluate_all("els => els.map(el => el.dataset.model)")
+            if vendor == '瑞芯微' and index == 0:
+                assert names[0] == 'RK3576', names
+            if index == 0:
+                capture('allwinner-emmc-models' if vendor == '全志' else 'rockchip-emmc-models')
+            for model in names:
+                row = page.locator(f'[data-model="{model}"]')
+                media = row.locator('.target-model-media')
+                expect(media if media.count() else page.locator('.target-series-spec .target-model-media')).to_contain_text('eMMC')
+                row.click()
+                expect(next_step).to_be_disabled()
+                page.locator('[data-medium="eMMC"]').click()
+                next_step.click()
+                summary = page.locator('.image-target-summary')
+                expect(summary).to_contain_text(model)
+                expect(summary).to_contain_text('eMMC')
+                if vendor == '全志':
+                    expect(page.locator('input[value="mainline_emmc"]')).to_be_checked()
+                    expect(page.locator('input[value="vendor"]')).to_be_enabled()
+                else:
+                    expect(page.locator('.vendor-switch')).to_contain_text('主线 eMMC 整盘')
+                page.locator('#v2-step-1').click()
+                page.get_by_role('button', name='返回型号列表').click()
+                checked.add(model)
+        assert len(checked) == expected_count, (vendor, checked)
+        results.append(f'{vendor} {len(checked)} 款型号可手选 eMMC 并进入对应镜像路线')
+
+
 def test_target_matrix(page, results):
     expected = {
-        'T113': ('SPI NAND',), 'T153': ('eMMC',), 'F101': ('SPI NOR',),
+        'T113': ('SPI NAND', 'eMMC'), 'T153': ('eMMC',), 'F101': ('SPI NOR', 'eMMC'),
         'RK3576': ('eMMC',), 'RK3588': ('eMMC',), 'RK3588S': ('eMMC',),
         'i.MX6ULL': ('eMMC', 'SD'), 'i.MX8': ('eMMC', 'SD'), 'i.MX9': ('eMMC', 'SD'),
         'STM32MP1': ('eMMC', 'SD'), 'STM32MP157': ('eMMC', 'SD'),
@@ -141,25 +178,72 @@ def test_pages(page, results, capture):
     button('瑞芯微').click()
     page.locator('[data-model="RK3576"]').click()
     page.locator('[data-medium="eMMC"]').click()
-    button('擦除 eMMC…').click()
     dlg=page.get_by_role('dialog')
-    dlg.locator('select').select_option('1:2')
-    dlg.get_by_role('button',name='检查设备容量').click()
+    page.evaluate("pageFixture.attached.push({vendor:'rockchip',key:'1:3',pid:0x350e,loader:false})")
+    button('擦除 eMMC…').click()
+    expect(dlg.locator('.emmc-port').filter(has_text='USB 1:3')).to_be_disabled()
+    capture('emmc-erase-devices')
+    port=dlg.locator('.emmc-port').filter(has_text='USB 1:2')
+    port.click()
     expect(dlg).to_contain_text('8,589,934,592')
+    dlg.get_by_role('button',name='更换设备').click()
+    port.click()
+    dlg.get_by_role('button',name='取消').click()
+    expect(dlg).to_have_count(0)
+    assert 'imager_emmc_cancel' in page.evaluate('pageFixture.calls')
+    button('擦除 eMMC…').click()
+    port.click()
+    expect(dlg.locator('.emmc-device')).to_contain_text('USB 1:2')
     capture('emmc-erase-confirm')
+    rect=dlg.bounding_box()
+    viewport=page.viewport_size
+    for position,size in [('x','width'),('y','height')]:
+        assert abs(rect[position]*2+rect[size]-viewport[size])<3, rect
     assert 'imager_emmc_erase' not in page.evaluate('pageFixture.calls')
+    page.evaluate('pageFixture.holdErase=true')
     dlg.get_by_role('button',name='确认擦除').click()
+    expect(dlg.get_by_role('progressbar')).to_be_visible()
+    page.keyboard.press('Escape')
+    expect(dlg.get_by_role('button',name='关闭')).to_be_disabled()
+    page.evaluate('pageFixture.finishErase()')
     expect(dlg).to_contain_text('擦除完成')
+    capture('emmc-erase-done')
     dlg.get_by_role('button',name='关闭').click()
+    page.evaluate('pageFixture.holdErase=false; pageFixture.failErase=true')
+    button('擦除 eMMC…').click()
+    port.click()
+    dlg.get_by_role('button',name='确认擦除').click()
+    expect(dlg.get_by_role('alert')).to_contain_text('连接中断')
+    dlg.get_by_role('button',name='重新检测').click()
+    expect(port).to_be_visible()
+    dlg.get_by_role('button',name='关闭').click()
+    page.evaluate('pageFixture.attached.pop(); pageFixture.failErase=false')
     page.locator('[data-medium="SD"]').click()
     page.locator('.v2-foot-actions .v2-primary').click()
     page.evaluate("pageFixture.nextFile='C:/qa/card.img.xz'")
     button('选择镜像').click()
     expect(page.locator('.card-image-slot')).to_contain_text('card.img.xz')
+    expect(page.locator('.v2-status-facts')).to_contain_text('电脑读卡器')
+    button('上一步').click()
+    expect(page.locator('[data-medium="SD"]')).to_have_attribute('aria-pressed','true')
+    page.locator('.v2-foot-actions .v2-primary').click()
+    expect(page.locator('.card-image-slot')).to_contain_text('card.img.xz')
     capture('reader-image')
     button('下一步：选择读卡器').click()
     page.locator('.reader-row input').check()
     capture('reader-selected')
+    button('下一步：确认写卡').click()
+    page.evaluate('pageFixture.readerDisconnected=true')
+    page.locator('#v2-step-3').click()
+    expect(page.locator('.reader-empty')).to_contain_text('未发现可写')
+    expect(button('下一步：确认写卡')).to_be_disabled()
+    page.evaluate('pageFixture.readerScanError=true')
+    button('重新检测').click()
+    expect(page.locator('.reader-empty')).to_contain_text('存储服务不可用')
+    page.evaluate('pageFixture.readerScanError=false; pageFixture.readerDisconnected=false')
+    button('重新检测').click()
+    expect(page.locator('.reader-row input')).not_to_be_checked()
+    page.locator('.reader-row input').check()
     button('下一步：确认写卡').click()
     capture('reader-before-write')
     expect(page.locator('.card-destination')).to_contain_text('QA Reader')
@@ -170,6 +254,7 @@ def test_pages(page, results, capture):
     page.locator('#v2-step-1').click()
     page.evaluate("pageFixture.attached=[]")
     results.append('只读厂商识别、手动切换、RK Loader 独立擦除和 TF 读卡器写后校验（模拟 IPC）')
+    test_emmc_families(page, results, capture)
     test_target_matrix(page, results)
     # Reproduce the RC3 picker path without entering an EVB or board alias.
     next_step = page.locator('.v2-foot-actions .v2-primary')
@@ -291,6 +376,11 @@ def test_pages(page, results, capture):
                 page.keyboard.press('Escape')
                 expect(button(trigger)).to_be_focused()
             expect(page.locator('.imager-image-review input[type=checkbox]')).to_have_count(0)
+            expect(page.locator('.v2-foot-actions .v2-primary')).to_be_enabled()
+            page.locator('.v2c-tabs').get_by_role('button',name='最近使用').click()
+            expect(page.locator('.v2-foot-actions .v2-primary')).to_be_disabled()
+            page.locator('.v2c-tabs').get_by_role('button',name='本地文件').click()
+            expect(button('更换参考清单…')).to_be_visible()
             expect(page.locator('.v2-foot-actions .v2-primary')).to_be_enabled()
             page.locator('input[name="aw-system-route"][value="vendor"]').check()
             expect(button('选择镜像…')).to_be_visible()
@@ -648,6 +738,7 @@ if __name__=='__main__':
         page.on('dialog',lambda d:d.dismiss())
         page.route('**/*',lambda route:route.continue_() if route.request.url.startswith(url+'/') else route.abort())
         def capture(name):
+            expect(page.locator('.target-picker img, .vendor-context img, .v2w-board img, .v2c-chip-package')).to_have_count(0)
             if name in report['screens']:
                 return
             overflow=page.evaluate('document.documentElement.scrollWidth - document.documentElement.clientWidth')
@@ -671,6 +762,8 @@ if __name__=='__main__':
             folder=args.output/'screens'
             folder.mkdir(exist_ok=True)
             page.screenshot(path=folder/(name+'.png'),animations='disabled')
+            if name.startswith('emmc-erase-'):
+                page.get_by_role('dialog').screenshot(path=folder/(name+'-detail.png'),animations='disabled')
             if args.theme_screens:
                 themes=page.evaluate('''() => [...document.querySelectorAll('[data-theme]')].map(e=>{
                     const theme=e.dataset.theme;
@@ -686,7 +779,19 @@ if __name__=='__main__':
             page.keyboard.press('Meta+k' if args.platform=='macos' else 'Control+k')
             expect(page.get_by_role('searchbox',name='搜索芯片型号或板名')).to_be_focused()
             report['checks'].append('当前平台搜索快捷键将焦点移至可见目标搜索框')
+            expect(page.locator('.v2-foot-actions .v2-primary')).to_be_disabled()
+            expect(page.locator('[data-medium][aria-pressed=true]')).to_have_count(0)
             capture('target-home')
+            scope=page.get_by_role('combobox',name='搜索范围')
+            scope.select_option('series')
+            search=page.get_by_role('searchbox',name='筛选当前系列型号')
+            search.fill('RK3576')
+            expect(page.locator('[data-model]')).to_have_count(0)
+            search.press('Meta+k' if args.platform=='macos' else 'Control+k')
+            expect(scope).to_have_value('all')
+            expect(page.locator('[data-model="RK3576"]')).to_be_visible()
+            page.reload()
+
             test_pages(page,report['checks'],capture)
             assert not report['pageErrors'], report['pageErrors']
             shells=[row for row in report['geometry'] if row['page'] in ('target-home','device-overview')]

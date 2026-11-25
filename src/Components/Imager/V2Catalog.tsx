@@ -12,10 +12,6 @@ import { awRouteText } from './imageReviewModel';
 import type { ImageReviewEvidence } from './imageReviewEvidence';
 import { copyVerifiedText } from './imagerAIControls';
 import type { BasicRoute } from './BasicPlan';
-import t113Art from './v2-art/t113-preview.png?url';
-import t113Detail from './v2-art/t113-detail.png?url';
-import rk3588Art from './v2-art/rk3588-preview.png?url';
-import emptyChip from './v2-art/chip-empty.png?url';
 import './V2Catalog.css';
 
 export interface V2Board {
@@ -30,55 +26,9 @@ export interface V2Board {
 }
 export type V2ImageSource = 'catalog' | 'local' | 'recent';
 type Identity = { sizeBytes: number; sha256: string };
-const chipPackages: Record<string, [string, string]> = {
-  f101: ['F101', 'ALLWINNER'],
-  rk3576: ['RK3576', 'ROCKCHIP'],
-  'nxp-imx6ull': ['i.MX6ULL', 'NXP'],
-  stm32mp157: ['MP157', 'ST'],
-  't153-emmc': ['T153', 'ALLWINNER'],
-  'nxp-imx': ['i.MX', 'NXP'],
-  stm32mp1: ['STM32MP1', 'ST'],
-  'canaan-k230': ['K230', 'CANAAN'],
-};
 const baseName = (path: string) => path.split(/[/\\]/).pop() || path;
 function icon(name: LynxIconName, size: 16 | 20 | 24 = 20) {
   return <LynxIcon name={name} size={size} aria-hidden="true" />;
-}
-
-export function V2BoardArt({
-  id,
-  name,
-  large = false,
-}: {
-  id: string;
-  name?: string;
-  large?: boolean;
-}) {
-  const chip = chipPackages[id];
-  if (chip) {
-    return (
-      <span
-        role="img"
-        aria-label={chip.join(' · ') + ' 芯片封装示意图'}
-        className={'v2c-board-art v2c-chip-art' + (large ? ' v2c-art-large' : '')}
-      >
-        <span className={'v2c-chip-package pkg-' + id}>
-          <small>{chip[1]}</small>
-          <b>{chip[0]}</b>
-        </span>
-      </span>
-    );
-  }
-  const src =
-    id === 't113-pro' ? (large ? t113Detail : t113Art) : id === 'rk3588' ? rk3588Art : emptyChip;
-  return (
-    <img
-      className={'v2c-board-art' + (large ? ' v2c-art-large' : '')}
-      src={src}
-      alt={id === 't113-pro' || id === 'rk3588' ? (name || id) + ' 示意图' : '芯片平台示意图'}
-      draggable={false}
-    />
-  );
 }
 
 function DetailsPane({
@@ -462,13 +412,13 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
             )}
           </>
         )}
-        {(source === 'local' || (source === 'catalog' && candidate)) && (
+        {(source !== 'catalog' || candidate) && (
           <SystemImageReview
             key={JSON.stringify([
               board.id,
               boardName,
               props.route,
-              source,
+              inCatalog,
               imagePath,
               candidate?.indexSha256,
             ])}

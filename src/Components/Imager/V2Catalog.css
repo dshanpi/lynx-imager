@@ -230,71 +230,6 @@
 .v2c-board-card input:focus-visible {
   outline: none;
 }
-.v2c-board-art {
-  width: 100%;
-  height: 80px;
-  object-fit: contain;
-  display: block;
-  mix-blend-mode: multiply;
-}
-.v2c-board-art.v2c-chip-art {
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
-.v2c-chip-package {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: min(72%, 94px);
-  aspect-ratio: 1.22;
-  isolation: isolate;
-  color: #e5e6e4;
-  background: repeating-linear-gradient(90deg, #929a9d 0 2px, transparent 2px 5px);
-  transform: rotate(-15deg) skewX(10deg) scaleY(0.79);
-  filter: drop-shadow(0 3px 2px #28384136);
-}
-.v2c-chip-package::before,
-.v2c-chip-package::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-}
-.v2c-chip-package::before {
-  inset: 5px -4px;
-  background: repeating-linear-gradient(0deg, #959c9f 0 2px, transparent 2px 5px);
-}
-.v2c-chip-package::after {
-  inset: 4px 1px;
-  border: 2px solid #555c60;
-  border-radius: 4px;
-  background:
-    radial-gradient(circle at 10% 85%, #869099 0 1.4px, transparent 2px),
-    linear-gradient(120deg, #3d464a, #232a2e);
-  box-shadow: inset 0 -3px #1d2529;
-}
-.v2c-chip-package b {
-  font:
-    700 clamp(10px, 1.2vw, 18px)/1.2 'Segoe UI',
-    sans-serif;
-}
-.v2c-chip-package small {
-  font:
-    600 8px/1.3 'Segoe UI',
-    sans-serif;
-  letter-spacing: 0.5px;
-}
-.v2c-chip-package.pkg-nxp-imx {
-  aspect-ratio: 1.03;
-}
-.v2c-chip-package.pkg-stm32mp1 {
-  aspect-ratio: 1.35;
-}
-.v2c-chip-package.pkg-canaan-k230::after {
-  border-color: #565b53;
-}
 .v2c-board-copy {
   min-width: 0;
   display: flex;
@@ -1130,7 +1065,7 @@
   --vc-accent: var(--color-primary);
   --vc-tint: var(--color-selected);
 }
-.imager-themed[data-theme='dark'] .v2c-layout :is(.v2c-board-art, .v2c-task-preview img) {
+.imager-themed[data-theme='dark'] .v2c-layout .v2c-task-preview img {
   mix-blend-mode: normal;
   border-radius: 5px;
 }

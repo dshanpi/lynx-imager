@@ -1,4 +1,4 @@
-import type { ReactNode, RefObject } from 'react';
+import type { RefObject } from 'react';
 import { LynxIcon } from '../../CoreUI';
 import type {
   WorkbenchDevice,
@@ -17,7 +17,6 @@ import './VendorRoutePanel.css';
 interface RouteProps {
   dropRef: RefObject<HTMLDivElement | null>;
   boardName: string;
-  boardArt: ReactNode;
   mode: string;
   vendor: WorkbenchDevice['chipVendor'];
   selection: VendorSelection;
@@ -58,7 +57,6 @@ const descriptions: Record<VendorSelection['route'], string> = {
 export function VendorRoutePanel({
   dropRef,
   boardName,
-  boardArt,
   mode,
   vendor,
   selection: s,
@@ -159,11 +157,11 @@ export function VendorRoutePanel({
       </section>
       <aside className="vendor-detail vendor-context" aria-label="本次写入目标">
         <h3>本次写入目标</h3>
-        <div className="vendor-board">
-          {boardArt}
-          <strong>{boardName}</strong>
-        </div>
         <dl>
+          <div>
+            <dt>目标型号</dt>
+            <dd>{boardName}</dd>
+          </div>
           <div>
             <dt>下载模式</dt>
             <dd>{mode}</dd>

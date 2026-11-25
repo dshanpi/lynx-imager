@@ -148,9 +148,10 @@ def run(binary, out):
             web.click(".target-chip-help summary")
             web.shown("查看主控芯片表面的丝印")
             web.click('button[data-model="RK3506"]')
-            assert web.js("return document.querySelectorAll('[data-medium]:disabled').length===4")
+            assert web.js("return document.querySelectorAll('[data-medium]:disabled').length===2")
             assert web.js("return document.querySelector('.v2-foot-actions .v2-primary').disabled")
             web.click("button", "返回型号列表")
+            web.js('const s=document.querySelector("select[aria-label=搜索范围]"); s.value="series"; s.dispatchEvent(new Event("change",{bubbles:true}));')
             web.click('input[aria-label="筛选当前系列型号"]')
             for letter in "3588":
                 keys(web, letter)

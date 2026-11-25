@@ -61,13 +61,6 @@
 .target-heading {
   margin: 0 0 12px;
 }
-.target-vendor-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--lynx-text-secondary);
-  margin-right: 4px;
-}
 .target-vendors button,
 .target-media button,
 .target-subhead button {
@@ -89,16 +82,11 @@
   font-weight: 400;
   color: var(--lynx-text-secondary);
 }
-.target-vendors small,
 .target-media strong,
 .target-media span small,
 .target-models strong,
 .target-models span small {
   display: block;
-}
-.target-vendors i {
-  font: 700 14px var(--lynx-font-mono);
-  color: var(--lynx-accent-hover);
 }
 .target-picker button {
   cursor: pointer;
@@ -143,9 +131,6 @@
   font-size: 14px;
   text-align: left;
 }
-.target-families small {
-  color: #c7d8e8;
-}
 .target-families button[aria-pressed='true'],
 .target-families button:hover {
   background: #345770;
@@ -185,9 +170,6 @@
 .target-models button:hover,
 .target-subhead button:hover {
   background: var(--lynx-bg-hover);
-}
-.target-models button > svg {
-  color: var(--lynx-text-secondary);
 }
 .target-media {
   display: grid;
@@ -238,20 +220,6 @@
   background: transparent;
   font-weight: 600;
 }
-.target-vendors i {
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--lynx-border);
-  background: var(--lynx-bg-surface);
-  min-width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-.target-vendors button[aria-pressed='true'] i {
-  background: var(--lynx-accent-hover);
-  color: white;
-}
 .target-families {
   display: flex;
   flex-direction: column;
@@ -275,26 +243,6 @@
 }
 .target-chip-help p {
   color: #e0eaf4;
-}
-.target-series-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--lynx-border-strong);
-  border-radius: 4px;
-  padding: 5px 9px;
-  margin-bottom: 8px;
-}
-.target-series-search input {
-  border: 0;
-  background: transparent;
-  color: inherit;
-  flex: 1;
-  min-width: 0;
-  font: inherit;
-}
-.target-series-search:focus-within {
-  outline: 2px solid var(--lynx-accent);
 }
 .target-columns {
   display: grid;
@@ -333,97 +281,4 @@
   .target-heading .imager-board-search {
     width: 185px;
   }
-  .target-vendor-label {
-    font-size: 12px;
-  }
-}
-.emmc-maintenance {
-  margin-top: 12px;
-}
-.emmc-maintenance dialog {
-  max-width: min(460px, 90vw);
-  padding: 22px;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-.emmc-maintenance dialog::backdrop {
-  background: rgb(15 24 40 / 38%);
-}
-.emmc-maintenance dialog label {
-  display: grid;
-  gap: 6px;
-}
-.emmc-maintenance dialog select {
-  width: 100%;
-}
-.emmc-maintenance dialog footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-.emmc-maintenance .erase-confirm {
-  color: var(--color-error);
-}
-.emmc-maintenance dialog {
-  inset: 0;
-  margin: auto;
-  width: min(440px, calc(100vw - 32px));
-  max-height: calc(100vh - 40px);
-  overflow: auto;
-  box-shadow: 0 16px 65px #101b363b;
-  padding: 24px;
-}
-.erase-heading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.erase-heading > svg {
-  color: var(--color-error);
-}
-.erase-heading h3 {
-  margin: 0;
-  font-size: var(--font-title, 20px);
-}
-.emmc-maintenance dialog > p {
-  margin: 12px 0 18px;
-  line-height: 1.65;
-}
-.emmc-maintenance dialog > p:empty {
-  display: none;
-}
-.emmc-maintenance select {
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid var(--color-control-border);
-  color: var(--color-text);
-  background: var(--color-surface);
-}
-.erase-preview {
-  display: grid;
-  gap: 4px;
-  background: var(--color-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 14px 16px;
-  margin-top: 15px;
-}
-.erase-preview strong {
-  font-size: 20px;
-}
-.erase-preview :is(small, span) {
-  color: var(--color-muted);
-  font-size: 12px;
-}
-.emmc-maintenance dialog footer {
-  border-top: 1px solid var(--color-divider);
-  padding-top: 16px;
-  margin-top: 18px;
-}
-.emmc-maintenance button.erase-confirm {
-  background: var(--color-error);
-  border-color: var(--color-error);
-  color: white;
 }

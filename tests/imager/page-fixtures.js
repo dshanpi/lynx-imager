@@ -28,10 +28,17 @@ mockIPC(
         return;
       case 'imager_emmc_erase':
         if (args.token !== 'qa-ticket') throw Error('失效');
+        if (qa.failErase) throw Error('连接中断');
+        if (qa.holdErase)
+          await new Promise((resolve) => {
+            qa.finishErase = resolve;
+          });
         return 8589934592;
       case 'imager_card_image':
         return { path: args.path, bytes: 1048576, sha256: 'a'.repeat(64) };
       case 'imager_card_list':
+        if (qa.readerScanError) throw Error('存储服务不可用');
+        if (qa.readerDisconnected) return [];
         return [
           { key: '8', name: 'QA Reader', identity: 'fixture', sector: 512, bytes: 8589934592 },
         ];
@@ -40,7 +47,7 @@ mockIPC(
           throw Error('wrong target');
         return;
       case 'plugin:app|version':
-        return '0.1.0-rc.8';
+        return '0.1.0-rc.11';
       case 'get_system_proxy':
         return null;
       case 'plugin:updater|check':
