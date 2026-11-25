@@ -300,9 +300,18 @@ pub async fn imager_usb_targets() -> Result<Vec<UsbTarget>, String> {
                 continue;
             };
             let id = format!("{:04x}:{:04x}", desc.vendor_id(), desc.product_id());
-            let Some(vendor) = ["allwinner", "rockchip", "nxp", "st", "kendryte"]
+            let known_vendor = ["allwinner", "rockchip", "nxp", "st", "kendryte"]
                 .into_iter()
-                .find(|v| ids(v).is_ok_and(|known| known.contains(&id.as_str())))
+                .find(|v| ids(v).is_ok_and(|known| known.contains(&id.as_str())));
+            let rockusb = desc.vendor_id() == 0x2207
+                && device.active_config_descriptor().is_ok_and(|config| {
+                    config.interfaces().any(|iface| {
+                        iface.descriptors().any(|d| {
+                            (d.class_code(), d.sub_class_code(), d.protocol_code()) == (0xff, 6, 5)
+                        })
+                    })
+                });
+            let Some(vendor) = known_vendor.or(if rockusb { Some("rockchip") } else { None })
             else {
                 continue;
             };

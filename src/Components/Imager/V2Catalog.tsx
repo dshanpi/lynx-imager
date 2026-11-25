@@ -426,9 +426,7 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
           <h3>{props.vendorTitle || '烧录文件'}</h3>
           {tabs}
         </header>
-        {source === 'local' && props.vendorControls && (
-          <div ref={dropRef}>{props.vendorControls}</div>
-        )}
+        {source === 'local' && props.vendorControls}
         {inCatalog && (
           <BasicCatalog
             key={board.id + ':' + props.route}
@@ -445,20 +443,14 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
                 <span className="image-desk-file-icon">{icon('document', 24)}</span>
                 <div className="image-desk-file-copy">
                   <strong>{imageRole}</strong>
-                  <small>
-                    {props.vendorControls ? '也可将本地文件拖入此处' : '支持拖入本地镜像文件。'}
-                  </small>
+                  <small>支持拖入本地镜像文件。</small>
                 </div>
-                {!props.vendorControls && (
-                  <span className="image-desk-destination">
-                    {icon('database', 16)}写入 {board.storage}
-                  </span>
-                )}
-                {!props.vendorControls && (
-                  <button type="button" className="v2c-solid" onClick={onBrowse}>
-                    {icon('folder')}选择镜像…
-                  </button>
-                )}
+                <span className="image-desk-destination">
+                  {icon('database', 16)}写入 {board.storage}
+                </span>
+                <button type="button" className="v2c-solid" onClick={onBrowse}>
+                  {icon('folder')}选择镜像…
+                </button>
               </div>
             )}
             {fileError ? (

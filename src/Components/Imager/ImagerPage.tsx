@@ -946,6 +946,7 @@ export function ImagerPage({
               vendorControls={
                 selection && (
                   <VendorRoutePanel
+                    dropRef={dropRef}
                     boardName={boardName}
                     boardArt={<V2BoardArt id={board.id} name={boardName} />}
                     mode={board.mode}

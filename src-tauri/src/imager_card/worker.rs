@@ -1,4 +1,5 @@
 use super::{fits, host, inspect, source, transfer, Request};
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use serde::{Deserialize, Serialize};
 use std::{
     io::{BufRead, BufReader, Read, Write},
@@ -75,10 +76,43 @@ pub fn entry() -> Option<i32> {
             .next()
             .and_then(|s| s.parse::<u16>().ok())
             .ok_or("无效端口")?;
-        let token = args
-            .next()
-            .filter(|s| s.len() == 32 && s.bytes().all(|b| b.is_ascii_hexdigit()))
-            .ok_or("无效会话")?;
+        let ticket_arg = args.next().ok_or("缺少授权会话")?;
+        let ticket_path =
+            String::from_utf8(URL_SAFE_NO_PAD.decode(ticket_arg).map_err(|_| "无效会话")?)
+                .map_err(|_| "无效会话")?;
+        let ticket_path = Path::new(&ticket_path);
+        if !ticket_path
+            .file_name()
+            .and_then(|s| s.to_str())
+            .is_some_and(|s| s.starts_with("lynx-card-session-"))
+        {
+            return Err("无效会话".into());
+        }
+        let ticket = std::fs::File::open(ticket_path).map_err(|e| e.to_string())?;
+        let meta = ticket.metadata().map_err(|e| e.to_string())?;
+        if !meta.is_file() || meta.len() != 32 {
+            return Err("会话已失效".into());
+        }
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::MetadataExt;
+            if meta.mode() & 0o077 != 0
+                || std::env::var("PKEXEC_UID")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .is_some_and(|uid: u32| uid != meta.uid())
+            {
+                return Err("会话权限无效".into());
+            }
+        }
+        let mut token = String::new();
+        ticket
+            .take(33)
+            .read_to_string(&mut token)
+            .map_err(|e| e.to_string())?;
+        if token.len() != 32 || !token.bytes().all(|b| b.is_ascii_hexdigit()) {
+            return Err("无效会话".into());
+        }
         if args.next().is_some() {
             return Err("无效参数".to_string());
         }
@@ -125,10 +159,29 @@ pub(super) fn launch(app: &AppHandle, req: Request) -> Result<(), String> {
     let token = format!("{:032x}", rand::random::<u128>());
     let port = listener.local_addr().map_err(|e| e.to_string())?.port();
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
-    elevate(&exe, port, &token)?;
+    // Only the invoking user and the elevated helper can read the bearer secret.
+    // Process listings expose only the path to the private temporary file.
+    let mut ticket = tempfile::Builder::new()
+        .prefix("lynx-card-session-")
+        .tempfile()
+        .map_err(|e| e.to_string())?;
+    ticket
+        .write_all(token.as_bytes())
+        .and_then(|_| ticket.flush())
+        .map_err(|e| e.to_string())?;
+    let ticket_arg =
+        URL_SAFE_NO_PAD.encode(ticket.path().to_str().ok_or("临时目录路径无效")?.as_bytes());
+    #[cfg(target_os = "linux")]
+    let mut child = elevate(&exe, port, &ticket_arg)?;
+    #[cfg(not(target_os = "linux"))]
+    elevate(&exe, port, &ticket_arg)?;
     listener.set_nonblocking(true).map_err(|e| e.to_string())?;
     let deadline = Instant::now() + Duration::from_secs(90);
     let (mut stream, mut reader) = loop {
+        #[cfg(target_os = "linux")]
+        if child.try_wait().map_err(|e| e.to_string())?.is_some() {
+            return Err("写卡授权已取消或启动失败".into());
+        }
         if Instant::now() > deadline {
             return Err("写卡授权已取消或超时".into());
         }
@@ -147,6 +200,11 @@ pub(super) fn launch(app: &AppHandle, req: Request) -> Result<(), String> {
             Err(e) => return Err(e.to_string()),
         }
     };
+    #[cfg(target_os = "linux")]
+    std::thread::spawn(move || {
+        let _ = child.wait();
+    });
+    drop(ticket);
     stream.set_read_timeout(None).map_err(|e| e.to_string())?;
     packet(
         &mut stream,
@@ -202,7 +260,7 @@ fn elevate(exe: &Path, port: u16, token: &str) -> Result<(), String> {
     }
 }
 #[cfg(target_os = "linux")]
-fn elevate(exe: &Path, port: u16, token: &str) -> Result<(), String> {
+fn elevate(exe: &Path, port: u16, token: &str) -> Result<std::process::Child, String> {
     let mut c = if unsafe { libc::geteuid() } == 0 {
         std::process::Command::new(exe)
     } else {
@@ -210,14 +268,9 @@ fn elevate(exe: &Path, port: u16, token: &str) -> Result<(), String> {
         cmd.arg(exe);
         cmd
     };
-    let mut child = c
-        .args(["--imager-card-worker", &port.to_string(), token])
+    c.args(["--imager-card-worker", &port.to_string(), token])
         .spawn()
-        .map_err(|e| format!("无法申请写卡权限：{e}"))?;
-    std::thread::spawn(move || {
-        let _ = child.wait();
-    });
-    Ok(())
+        .map_err(|e| format!("无法申请写卡权限：{e}"))
 }
 #[cfg(target_os = "macos")]
 fn elevate(exe: &Path, port: u16, token: &str) -> Result<(), String> {

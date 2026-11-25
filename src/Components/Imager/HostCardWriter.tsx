@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invokeCommand, subscribeEvent } from '../../Platform/IPC';
 import type { ImagerCard, ImagerCardImage } from '../../Platform/IPC/contracts/Workbench';
@@ -20,6 +20,33 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
   const [finished, setFinished] = useState(false);
   const [progress, setProgress] = useState({ phase: '', bytes: 0 });
   const [issue, setIssue] = useState('');
+  const generation = useRef(0);
+  const historyKey = 'imager.sd-image.' + model;
+  useEffect(() => {
+    let last: string | null = null;
+    try {
+      last = localStorage.getItem(historyKey);
+    } catch {
+      return;
+    }
+    if (!last) return;
+    const version = ++generation.current;
+    setIssue('正在检查上次使用的镜像…');
+    invokeCommand('imager_card_image', { path: last })
+      .then((file) => {
+        if (generation.current === version) {
+          setImage(file);
+          onPath(file.path);
+          setIssue('');
+        }
+      })
+      .catch(() => {
+        if (generation.current === version) setIssue('上次使用的镜像已不可用，请重新选择。');
+      });
+    return () => {
+      generation.current++;
+    };
+  }, [historyKey, onPath]);
   useEffect(() => {
     let active = true;
     const off = subscribeEvent('imager-card-progress', (p) => {
@@ -76,17 +103,25 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
                   filters: [{ name: 'SD 整盘镜像', extensions: ['img', 'raw', 'wic', 'gz', 'xz'] }],
                 });
                 if (typeof path !== 'string') return;
+                ++generation.current;
+                setIssue('');
                 setImage(null);
                 setCard(null);
                 onPath('');
                 const file = await invokeCommand('imager_card_image', { path });
                 setImage(file);
                 onPath(path);
+                try {
+                  localStorage.setItem(historyKey, path);
+                } catch {
+                  /* The selected file still works for this session. */
+                }
               })
             }
           >
             {image ? '更换镜像' : '选择镜像'}
           </button>
+          {issue && <p role="status">{issue}</p>}
           {image && (
             <p>
               {image.path.split(/[\\/]/).pop()} · 解压后 {size(image.bytes)}

@@ -652,7 +652,8 @@ if __name__=='__main__':
                       const r=e.getBoundingClientRect();
                       return {text:e.textContent.trim(),x:r.x,y:r.y,right:r.right,bottom:r.bottom};
                     });
-                return {brandHeight:rect.height,headerHeight:header.height,actions};
+                const rail=[...document.querySelectorAll('.v2-rail,.board-list,.im-ai-rail')].find(e=>e.getClientRects().length);
+                return {brandHeight:rect.height,headerHeight:header.height,railWidth:rail?.getBoundingClientRect().width,actions};
             }''')
             for action in geometry['actions']:
                 assert action['x'] >= -1 and action['right'] <= args.width+1, (name,action)
@@ -679,6 +680,8 @@ if __name__=='__main__':
             capture('target-home')
             test_pages(page,report['checks'],capture)
             assert not report['pageErrors'], report['pageErrors']
+            shells=[row for row in report['geometry'] if row['page'] in ('target-home','device-overview')]
+            assert len(shells)==2 and all(abs(shells[0][k]-shells[1][k])<=1 for k in ('headerHeight','brandHeight','railWidth')), shells
             report['passed']=True
             for old in ('failure.png','failure.txt'):
                 (args.output/old).unlink(missing_ok=True)

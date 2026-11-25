@@ -736,6 +736,7 @@ export interface NativeSkillSyncResult {
 }
 
 export interface WorkbenchEventMap {
+  'imager-emmc-progress': IpcEventSpec<number>;
   'imager-card-progress': IpcEventSpec<{ phase: string; bytes: number }>;
   'workbench-task-event': IpcEventSpec<{
     taskId: string;

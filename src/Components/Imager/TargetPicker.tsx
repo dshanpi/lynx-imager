@@ -287,7 +287,9 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
                     : '此型号已收录，尚无可执行的存储配方。'}
                 </p>
               )}
-              {choice?.medium === 'eMMC' && part.vendor === 'rockchip' && <EmmcErase />}
+              {choice?.medium === 'eMMC' && part.vendor === 'rockchip' && (
+                <EmmcErase model={part.name} />
+              )}
               {choice && !choice.reader && part.vendor !== 'allwinner' && (
                 <label className="v2c-select-model">
                   具体板型（选填）

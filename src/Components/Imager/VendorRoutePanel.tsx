@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import type {
   WorkbenchDevice,
   WorkbenchFlasherDevice,
@@ -14,6 +14,7 @@ import { ImageLayout, vendorLayouts } from './ImageLayout';
 import './VendorRoutePanel.css';
 
 interface RouteProps {
+  dropRef: RefObject<HTMLDivElement | null>;
   boardName: string;
   boardArt: ReactNode;
   mode: string;
@@ -54,6 +55,7 @@ const descriptions: Record<VendorSelection['route'], string> = {
   'k230-raw': '整个文件从所选介质的偏移 0 写入。请核对实际板型和介质。',
 };
 export function VendorRoutePanel({
+  dropRef,
   boardName,
   boardArt,
   mode,
@@ -100,7 +102,7 @@ export function VendorRoutePanel({
           </div>
         </div>
         <p>{descriptions[s.route]}</p>
-        <div className="vendor-file">
+        <div className="vendor-file" ref={dropRef}>
           <span>{s.route === 'nxp-uuu' ? 'UUU 脚本' : '镜像文件'}</span>
           <strong title={imagePath}>{imagePath ? basename(imagePath) : '选择或拖入文件'}</strong>
           <button type="button" onClick={onChooseImage}>

@@ -1,9 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-import { invokeCommand } from '../../Platform/IPC';
+import { invokeCommand, subscribeEvent } from '../../Platform/IPC';
 import { formatErrorMessage } from '../../Utils';
 
 type Target = { vendor: string; key: string; pid: number; loader: boolean };
-export function EmmcErase() {
+export function EmmcErase({ model }: { model: string }) {
+  const [erased, setErased] = useState(0);
+  useEffect(() => {
+    let active = true;
+    const off = subscribeEvent('imager-emmc-progress', (bytes) => {
+      if (active) setErased(bytes);
+    }).catch(() => () => {});
+    return () => {
+      active = false;
+      void off.then((stop) => stop());
+    };
+  }, []);
   const dialog = useRef<HTMLDialogElement>(null);
   const [targets, setTargets] = useState<Target[]>([]);
   const [key, setKey] = useState('');
@@ -21,6 +32,7 @@ export function EmmcErase() {
 
   async function run(stage: typeof phase, work: () => Promise<void>) {
     if (busy.current) return;
+    if (stage === 'erase') setErased(0);
     busy.current = true;
     setPhase(stage);
     setMessage('');
@@ -71,7 +83,7 @@ export function EmmcErase() {
         }}
       >
         <h3 id="erase-title">擦除 eMMC 用户区</h3>
-        <p>此操作会清空所选设备的系统、分区表和用户数据。</p>
+        <p>当前选择 {model}。请按 USB 端口核对设备。此操作会清空系统、分区表和用户数据。</p>
         <label>
           目标 USB 端口
           <select

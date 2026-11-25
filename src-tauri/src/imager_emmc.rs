@@ -4,7 +4,7 @@ use rusb::{DeviceHandle, Direction, GlobalContext, TransferType};
 use serde::Serialize;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 
 const CONFIRM_WINDOW: Duration = Duration::from_secs(60);
 const TRANSFER_TIMEOUT: Duration = Duration::from_secs(30);
@@ -250,8 +250,15 @@ pub async fn imager_emmc_erase(app: AppHandle, token: String) -> Result<u64, Str
         if target.loader.sectors()? != target.sectors {
             return Err("设备容量已改变，请重新检查。".into());
         }
+        let mut last_update = Instant::now();
         erase_range(target.sectors, |sector, n| {
-            target.loader.command(0x25, sector, n, &mut [])
+            target.loader.command(0x25, sector, n, &mut [])?;
+            let done = sector + u32::from(n);
+            if done == target.sectors || last_update.elapsed() >= Duration::from_millis(350) {
+                let _ = app.emit("imager-emmc-progress", u64::from(done) * 512);
+                last_update = Instant::now();
+            }
+            Ok(())
         })
     })
     .await

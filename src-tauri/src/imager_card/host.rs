@@ -1,4 +1,5 @@
 use super::Card;
+#[cfg(any(windows, target_os = "macos"))]
 use serde_json::Value;
 use std::{fs::File, process::Command};
 pub(super) struct Target {
@@ -181,10 +182,16 @@ mod platform {
     }
     const INVENTORY: &str = include_str!("card-inventory.ps1");
     fn inventory() -> Result<Vec<Value>, String> {
-        let mut c = Command::new(
-            PathBuf::from(std::env::var_os("SystemRoot").ok_or("缺少 Windows 系统目录")?)
-                .join(r"System32\WindowsPowerShell\v1.0\powershell.exe"),
-        );
+        use std::os::windows::ffi::OsStringExt;
+        let mut path = [0u16; 512];
+        let n = unsafe {
+            windows::Win32::System::SystemInformation::GetSystemDirectoryW(Some(&mut path))
+        } as usize;
+        if n == 0 || n >= path.len() {
+            return Err("无法定位 Windows 系统目录".into());
+        }
+        let system = PathBuf::from(std::ffi::OsString::from_wide(&path[..n]));
+        let mut c = Command::new(system.join(r"WindowsPowerShell\v1.0\powershell.exe"));
         c.env_remove("PSModulePath")
             .creation_flags(0x08000000)
             .args(["-NoProfile", "-NonInteractive", "-Command", INVENTORY]);
@@ -199,13 +206,27 @@ mod platform {
             identity: v["identity"].as_str()?.into(),
         })
     }
+    fn current_card(v: &Value) -> Option<Card> {
+        let mut card = entry(v)?;
+        let handle = File::options()
+            .access_mode(0)
+            .share_mode(3)
+            .open(format!(r"\\.\PhysicalDrive{}", card.key))
+            .ok()?;
+        let mut generation = [0u8; 4];
+        if ctl(&handle, 0x2d0800, &mut generation).is_ok_and(|n| n == 4) {
+            card.identity
+                .push_str(&format!("|media:{}", u32::from_le_bytes(generation)));
+        }
+        Some(card)
+    }
     pub fn list() -> Result<Vec<Card>, String> {
-        Ok(inventory()?.iter().filter_map(entry).collect())
+        Ok(inventory()?.iter().filter_map(current_card).collect())
     }
     pub fn open(card: &Card) -> Result<Target, String> {
         let v = inventory()?
             .into_iter()
-            .find(|v| entry(v).as_ref() == Some(card))
+            .find(|v| current_card(v).as_ref() == Some(card))
             .ok_or("卡片已移除或身份改变")?;
         let mut locks = vec![];
         for vol in v["volumes"].as_array().ok_or("无法核对卡上的卷")? {
@@ -266,7 +287,7 @@ mod platform {
     use std::{
         io::Write,
         os::fd::AsRawFd,
-        os::unix::fs::{FileTypeExt, OpenOptionsExt},
+        os::unix::fs::{FileTypeExt, MetadataExt, OpenOptionsExt},
         process::Stdio,
     };
     fn info(args: &[&str]) -> Result<Value, String> {
@@ -337,7 +358,18 @@ mod platform {
                         name: v["MediaName"].as_str().unwrap_or(key).into(),
                         bytes,
                         sector,
-                        identity: format!("{}:{}", id, v["DiskUUID"].as_str().unwrap_or("")),
+                        identity: {
+                            let Ok(node) = std::fs::metadata(format!("/dev/r{key}")) else {
+                                continue;
+                            };
+                            format!(
+                                "{id}:{}:{}:{}:{}",
+                                node.ino(),
+                                node.ctime(),
+                                node.ctime_nsec(),
+                                v["DiskUUID"].as_str().unwrap_or("")
+                            )
+                        },
                     });
                 }
             }

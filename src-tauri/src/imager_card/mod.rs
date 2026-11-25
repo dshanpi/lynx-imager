@@ -198,6 +198,50 @@ mod tests {
         assert!(transfer(&data[..256], &mut disk, &image, || Ok(()), |_, _| {}).is_err());
     }
     #[test]
+    fn mismatched_readback_and_insufficient_media_are_rejected() {
+        struct BadRead(Cursor<Vec<u8>>);
+        impl Read for BadRead {
+            fn read(&mut self, b: &mut [u8]) -> std::io::Result<usize> {
+                let n = self.0.read(b)?;
+                if n > 0 {
+                    b[0] ^= 1;
+                }
+                Ok(n)
+            }
+        }
+        impl Write for BadRead {
+            fn write(&mut self, b: &[u8]) -> std::io::Result<usize> {
+                self.0.write(b)
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+        impl Seek for BadRead {
+            fn seek(&mut self, p: SeekFrom) -> std::io::Result<u64> {
+                self.0.seek(p)
+            }
+        }
+        let data = [1u8; 1024];
+        let img = Image {
+            path: String::new(),
+            bytes: 1024,
+            sha256: format!("{:x}", Sha256::digest(data)),
+        };
+        let small = Card {
+            key: "test".into(),
+            name: "test".into(),
+            identity: "test".into(),
+            bytes: 512,
+            sector: 512,
+        };
+        assert!(fits(&small, &img).is_err());
+        let mut disk = BadRead(Cursor::new(vec![0; 1024]));
+        assert!(transfer(&data[..], &mut disk, &img, || Ok(()), |_, _| {})
+            .unwrap_err()
+            .contains("SHA-256"));
+    }
+    #[test]
     fn unwraps_gzip_and_rejects_vendor_update() {
         let dir = tempfile::tempdir().unwrap();
         let p = dir.path().join("disk.img.gz");
