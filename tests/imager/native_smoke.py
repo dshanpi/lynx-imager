@@ -169,7 +169,10 @@ def run(binary, out):
                 keys(web, letter)
             wait(lambda: web.js("return document.querySelectorAll('[data-model]').length===1"), "F101 search")
             web.click('button[data-model="F101"]')
-            assert web.js("return document.querySelectorAll('[data-medium]:disabled').length===3 && document.querySelector('.v2-foot-actions .v2-primary').disabled")
+            assert web.js("""return [...document.querySelectorAll('[data-medium]:enabled')]
+                .map(e=>e.dataset.medium).sort().join(',')==='SD,SPI NOR,eMMC' &&
+                document.querySelector('[data-medium="SPI NAND"]').disabled &&
+                document.querySelector('.v2-foot-actions .v2-primary').disabled""")
             web.click('button[data-medium="SPI NOR"]')
             capture(web, "production-board")
             checked("厂商筛选、Ctrl+K、输入搜索、选择 F101 与继续按钮")
