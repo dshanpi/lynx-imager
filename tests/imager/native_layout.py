@@ -48,6 +48,8 @@ def inspect(binary, out):
                 if width == 1280:
                     web.shot(out / (name + ".png"))
             basic, advanced = results["basic"], results["advanced"]
+            for key in ("mainX", "titleSize", "headingSize", "bodySize", "family", "footer"):
+                assert basic[key] == advanced[key], (width, key, basic[key], advanced[key])
             for page, metrics in results.items():
                 x, y, rail_width, rail_height = metrics["rail"]
                 assert 0 < rail_width < width / 2 and rail_height > 0, (page, metrics)

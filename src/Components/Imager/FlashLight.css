@@ -85,7 +85,7 @@
 }
 .v2-basic-shell .target-page-heading h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: var(--font-title, 20px);
   font-weight: 650;
   letter-spacing: -0.5px;
   line-height: 1.35;
@@ -369,7 +369,7 @@
 }
 .v2-basic-shell .image-desk-title h2,
 .v2-basic-shell .r3-heading h2 {
-  font-size: 25px;
+  font-size: var(--font-title, 20px);
   letter-spacing: -0.4px;
 }
 .v2-basic-shell .image-desk-title {
