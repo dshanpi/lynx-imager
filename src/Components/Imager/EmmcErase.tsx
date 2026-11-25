@@ -110,7 +110,7 @@ export function EmmcErase({ model }: { model: string }) {
         )}
         <p role="status">
           {phase === 'erase'
-            ? '正在擦除，请保持供电和 USB 连接…'
+            ? `已擦除 ${(erased / 1024 ** 2).toFixed(1)} MiB，请保持供电和 USB 连接…`
             : phase === 'check'
               ? '正在读取介质和容量…'
               : phase === 'scan'

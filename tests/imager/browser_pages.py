@@ -101,7 +101,12 @@ def test_target_matrix(page, results):
             expect(summary).to_contain_text(medium)
             expect(summary.locator('strong')).to_contain_text(chip)
             if page.locator('.card-writer').count():
-                expect(page.get_by_role('button',name='下一步：选择读卡器')).to_be_disabled()
+                reader_next = page.get_by_role('button', name='下一步：选择读卡器')
+                if chip == 'RK3576':
+                    expect(page.locator('.card-writer')).to_contain_text('card.img.xz')
+                    expect(reader_next).to_be_enabled()
+                else:
+                    expect(reader_next).to_be_disabled()
             else:
                 expect(next_step).to_be_disabled()
             page.locator('#v2-step-1').click()
