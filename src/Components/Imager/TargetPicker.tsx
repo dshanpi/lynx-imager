@@ -165,7 +165,6 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
             onChange={(event) => {
               manual.current = true;
               setSeriesOnly(event.target.value === 'series');
-              input.current?.focus();
             }}
           >
             <option value="all">全部型号</option>

@@ -27,7 +27,6 @@ function usbId(device: Target) {
 }
 export function EmmcErase({ model }: { model: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const heading = useRef<HTMLHeadingElement>(null);
   const ticket = useRef('');
   const busy = useRef(false);
   const [state, setState] = useState<State>({ phase: 'pick', targets: [] });
@@ -50,9 +49,6 @@ export function EmmcErase({ model }: { model: string }) {
     };
   }, []);
 
-  useEffect(() => {
-    if (phase === 'ready' || phase === 'done' || phase === 'failed') heading.current?.focus();
-  }, [phase]);
   async function scan() {
     if (busy.current) return;
     busy.current = true;
@@ -147,7 +143,7 @@ export function EmmcErase({ model }: { model: string }) {
             <LynxIcon name={phase === 'done' ? 'check-circle' : 'database'} size={24} />
           </div>
           <div>
-            <h2 id="erase-title" ref={heading} tabIndex={-1}>
+            <h2 id="erase-title" aria-live="polite">
               {title}
             </h2>
             <p>{model} · 板载存储</p>
