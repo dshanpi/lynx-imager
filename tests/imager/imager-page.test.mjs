@@ -17,7 +17,7 @@ test('LYNX Imager exposes four visible steps and all three workspaces', async ()
   assert.match(source, /aria-current=.*'step'/);
   assert.match(source, /aria-label="烧录步骤"/);
   assert.match(source.replace(/\s/g, ''), /\[boardId,setBoardId\]=useState<string\|null>\(null\)/);
-  assert.match(source.replace(/\s/g, ''), /step===4&&board&&target&&[<(]/);
+  assert.match(source.replace(/\s/g, ''), /step===4&&!cardReader&&board&&target&&[<(]/);
 });
 
 test('basic flow calls existing typed IPC boundaries', async () => {

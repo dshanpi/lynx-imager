@@ -1,0 +1,1 @@
+DshanPI-A1 RK3576 MiniLoaderAll.bin comes from the board support package RKDevTool v3.32, Output/Android. The v2.92 package contains the same file. Original length 754169 bytes, SHA-256 bd7d13b36df2bc0d5e7b41af97de9240ee22f271590e7c49b2e9168d5eae4cf6. Use only with the matching board. See Rockchip-LICENSE.

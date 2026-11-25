@@ -31,6 +31,12 @@ pub fn manage_runtime_state(builder: tauri::Builder<tauri::Wry>) -> tauri::Build
 
 pub fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     log::info!("LYNX_LIFECYCLE_SETUP_BEGIN");
+    let handle = app.handle().clone();
+    tauri::async_runtime::spawn(async move {
+        if let Err(e) = crate::imager_board_loader::imager_board_loader(handle, "DshanPI-A1".into()).await {
+            log::warn!("Board loader cache: {e}");
+        }
+    });
     learning::deep_link::setup(app)?;
     task_bar::setup_taskbar_listeners(app.handle());
     let data_dir = app

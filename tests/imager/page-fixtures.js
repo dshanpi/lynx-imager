@@ -18,6 +18,27 @@ mockIPC(
   async (cmd, args) => {
     qa.calls.push(cmd);
     switch (cmd) {
+      case 'imager_usb_targets':
+        return qa.attached || [];
+      case 'imager_board_loader':
+        return 'C:/qa/builtin/MiniLoaderAll.bin';
+      case 'imager_emmc_prepare':
+        return { token: 'qa-ticket', bytes: 8589934592 };
+      case 'imager_emmc_cancel':
+        return;
+      case 'imager_emmc_erase':
+        if (args.token !== 'qa-ticket') throw Error('失效');
+        return 8589934592;
+      case 'imager_card_image':
+        return { path: args.path, bytes: 1048576, sha256: 'a'.repeat(64) };
+      case 'imager_card_list':
+        return [
+          { key: '8', name: 'QA Reader', identity: 'fixture', sector: 512, bytes: 8589934592 },
+        ];
+      case 'imager_card_write':
+        if (args.card.identity !== 'fixture' || args.image.bytes !== 1048576)
+          throw Error('wrong target');
+        return;
       case 'plugin:app|version':
         return '0.1.0-rc.8';
       case 'get_system_proxy':

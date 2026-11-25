@@ -1,5 +1,6 @@
+import { HostCardWriter } from './HostCardWriter';
 import { V2BoardPicker } from './TargetPicker';
-import { profiles, type TargetChoice } from './targetCatalog';
+import { rockchipModels, profiles, type TargetChoice } from './targetCatalog';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { open } from '@tauri-apps/plugin-dialog';
@@ -82,28 +83,17 @@ const BOARD_PRESETS: BoardPreset[] = [
     route: 'mainline_emmc',
     needsLoader: true,
   },
-  {
-    id: 'rk3576',
-    name: 'RK3576 系列',
+  ...rockchipModels.map((model): BoardPreset => ({
+    id: model.toLowerCase(),
+    name: model,
     chipVendor: 'rockchip',
-    chip: '瑞芯微 · RK3576',
+    chip: '瑞芯微 · ' + model,
     storage: 'eMMC',
     mode: 'Maskrom / Loader',
     route: 'rockchip_raw_emmc',
     needsLoader: true,
     loaderLabel: 'Rockchip Loader',
-  },
-  {
-    id: 'rk3588',
-    name: 'RK3588 系列',
-    chipVendor: 'rockchip',
-    chip: '瑞芯微 · RK3588',
-    storage: 'eMMC',
-    mode: 'Maskrom / Loader',
-    route: 'rockchip_raw_emmc',
-    needsLoader: true,
-    loaderLabel: 'Rockchip Loader',
-  },
+  })),
   {
     id: 'nxp-imx6ull',
     name: 'i.MX6ULL',
@@ -318,7 +308,28 @@ export function ImagerPage({
       : undefined;
   const boardName =
     boardVariant.trim() || (board?.chipVendor === 'allwinner' ? board.name : choice?.model) || '';
-  const vendorRoute = selection?.route;
+  const vendorRoute = choice?.reader ? undefined : selection?.route;
+  useEffect(() => {
+    if (
+      vendorRoute !== 'rk-emmc' ||
+      choice?.model !== 'RK3576' ||
+      boardVariant !== 'DshanPI-A1' ||
+      step !== 2 ||
+      loaderPath
+    )
+      return;
+    let current = true;
+    invokeCommand('imager_board_loader', { board: boardVariant })
+      .then((path) => {
+        if (current) setLoaderPath((previous) => previous || path);
+      })
+      .catch((e) => {
+        if (current) setError(formatErrorMessage(e));
+      });
+    return () => {
+      current = false;
+    };
+  }, [vendorRoute, choice?.model, boardVariant, step, loaderPath]);
   const [inspected, setInspected] = useState<{
     key: string;
     value: VendorInspection | null;
@@ -342,7 +353,7 @@ export function ImagerPage({
   }, [vendorRoute, imagePath, inspectionKey]);
   const inspection = inspected?.key === inspectionKey ? inspected.value : null;
   const inspectionError = inspected?.key === inspectionKey ? inspected.error : '';
-  const image = useFingerprint(imagePath, revision);
+  const image = useFingerprint(choice?.reader ? '' : imagePath, revision);
   const loader = useFingerprint(loaderPath, revision);
   const imageValid =
     !!image?.value && (!candidate || candidate.manifest.image.sha256 === image.value.sha256);
@@ -363,7 +374,7 @@ export function ImagerPage({
         ? 'working'
         : undefined;
   const statusTarget = selected?.device.name || boardName || '未选择板子';
-  const watchTarget = active && step >= 3 && !taskId;
+  const watchTarget = active && !choice?.reader && step >= 3 && !taskId;
   // Keep the same subscription from interface detection through the confirmation drawer.
   // A second board can reconnect to the same USB port with the same VID/PID.
   useEffect(() => {
@@ -428,14 +439,21 @@ export function ImagerPage({
     setCandidate(null);
   }
   function chooseHardware(next: TargetChoice | null) {
-    if (choice?.model === next?.model && choice?.medium === next?.medium) return;
+    if (
+      choice?.model === next?.model &&
+      choice?.medium === next?.medium &&
+      !!choice?.reader === !!next?.reader
+    )
+      return;
     const id = next ? (profiles[next.model]?.preset ?? null) : null;
     setChoice(next);
     invalidate();
     clearFiles();
     setBoardId(id);
     const vendor = BOARD_PRESETS.find((p) => p.id === id)?.chipVendor;
-    setSelection(vendor && vendor !== 'allwinner' ? defaultVendorSelection(vendor) : null);
+    setSelection(
+      !next?.reader && vendor && vendor !== 'allwinner' ? defaultVendorSelection(vendor) : null
+    );
     setRouteOverride(null);
     setBoardVariant('');
     setSource('local');
@@ -528,7 +546,7 @@ export function ImagerPage({
     }
   }
   useEffect(() => {
-    if (!active || step !== 2 || source !== 'local') return;
+    if (!active || choice?.reader || step !== 2 || source !== 'local') return;
     let disposed = false;
     let stop: (() => void) | undefined;
     try {
@@ -555,7 +573,7 @@ export function ImagerPage({
       disposed = true;
       stop?.();
     };
-  }, [active, step, source, loadImage]);
+  }, [active, choice?.reader, step, source, loadImage]);
   function selectCandidate(c: StagedFirmware) {
     invalidate();
     setSelected(null);
@@ -808,14 +826,15 @@ export function ImagerPage({
     imageValid &&
     (!board?.needsLoader || loaderValid) &&
     (!selection || (!!inspection && !vendorFileIssue));
+  const cardReader = !!choice?.reader;
   const enabled =
     step === 1
-      ? !!choice && !!board
+      ? !!choice && (!!board || cardReader)
       : step === 2
         ? filesReady && (source !== 'catalog' || !!candidate)
         : watchReady && !!selected && filesReady && !targetIssue;
   const stepDetails = [
-    boardName,
+    choice?.reader ? choice.model : boardName,
     baseName(imagePath),
     selected?.usb.mode,
     taskId ? stateName(task.status) : '确认并执行烧录',
@@ -845,7 +864,7 @@ export function ImagerPage({
                       {done ? <CheckmarkCircle20Regular /> : n}
                     </span>
                     <span className="v2-step-label">
-                      <strong>{label}</strong>
+                      <strong>{cardReader && n === 3 ? '选择读卡器' : label}</strong>
                       {step > 1 && !!stepDetails[i] && n <= step && <small>{stepDetails[i]}</small>}
                     </span>
                   </button>
@@ -872,13 +891,28 @@ export function ImagerPage({
         <fieldset className="v2-control-area" disabled={!!busy}>
           {step === 1 && (
             <V2BoardPicker
+              active={active}
               choice={choice}
               onChoice={chooseHardware}
               boardName={boardVariant}
               onBoardName={selectVariant}
             />
           )}
-          {step === 2 && board && (
+          {cardReader && step >= 2 && choice && (
+            <HostCardWriter
+              key={choice.model}
+              model={choice.model}
+              step={step}
+              onStep={(n) => {
+                setError('');
+                setStep(n);
+              }}
+              run={run}
+              onPath={setImagePath}
+              busy={busy}
+            />
+          )}
+          {step === 2 && !cardReader && board && (
             <V2SystemPicker
               memoryScope={JSON.stringify([
                 choice?.model,
@@ -942,7 +976,7 @@ export function ImagerPage({
               }}
             />
           )}
-          {step === 3 && board && !failedPreflight && (
+          {step === 3 && !cardReader && board && !failedPreflight && (
             <V2Interface
               key={interfaceRevision}
               routeLabel={route}
@@ -968,7 +1002,7 @@ export function ImagerPage({
               onOpenAdvanced={onOpenAdvancedWorkbench}
             />
           )}
-          {step === 4 && board && target && (
+          {step === 4 && !cardReader && board && target && (
             <V2Write
               snapshot={{
                 board: boardName,
@@ -1029,7 +1063,7 @@ export function ImagerPage({
         {!failedPreflight && (error || (step === 3 && (watchError || loader?.error))) && (
           <p role="alert" className="v2-engine-error">
             {error || watchError || loader?.error}
-            {step === 3 && (
+            {step === 3 && !cardReader && (
               <button
                 type="button"
                 onClick={() => {
@@ -1044,7 +1078,7 @@ export function ImagerPage({
           </p>
         )}
       </div>
-      {step < 4 && !failedPreflight && (
+      {step < 4 && (!cardReader || step === 1) && !failedPreflight && (
         <div className="v2-foot-actions">
           <p className="flash-next-hint">
             {step === 1

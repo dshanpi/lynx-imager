@@ -1,3 +1,5 @@
+import { EmmcErase } from './EmmcErase';
+import { invokeCommand } from '../../Platform/IPC';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { LynxIcon } from '../../CoreUI';
 import {
@@ -10,6 +12,7 @@ import {
 import './TargetPicker.css';
 
 interface Props {
+  active: boolean;
   choice: TargetChoice | null;
   onChoice: (next: TargetChoice | null) => void;
   boardName: string;
@@ -56,7 +59,7 @@ function preparation(vendor: string, medium: string): string[][] {
   }
 }
 
-export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Props) {
+export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName }: Props) {
   const saved = models.find((m) => m.name === choice?.model);
   const [vendorId, setVendor] = useState(saved?.vendor ?? 'allwinner');
   const [family, setFamily] = useState(saved?.family ?? 'T');
@@ -64,6 +67,36 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
   const [familyQuery, setFamilyQuery] = useState('');
   const [query, setQuery] = useState('');
   const input = useRef<HTMLInputElement>(null);
+  const manual = useRef(false);
+  useEffect(() => {
+    if (!active || choice) return;
+    let disposed = false;
+    let timer: ReturnType<typeof setTimeout>;
+    async function detect() {
+      if (disposed || manual.current) return;
+      try {
+        if (document.visibilityState === 'visible') {
+          const connected = await invokeCommand('imager_usb_targets', {});
+          const detected =
+            connected.length === 1 && manufacturers.find((v) => v.id === connected[0].vendor);
+          if (!disposed && !manual.current && detected) {
+            setVendor(detected.id);
+            setFamily((current) =>
+              current in detected.families ? current : Object.keys(detected.families)[0]
+            );
+          }
+        }
+      } catch {
+        /* Manual target selection also works without USB access. */
+      }
+      if (!disposed && !manual.current) timer = setTimeout(detect, 2000);
+    }
+    void detect();
+    return () => {
+      disposed = true;
+      clearTimeout(timer);
+    };
+  }, [active, choice]);
   const vendor = manufacturers.find((v) => v.id === vendorId)!;
   const list = query.trim()
     ? searchModels(query)
@@ -75,6 +108,7 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
       );
   const part = models.find((m) => m.name === model);
   const change = (v: string, f: string, m = '') => {
+    manual.current = true;
     if (v !== vendorId || f !== family || m !== model) onChoice(null);
     setQuery('');
     setFamilyQuery('');
@@ -145,6 +179,7 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
             placeholder="搜索芯片型号或板名"
             value={query}
             onChange={(e) => {
+              manual.current = true;
               setQuery(e.target.value);
               if (e.target.value && model) {
                 onChoice(null);
@@ -189,20 +224,26 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
                   <button
                     key={m}
                     data-medium={m}
-                    disabled={!part.profile?.media.includes(m)}
+                    disabled={m !== 'SD' && !part.profile?.media.includes(m)}
                     aria-pressed={choice?.medium === m}
-                    onClick={() => onChoice({ model: part.name, medium: m })}
+                    onClick={() =>
+                      onChoice({
+                        model: part.name,
+                        medium: m,
+                        reader: m === 'SD' && !part.profile?.media.includes(m),
+                      })
+                    }
                   >
                     <LynxIcon
                       name={(['board', 'branch', 'database', 'archive'] as const)[i]}
                       size={20}
                     />
                     <span>
-                      <strong>{m}</strong>
+                      <strong>{m === 'SD' ? 'TF / SD' : m}</strong>
                       <small>{mediaHints[i]}</small>
                     </span>
                     <small>
-                      {!part.profile?.media.includes(m)
+                      {m !== 'SD' && !part.profile?.media.includes(m)
                         ? '未适配'
                         : choice?.medium === m
                           ? '已选'
@@ -211,7 +252,23 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
                   </button>
                 ))}
               </div>
-              {choice && part.profile ? (
+              {choice?.medium === 'SD' && part.profile?.media.includes('SD') && (
+                <label>
+                  连接方式{' '}
+                  <select
+                    value={choice.reader ? 'reader' : 'board'}
+                    onChange={(e) => onChoice({ ...choice, reader: e.target.value === 'reader' })}
+                  >
+                    <option value="board">开发板下载口</option>
+                    <option value="reader">电脑读卡器</option>
+                  </select>
+                </label>
+              )}
+              {choice?.reader ? (
+                <p className="target-note">
+                  通过电脑读卡器写入板卡的 SD 整盘镜像，无需连接开发板。
+                </p>
+              ) : choice && part.profile ? (
                 <div className="target-prep">
                   <h4>{choice.medium} 可用的镜像类型</h4>
                   {preparation(part.vendor, choice.medium).map(([title, hint], index) => (
@@ -230,10 +287,24 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
                     : '此型号已收录，尚无可执行的存储配方。'}
                 </p>
               )}
-              {choice && part.vendor !== 'allwinner' && (
+              {choice?.medium === 'eMMC' && part.vendor === 'rockchip' && <EmmcErase />}
+              {choice && !choice.reader && part.vendor !== 'allwinner' && (
                 <label className="v2c-select-model">
                   具体板型（选填）
-                  {part.vendor === 'rockchip' && !!part.profile?.aliases.length ? (
+                  {part.name === 'RK3576' ? (
+                    <>
+                      <input
+                        aria-label="具体板型"
+                        list="rk3576-boards"
+                        value={boardName}
+                        placeholder="输入板名或选择 DshanPI-A1"
+                        onChange={(e) => onBoardName(e.target.value)}
+                      />
+                      <datalist id="rk3576-boards">
+                        <option value="DshanPI-A1" />
+                      </datalist>
+                    </>
+                  ) : part.vendor === 'rockchip' && !!part.profile?.aliases.length ? (
                     <select
                       aria-label="具体 RK 板型"
                       value={boardName}
@@ -268,7 +339,10 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
                       aria-label="筛选当前系列型号"
                       placeholder={'搜索 ' + family + ' 系列型号'}
                       value={familyQuery}
-                      onChange={(e) => setFamilyQuery(e.target.value)}
+                      onChange={(e) => {
+                        manual.current = true;
+                        setFamilyQuery(e.target.value);
+                      }}
                     />
                   </label>
                 )}
@@ -294,17 +368,19 @@ export function V2BoardPicker({ choice, onChoice, boardName, onBoardName }: Prop
                     </span>
                     <span className="target-model-route">{m.profile?.routes ?? '—'}</span>
                     <small className="target-model-media">
-                      {m.profile?.media.join(' / ') ?? '—'}
+                      {Array.from(new Set([...(m.profile?.media ?? []), 'SD'])).join(' / ')}
                     </small>
-                    <span className="target-model-status">{m.profile ? '已适配' : '待适配'}</span>
+                    <span className="target-model-status">
+                      {m.vendor === 'rockchip' ? '通用 RockUSB' : m.profile ? '已适配' : '读卡器'}
+                    </span>
                     <span aria-hidden="true">›</span>
                   </button>
                 ))}
               </div>
               {!!list.length && (
                 <p className="target-note">
-                  <LynxIcon name="info" size={16} />{' '}
-                  待适配型号暂不支持烧录，可点击查看已收录的信息。
+                  <LynxIcon name="info" size={16} /> TF / SD
+                  读卡器使用整盘镜像，开发板下载口支持的介质按型号列出。
                 </p>
               )}
               {!list.length && <p role="status">未找到匹配型号，请核对丝印或尝试板名。</p>}

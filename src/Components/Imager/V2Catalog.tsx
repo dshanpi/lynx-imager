@@ -426,7 +426,9 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
           <h3>{props.vendorTitle || '烧录文件'}</h3>
           {tabs}
         </header>
-        {source === 'local' && props.vendorControls}
+        {source === 'local' && props.vendorControls && (
+          <div ref={dropRef}>{props.vendorControls}</div>
+        )}
         {inCatalog && (
           <BasicCatalog
             key={board.id + ':' + props.route}
@@ -438,7 +440,7 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
         )}
         {source === 'local' && (
           <>
-            {!imagePath && (
+            {!imagePath && !props.vendorControls && (
               <div className="v2c-drop imager-empty-files" ref={dropRef}>
                 <span className="image-desk-file-icon">{icon('document', 24)}</span>
                 <div className="image-desk-file-copy">
@@ -481,7 +483,7 @@ export function V2SystemPicker(props: V2SystemPickerProps) {
             {...props}
           />
         )}
-        {source === 'local' && !imagePath && (
+        {source === 'local' && !imagePath && !props.vendorControls && (
           <details className="v2c-path-entry">
             <summary>输入文件路径</summary>
             <form

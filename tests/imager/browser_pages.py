@@ -81,7 +81,9 @@ def test_target_matrix(page, results):
     }
     next_step = page.locator('.v2-foot-actions .v2-primary')
     blocked = []
+    expected['RK3568'] = ('eMMC',)
     for chip, supported in expected.items():
+        supported = tuple(set(supported) | {'SD'})
         page.get_by_role('searchbox', name='搜索芯片型号或板名').fill(chip)
         page.locator(f'[data-model="{chip}"]').click()
         expect(next_step).to_be_disabled()
@@ -98,7 +100,10 @@ def test_target_matrix(page, results):
             summary = page.locator('.image-target-summary')
             expect(summary).to_contain_text(medium)
             expect(summary.locator('strong')).to_contain_text(chip)
-            expect(next_step).to_be_disabled()
+            if page.locator('.card-writer').count():
+                expect(page.get_by_role('button',name='下一步：选择读卡器')).to_be_disabled()
+            else:
+                expect(next_step).to_be_disabled()
             page.locator('#v2-step-1').click()
             expect(option).to_have_attribute('aria-pressed', 'true')
     assert not blocked, f'已选择受支持介质却不能继续：{blocked}'
@@ -122,6 +127,40 @@ def test_pages(page, results, capture):
     def save():
         page.locator('.settings-footer .settings-btn-primary').click()
 
+    # Passive detection, manual override, stand-alone erase and direct SD write.
+    page.evaluate("pageFixture.attached=[{vendor:'rockchip',key:'1:2',pid:0x350e,loader:true}]")
+    expect(button('瑞芯微')).to_have_attribute('aria-pressed','true')
+    button('全志').click()
+    page.wait_for_timeout(2100)
+    expect(button('全志')).to_have_attribute('aria-pressed','true')
+    button('瑞芯微').click()
+    page.locator('[data-model="RK3576"]').click()
+    page.locator('[data-medium="eMMC"]').click()
+    button('擦除 eMMC…').click()
+    dlg=page.get_by_role('dialog')
+    dlg.locator('select').select_option('1:2')
+    dlg.get_by_role('button',name='检查设备容量').click()
+    expect(dlg).to_contain_text('8,589,934,592')
+    capture('emmc-erase-confirm')
+    assert 'imager_emmc_erase' not in page.evaluate('pageFixture.calls')
+    dlg.get_by_role('button',name='确认擦除').click()
+    expect(dlg).to_contain_text('擦除完成')
+    dlg.get_by_role('button',name='关闭').click()
+    page.locator('[data-medium="SD"]').click()
+    page.locator('.v2-foot-actions .v2-primary').click()
+    page.evaluate("pageFixture.nextFile='C:/qa/card.img.xz'")
+    button('选择镜像').click()
+    button('下一步：选择读卡器').click()
+    page.locator('.reader-row input').check()
+    button('下一步：确认写卡').click()
+    capture('reader-before-write')
+    assert 'imager_card_write' not in page.evaluate('pageFixture.calls')
+    button('擦写所选卡').click()
+    expect(page.locator('.card-writer')).to_contain_text('已回读写入范围')
+    capture('reader-verified')
+    page.locator('#v2-step-1').click()
+    page.evaluate("pageFixture.attached=[]")
+    results.append('只读厂商识别、手动切换、RK Loader 独立擦除和 TF 读卡器写后校验（模拟 IPC）')
     test_target_matrix(page, results)
     # Reproduce the RC3 picker path without entering an EVB or board alias.
     next_step = page.locator('.v2-foot-actions .v2-primary')
@@ -129,10 +168,10 @@ def test_pages(page, results, capture):
     page.locator('.target-families').get_by_role('button', name='RK35 系列').click()
     page.locator('[data-model="RK3576"]').click()
     expect(next_step).to_be_disabled()
-    for medium in ('SPI NOR', 'SPI NAND', 'SD'):
+    for medium in ('SPI NOR', 'SPI NAND'):
         expect(page.locator(f'[data-medium="{medium}"]')).to_be_disabled()
     page.locator('[data-medium="eMMC"]').click()
-    expect(page.get_by_role('textbox', name='具体板型')).to_have_value('')
+    expect(page.get_by_role('combobox', name='具体板型', exact=True)).to_have_value('')
     expect(next_step).to_be_enabled()
     capture('rk3576-emmc-ready')
     next_step.click()

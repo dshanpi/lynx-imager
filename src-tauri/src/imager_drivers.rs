@@ -11,7 +11,32 @@ pub struct DriverInfo {
 fn ids(vendor: &str) -> Result<&'static [&'static str], String> {
     Ok(match vendor {
         "allwinner" => &["1f3a:efe8"],
-        "rockchip" => &["2207:350e", "2207:350b"],
+        "rockchip" => &[
+            "2207:110c",
+            "2207:180a",
+            "2207:281a",
+            "2207:290a",
+            "2207:292a",
+            "2207:292c",
+            "2207:300a",
+            "2207:300b",
+            "2207:301a",
+            "2207:310a",
+            "2207:310b",
+            "2207:310c",
+            "2207:320a",
+            "2207:320b",
+            "2207:320c",
+            "2207:330a",
+            "2207:330c",
+            "2207:330d",
+            "2207:330e",
+            "2207:350a",
+            "2207:350b",
+            "2207:350d",
+            "2207:350e",
+            "2207:350f",
+        ],
         "st" => &["0483:df11"],
         "kendryte" => &["29f1:0230"],
         // ROM, SPL and Fastboot enumerate independently. Limit rules to download IDs.
@@ -256,4 +281,52 @@ mod windows_setup {
         .await
         .map_err(|e| e.to_string())?
     }
+}
+
+#[derive(Serialize)]
+pub struct UsbTarget {
+    vendor: &'static str,
+    key: String,
+    pid: u16,
+    loader: bool,
+}
+
+#[tauri::command]
+pub async fn imager_usb_targets() -> Result<Vec<UsbTarget>, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let mut targets = Vec::new();
+        for device in rusb::devices().map_err(|e| e.to_string())?.iter() {
+            let Ok(desc) = device.device_descriptor() else {
+                continue;
+            };
+            let id = format!("{:04x}:{:04x}", desc.vendor_id(), desc.product_id());
+            let Some(vendor) = ["allwinner", "rockchip", "nxp", "st", "kendryte"]
+                .into_iter()
+                .find(|v| ids(v).is_ok_and(|known| known.contains(&id.as_str())))
+            else {
+                continue;
+            };
+            let ports = device.port_numbers().unwrap_or_default();
+            let key = format!(
+                "{}:{}",
+                device.bus_number(),
+                ports
+                    .iter()
+                    .map(u8::to_string)
+                    .collect::<Vec<_>>()
+                    .join(".")
+            );
+            targets.push(UsbTarget {
+                vendor,
+                key,
+                pid: desc.product_id(),
+                loader: vendor == "rockchip"
+                    && desc.usb_version().sub_minor() & 1 == 1
+                    && !ports.is_empty(),
+            });
+        }
+        Ok(targets)
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }

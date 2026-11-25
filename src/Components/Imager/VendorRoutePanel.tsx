@@ -102,7 +102,7 @@ export function VendorRoutePanel({
         <p>{descriptions[s.route]}</p>
         <div className="vendor-file">
           <span>{s.route === 'nxp-uuu' ? 'UUU 脚本' : '镜像文件'}</span>
-          <strong title={imagePath}>{imagePath ? basename(imagePath) : '待选择'}</strong>
+          <strong title={imagePath}>{imagePath ? basename(imagePath) : '选择或拖入文件'}</strong>
           <button type="button" onClick={onChooseImage}>
             {imagePath ? '更换文件' : '选择文件'}
           </button>
@@ -222,7 +222,7 @@ export function VendorTargetPanel({
             disabled={!usb}
             onChange={(e) => patch({ eraseConfirmed: e.target.checked })}
           />
-          我已核对目标，允许覆盖此 eMMC 用户区。
+          先擦除整个 eMMC 用户区，再写入镜像。
         </label>
       </section>
     );

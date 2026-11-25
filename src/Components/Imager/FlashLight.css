@@ -1,175 +1,3 @@
-/* Flash workspace only. Other tools keep their existing appearance and theme. */
-#root .imager-themed .imager-app-shell.v2-basic-shell {
-  color-scheme: light;
-  --color-brand: #18764e;
-  --color-primary: #18764e;
-  --color-on-primary: #fff;
-  --color-background: #f3f6f3;
-  --color-sidebar: #f3f6f3;
-  --color-surface: #fff;
-  --color-subtle: #f5f8f5;
-  --color-selected: #e7f2eb;
-  --color-selection-line: #18764e;
-  --color-focus: #18764e;
-  --color-text: #24362c;
-  --color-muted: #596b60;
-  --color-border: #dbe4dc;
-  --color-divider: #e9eee9;
-  --color-control-border: #a5b5a9;
-  --color-connected: #247548;
-  --color-warning: #8d560b;
-  --color-warning-subtle: #fff6e5;
-  --color-error: #b93636;
-  --color-error-subtle: #fff0ed;
-  --color-success: #247548;
-  --color-success-subtle: #eaf5ee;
-  --lynx-bg-app: var(--color-background);
-  --lynx-bg-surface: #fff;
-  --lynx-bg-subtle: var(--color-subtle);
-  --lynx-bg-hover: #f0f6f1;
-  --lynx-bg-selected: var(--color-selected);
-  --lynx-bg-disabled: #f2f4f2;
-  --lynx-border: var(--color-border);
-  --lynx-border-strong: var(--color-control-border);
-  --lynx-divider: var(--color-divider);
-  --lynx-text-primary: var(--color-text);
-  --lynx-text-secondary: var(--color-muted);
-  --lynx-text-muted: #69786e;
-  --lynx-text-disabled: #748078;
-  --lynx-text-inverse: #fff;
-  --lynx-accent: var(--color-primary);
-  --lynx-accent-hover: #105c3b;
-  --lynx-accent-active: #d6eadd;
-  --lynx-accent-subtle: var(--color-selected);
-  --lynx-success: var(--color-connected);
-  --lynx-success-bg: var(--color-success-subtle);
-  --lynx-warning: var(--color-warning);
-  --lynx-warning-bg: var(--color-warning-subtle);
-  --lynx-danger: var(--color-error);
-  --lynx-danger-bg: var(--color-error-subtle);
-  --v2-paper: #fff;
-  --v2-tint: var(--color-background);
-  --v2-ink: var(--color-text);
-  --v2-secondary: var(--color-muted);
-  --v2-line: var(--color-border);
-  --v2-blue: var(--color-primary);
-  --v2-active: var(--color-selected);
-  --v2-green: var(--color-connected);
-  --v2-disabled: #e9eeea;
-  --v2-disabled-ink: #6e7d73;
-  --workspace-rail: 224px;
-  --size-titlebar: 66px;
-  --size-actions: 76px;
-  --size-statusbar: 28px;
-  --workspace-inset-top: 22px;
-  --workspace-inset-x: 24px;
-  --lynx-control-height: 38px;
-  --lynx-radius-control: 8px;
-  --font-ui: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei UI', sans-serif;
-  font-family: var(--font-ui);
-  font-size: 14px;
-  color: var(--color-text);
-  background: var(--color-background);
-}
-.v2-basic-shell ::selection {
-  background: #cce7d5;
-  color: #183d28;
-}
-.v2-basic-shell :is(input, textarea) {
-  caret-color: var(--color-primary);
-}
-.v2-basic-shell * {
-  scrollbar-color: #b5c4b8 transparent;
-  scrollbar-width: thin;
-}
-.v2-basic-shell > .imager-app-header {
-  background: #fff;
-  gap: 20px;
-  padding-inline: 24px;
-  border-color: var(--color-border);
-}
-.v2-basic-shell .imager-brand {
-  width: auto;
-  gap: 9px;
-  margin-right: 28px;
-}
-.v2-basic-shell .imager-brand strong {
-  font-size: 18px;
-  letter-spacing: -0.5px;
-}
-.v2-basic-shell .imager-brand svg {
-  width: 23px;
-  height: 23px;
-}
-.v2-basic-shell .imager-brand small {
-  font-size: 11px;
-}
-.v2-basic-shell .imager-app-tabs {
-  align-items: center;
-  gap: 6px;
-  grid-auto-columns: auto;
-}
-.v2-basic-shell .imager-app-tabs button {
-  height: 38px;
-  padding-inline: 20px;
-  border-radius: 8px;
-  font-size: 14px;
-}
-.v2-basic-shell .imager-app-tabs button.is-active {
-  color: #fff;
-  background: var(--color-primary);
-}
-.v2-basic-shell .imager-app-tabs button.is-active::after {
-  display: none;
-}
-.v2-basic-shell .imager-app-actions {
-  gap: 10px;
-}
-.v2-basic-shell .imager-app-actions button {
-  border-radius: 7px;
-  padding: 5px;
-}
-.v2-basic-shell .v2-rail {
-  padding: 26px 14px 16px;
-  border: 0;
-  background: var(--color-background);
-}
-.v2-basic-shell .v2-rail-title {
-  display: block;
-  min-height: 0;
-  margin: 0 10px 24px;
-  padding: 0;
-}
-.v2-basic-shell .v2-rail-title h2 {
-  font-size: 18px;
-  margin-bottom: 6px;
-}
-.v2-basic-shell .v2-rail-title p {
-  font-size: 12px;
-  line-height: 1.5;
-}
-.v2-basic-shell .v2-rail nav button {
-  min-height: 68px;
-  padding: 12px;
-  gap: 12px;
-  border-radius: 10px;
-}
-.v2-basic-shell .v2-rail nav li {
-  margin-bottom: 12px;
-}
-.v2-basic-shell .v2-rail nav li:not(:last-child)::before {
-  left: 27px;
-  background: var(--v2-line);
-}
-.v2-basic-shell .v2-step-number {
-  width: 30px;
-  height: 30px;
-  font-size: 13px;
-}
-.v2-basic-shell .v2-rail [data-state='active'] .v2-step-number {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-}
 .v2-basic-shell .v2-basic input:is([type='checkbox'], [type='radio']) {
   accent-color: var(--color-primary);
 }
@@ -193,7 +21,7 @@
   margin: 16px 20px 0 0;
   padding: 24px;
   border-radius: 16px 16px 0 0;
-  background: #fff;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-bottom: 0;
 }
@@ -221,7 +49,7 @@
 .v2-basic-shell .v2-foot-actions button.v2-primary {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 .v2-basic-shell .v2-foot-actions button.v2-primary:disabled {
   background: var(--v2-disabled);
@@ -300,7 +128,7 @@
   padding: 5px 10px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--color-surface);
   font-weight: 500;
 }
 .v2-basic-shell .target-vendors i {
@@ -310,12 +138,12 @@
 }
 .v2-basic-shell .target-vendors button[aria-pressed='true'] {
   background: var(--color-selected);
-  border-color: #70a886;
-  color: #155a3b;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 .v2-basic-shell .target-vendors button[aria-pressed='true'] i {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-primary);
 }
 .v2-basic-shell .target-workspace {
   display: flex;
@@ -323,7 +151,7 @@
   border: 0;
   border-radius: 0;
   overflow: visible;
-  background: #fff;
+  background: var(--color-surface);
 }
 .v2-basic-shell .target-families {
   display: flex;
@@ -333,7 +161,7 @@
   gap: 6px;
   padding: 0 0 8px;
   color: var(--color-muted);
-  background: #fff;
+  background: var(--color-surface);
   border-bottom: 1px solid var(--color-divider);
   overflow: visible;
 }
@@ -357,7 +185,7 @@
 }
 .v2-basic-shell .target-families button[aria-pressed='true'] {
   background: var(--color-selected);
-  color: #155a3b;
+  color: var(--color-primary);
   font-weight: 600;
 }
 .v2-basic-shell .target-families button:hover {
@@ -424,7 +252,7 @@
 }
 .v2-basic-shell .target-columns {
   margin: 0;
-  background: #f3f6f3;
+  background: var(--color-subtle);
   border-block: 1px solid var(--color-divider);
   color: var(--color-muted);
   font-size: 11px;
@@ -446,7 +274,7 @@
   border: 0;
   border-bottom: 1px solid var(--color-divider);
   border-radius: 0;
-  background: #fff;
+  background: var(--color-surface);
   text-align: left;
   transition: background-color 120ms ease-out;
 }
@@ -487,13 +315,13 @@
   width: fit-content;
   padding: 1px 6px;
   border-radius: 4px;
-  background: #e6f2ea;
-  color: #18764e;
+  background: var(--color-success-subtle);
+  color: var(--color-success);
   font-size: 11px;
 }
 .v2-basic-shell .target-models .is-unavailable .target-model-status {
-  background: #f1f3f1;
-  color: #747e77;
+  background: var(--color-subtle);
+  color: var(--color-muted);
 }
 .v2-basic-shell .target-models button > span:last-child {
   color: var(--color-muted);
@@ -508,8 +336,8 @@
   gap: 12px;
 }
 .v2-basic-shell .target-media button[aria-pressed='true'] {
-  border-color: #70a886;
-  color: #155a3b;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 .v2-basic-shell .target-media button small {
   margin-top: 3px;
@@ -533,7 +361,7 @@
   --vc-ink: var(--color-text);
   --vc-sub: var(--color-muted);
   --vc-line: var(--color-border);
-  --vc-panel: #fff;
+  --vc-panel: var(--color-surface);
   --vc-soft: var(--color-subtle);
   --vc-shade: var(--color-selected);
   --vc-accent: var(--color-primary);
@@ -561,7 +389,7 @@
 }
 .v2-basic-shell .v2c-drop {
   background: var(--color-subtle);
-  border-color: #a9c4b3;
+  border-color: var(--color-control-border);
   border-radius: 12px;
 }
 .v2-basic-shell :is(.vendor-detail, .image-file, .image-resource-panel) {
@@ -615,31 +443,11 @@
 .v2-basic-shell .v2w-drawer {
   border-radius: 14px;
 }
-.v2-basic-shell :is(.v2w-region, .v2w-drawer) {
-  --color-on-primary: #fff;
-}
 .v2-basic-shell .v2w-region :is(.v2w-button, .v2w-primary) {
   min-height: 40px;
   border-radius: 8px;
 }
 @media (max-width: 1160px) {
-  #root .imager-themed .imager-app-shell.v2-basic-shell {
-    --workspace-rail: 198px;
-  }
-  .v2-basic-shell > .imager-app-header {
-    gap: 12px;
-    padding-inline: 18px;
-  }
-  .v2-basic-shell .imager-brand {
-    gap: 6px;
-    margin-right: 12px;
-  }
-  .v2-basic-shell .imager-app-tabs button {
-    padding-inline: 15px;
-  }
-  .v2-basic-shell .imager-app-actions {
-    gap: 4px;
-  }
   .v2-basic-shell .v2-content {
     padding: 20px;
     margin-right: 16px;
@@ -660,21 +468,6 @@
   }
 }
 @media (max-width: 850px) {
-  #root .imager-themed .imager-app-shell.v2-basic-shell {
-    --workspace-rail: 168px;
-  }
-  .v2-basic-shell .imager-brand small {
-    display: none;
-  }
-  .v2-basic-shell .imager-app-tabs button {
-    padding-inline: 10px;
-  }
-  .v2-basic-shell .imager-app-actions button {
-    font-size: 12px;
-  }
-  .v2-basic-shell .imager-app-actions button svg {
-    display: none;
-  }
   .v2-basic-shell .v2-content {
     padding: 16px;
     margin: 12px 12px 0 0;

@@ -665,6 +665,20 @@ export interface WorkbenchCommandMap {
   >;
   workbench_cancel_task: IpcCommandSpec<{ taskId: string }>;
   workbench_test_flasher: IpcCommandSpec<{ kind: string; path: string }, string>;
+  imager_card_list: IpcCommandSpec<Record<string, never>, ImagerCard[]>;
+  imager_card_image: IpcCommandSpec<{ path: string }, ImagerCardImage>;
+  imager_card_write: IpcCommandSpec<{ card: ImagerCard; image: ImagerCardImage }>;
+  imager_board_loader: IpcCommandSpec<{ board: string }, string>;
+  imager_usb_targets: IpcCommandSpec<
+    Record<string, never>,
+    Array<{ vendor: string; key: string; pid: number; loader: boolean }>
+  >;
+  imager_emmc_prepare: IpcCommandSpec<
+    { key: string; pid: number },
+    { token: string; bytes: number }
+  >;
+  imager_emmc_erase: IpcCommandSpec<{ token: string }, number>;
+  imager_emmc_cancel: IpcCommandSpec<{ token: string }>;
   imager_inspect_vendor_image: IpcCommandSpec<
     { route: WorkbenchVendorRoute; path: string },
     WorkbenchVendorInspection
@@ -722,6 +736,7 @@ export interface NativeSkillSyncResult {
 }
 
 export interface WorkbenchEventMap {
+  'imager-card-progress': IpcEventSpec<{ phase: string; bytes: number }>;
   'workbench-task-event': IpcEventSpec<{
     taskId: string;
     phase: string;
@@ -764,4 +779,17 @@ export interface LocalMcpStatus {
   port: number | null;
   endpoint: string | null;
   message: string;
+}
+
+export interface ImagerCard {
+  key: string;
+  name: string;
+  bytes: number;
+  sector: number;
+  identity: string;
+}
+export interface ImagerCardImage {
+  path: string;
+  bytes: number;
+  sha256: string;
 }

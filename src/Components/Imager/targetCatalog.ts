@@ -1,6 +1,6 @@
 export const mediaNames = ['SPI NOR', 'SPI NAND', 'eMMC', 'SD'] as const;
 export type Medium = (typeof mediaNames)[number];
-export type TargetChoice = { model: string; medium: Medium };
+export type TargetChoice = { model: string; medium: Medium; reader?: boolean };
 
 type Manufacturer = {
   id: string;
@@ -86,7 +86,7 @@ export const profiles: Record<string, Profile | undefined> = {
     aliases: ['YuzukiNeko'],
     routes: '厂商包 / 主线整盘',
   },
-  RK3576: { preset: 'rk3576', media: ['eMMC'], aliases: [], routes: 'update.img / 整盘' },
+  RK3576: { preset: 'rk3576', media: ['eMMC'], aliases: ['DshanPI-A1'], routes: 'update.img / 整盘' },
   RK3588: {
     preset: 'rk3588',
     media: ['eMMC'],
@@ -94,7 +94,7 @@ export const profiles: Record<string, Profile | undefined> = {
     routes: 'update.img / 整盘',
   },
   RK3588S: {
-    preset: 'rk3588',
+    preset: 'rk3588s',
     media: ['eMMC'],
     aliases: ['LubanCat-4 (RK3588S)'],
     routes: 'update.img / 整盘',
@@ -126,6 +126,17 @@ export const profiles: Record<string, Profile | undefined> = {
     routes: 'KDImage / RAW',
   },
 };
+export const rockchipModels = Object.values(
+  manufacturers.find((m) => m.id === 'rockchip')!.families
+).flatMap((family) => family.split(' '));
+for (const model of rockchipModels) {
+  profiles[model] ??= {
+    preset: model.toLowerCase(),
+    media: ['eMMC'],
+    aliases: [],
+    routes: 'update.img / 整盘',
+  };
+}
 export const models = manufacturers.flatMap((v) =>
   Object.entries(v.families).flatMap(([family, names]) =>
     names.split(' ').map((name) => ({ name, family, vendor: v.id, profile: profiles[name] }))
