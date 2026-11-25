@@ -80,8 +80,74 @@
   position: relative;
 }
 .v2-basic-shell .target-page-heading {
-  margin-bottom: 10px;
-  padding-right: 320px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 104px;
+  padding: 18px clamp(18px, 3vw, 36px) 18px 22px;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  background: linear-gradient(105deg, #172b46 0%, #203e60 65%, #315677);
+  color: #fff;
+}
+.v2-basic-shell .target-page-heading::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 0 42%;
+  background-image: radial-gradient(#c0dcf34f 1px, transparent 1px);
+  background-size: 10px 10px;
+  mask-image: linear-gradient(to right, transparent, black 65%);
+}
+.target-package {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-content: center;
+  width: 112px;
+  height: 66px;
+  margin: 0 20px;
+  text-align: center;
+  transform: rotate(-8deg) skewX(-7deg);
+  background: linear-gradient(145deg, #40536a, #18283c 78%);
+  border: 2px solid #7f93a7;
+  border-radius: 5px;
+  box-shadow:
+    inset 0 0 0 3px #2c3d50,
+    3px 5px 0 #13263b,
+    5px 8px 12px #102338a8;
+  line-height: 1.15;
+}
+.target-package::before,
+.target-package::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+.target-package::before {
+  inset: -8px 5px;
+  border-block: 5px solid transparent;
+  border-image: repeating-linear-gradient(90deg, #b9ccd8 0 2px, transparent 2px 6px) 5;
+}
+.target-package::after {
+  inset: 5px -8px;
+  border-inline: 5px solid transparent;
+  border-image: repeating-linear-gradient(#b9ccd8 0 2px, transparent 2px 6px) 5;
+}
+.target-package span {
+  color: #cfdae4;
+  font-size: 10px;
+}
+.target-package strong {
+  color: #fff;
+  font-size: 17px;
+}
+.target-heading-copy {
+  min-width: 0;
+  padding-right: 12px;
 }
 .v2-basic-shell .target-page-heading h2 {
   margin: 0;
@@ -91,24 +157,23 @@
   line-height: 1.35;
 }
 .v2-basic-shell .target-page-heading p {
-  margin: 4px 0 0;
+  margin: 7px 0 0;
   font-size: 13px;
-  color: var(--color-muted);
+  color: #d2e1ef;
 }
 .v2-basic-shell .target-heading {
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
 }
 .v2-basic-shell .target-heading .imager-board-search {
-  position: absolute;
-  top: 4px;
-  right: 0;
-  flex: none;
-  width: 300px;
-  max-width: 100%;
-  height: 42px;
-  min-height: 42px;
+  position: static;
+  flex: 1 1 168px;
+  width: auto;
+  max-width: 286px;
+  height: 36px;
+  min-height: 36px;
   background: var(--color-subtle);
   border-color: var(--color-border);
   border-radius: 8px;
@@ -438,7 +503,7 @@
   box-shadow: none;
 }
 .v2-basic-shell .v2w-region h2 {
-  font-size: 25px;
+  font-size: var(--font-title, 20px);
 }
 .v2-basic-shell .v2w-drawer {
   border-radius: 14px;
@@ -483,7 +548,7 @@
     padding: 7px 9px;
   }
   .v2-basic-shell .target-page-heading {
-    padding-right: 0;
+    padding-inline: 16px;
   }
   .v2-basic-shell .target-heading {
     flex-direction: column-reverse;
@@ -492,6 +557,17 @@
   .v2-basic-shell .target-heading .imager-board-search {
     position: static;
     width: 100%;
+    flex: none;
+    max-width: none;
+  }
+}
+@media (max-width: 620px) {
+  .target-package {
+    width: 75px;
+    margin-inline: 8px;
+  }
+  .target-package strong {
+    font-size: 13px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

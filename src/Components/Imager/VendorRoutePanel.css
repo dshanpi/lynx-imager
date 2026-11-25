@@ -148,3 +148,34 @@
 .vendor-detail [data-valid='false'] dd {
   color: var(--lynx-danger);
 }
+.vendor-file.vendor-image-slot {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 19px 14px;
+  border: 1px dashed var(--color-control-border);
+  border-radius: 8px;
+  background: var(--color-subtle);
+}
+.vendor-image-slot > svg {
+  color: var(--color-primary);
+}
+.vendor-image-slot small,
+.vendor-image-slot strong {
+  display: block;
+}
+.vendor-image-slot small {
+  color: var(--color-muted);
+  margin-bottom: 4px;
+}
+.vendor-image-slot button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.vendor-file-layout .vendor-context {
+  background: var(--color-subtle);
+}
+.vendor-context .vendor-board {
+  padding-block: 6px;
+}

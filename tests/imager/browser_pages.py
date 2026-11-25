@@ -155,10 +155,14 @@ def test_pages(page, results, capture):
     page.locator('.v2-foot-actions .v2-primary').click()
     page.evaluate("pageFixture.nextFile='C:/qa/card.img.xz'")
     button('选择镜像').click()
+    expect(page.locator('.card-image-slot')).to_contain_text('card.img.xz')
+    capture('reader-image')
     button('下一步：选择读卡器').click()
     page.locator('.reader-row input').check()
+    capture('reader-selected')
     button('下一步：确认写卡').click()
     capture('reader-before-write')
+    expect(page.locator('.card-destination')).to_contain_text('QA Reader')
     assert 'imager_card_write' not in page.evaluate('pageFixture.calls')
     button('擦写所选卡').click()
     expect(page.locator('.card-writer')).to_contain_text('已回读写入范围')
@@ -652,7 +656,7 @@ if __name__=='__main__':
                 const brand=document.querySelector('.imager-brand strong');
                 const rect=brand.getBoundingClientRect();
                 const header=document.querySelector('.imager-app-header').getBoundingClientRect();
-                const actions=[...document.querySelectorAll('.v2-foot-actions button,dialog[open] footer button')]
+                const actions=[...document.querySelectorAll('.v2-foot-actions button,.card-writer footer button,dialog[open] footer button')]
                     .filter(e=>e.getClientRects().length).map(e=>{
                       const r=e.getBoundingClientRect();
                       return {text:e.textContent.trim(),x:r.x,y:r.y,right:r.right,bottom:r.bottom};

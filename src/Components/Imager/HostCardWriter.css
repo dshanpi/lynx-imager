@@ -1,0 +1,290 @@
+.card-writer {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 100%;
+  color: var(--color-text);
+  font-size: 13px;
+}
+.card-writer :is(p, h3, dl, dd) {
+  margin: 0;
+}
+.card-writer h3 {
+  font-size: 16px;
+  line-height: 1.45;
+}
+.card-writer small,
+.card-writer dt {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.card-writer button,
+.emmc-maintenance button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 7px;
+  border: 1px solid var(--color-control-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 550;
+}
+.card-writer button:not(:disabled):hover,
+.emmc-maintenance button:not(:disabled):hover {
+  border-color: var(--color-primary);
+}
+.card-writer button.v2-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.card-writer button:disabled,
+.emmc-maintenance button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.card-writer button:focus-visible,
+.emmc-maintenance :is(button, select):focus-visible,
+.reader-row:has(input:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.card-writer footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-divider);
+}
+.card-writer footer button {
+  min-height: 38px;
+}
+.card-image-slot,
+.card-destination,
+.reader-empty {
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.card-image-slot {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 28px 22px;
+  background: var(--color-subtle);
+}
+.card-image-slot h3 {
+  overflow-wrap: anywhere;
+  margin: 3px 0;
+}
+.card-image-slot p,
+.reader-empty {
+  color: var(--color-muted);
+}
+.disk-file-symbol {
+  width: 66px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  color: var(--color-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 3px 3px 0 var(--color-selected);
+}
+.reader-list-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.card-writer .reader-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  margin-bottom: 7px;
+}
+.card-writer .reader-row:has(:checked) {
+  background: var(--color-selected);
+  border-color: var(--color-primary);
+}
+.reader-row strong,
+.reader-row small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.reader-row small {
+  margin-top: 4px;
+}
+.reader-empty {
+  padding: 34px 16px;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+  background: var(--color-subtle);
+}
+.card-destination {
+  display: grid;
+  grid-template-columns: minmax(155px, 29%) 1fr;
+  background: var(--color-surface);
+}
+.card-specimen {
+  min-height: 177px;
+  display: grid;
+  place-items: center;
+  background-color: #ccdae6;
+  background-image: radial-gradient(#6d8ca35c 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+.sd-body {
+  position: relative;
+  display: grid;
+  align-content: end;
+  box-sizing: border-box;
+  width: 84px;
+  height: 108px;
+  padding: 10px;
+  color: #f0f6fc;
+  background:
+    linear-gradient(112deg, transparent 0 52%, #ffffff0a 52% 70%, transparent 70%),
+    linear-gradient(to bottom, #33414c 0 34%, #244a69 34% 84%, #223443 84%);
+  border: 2px solid #8699aa;
+  box-shadow: inset 0 0 0 4px #283849;
+  clip-path: polygon(0 0, 76% 0, 100% 18%, 100% 100%, 0 100%, 0 39%, 5% 39%, 5% 25%, 0 25%);
+  border-radius: 5px;
+  transform: rotate(-9deg);
+}
+.sd-label {
+  font-size: 29px;
+  font-style: italic;
+  font-weight: 750;
+  letter-spacing: -1px;
+  line-height: 1.1;
+}
+.sd-stripe {
+  height: 4px;
+  background: #89bcda;
+  margin: 5px 0 4px;
+}
+.sd-size {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: #d1dfeb;
+}
+.card-destination-copy {
+  align-self: center;
+  min-width: 0;
+  padding: 20px clamp(18px, 3vw, 40px);
+}
+.card-destination-copy h3 {
+  font-size: var(--font-title, 20px);
+  margin: 5px 0 14px;
+  overflow-wrap: anywhere;
+}
+.card-destination-copy dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 32px;
+}
+.card-destination-copy dd {
+  margin-top: 3px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.card-file-details {
+  border-block: 1px solid var(--color-divider);
+}
+.card-file-details > div {
+  display: grid;
+  grid-template-columns: minmax(80px, 15%) minmax(0, 1fr);
+  align-items: baseline;
+  padding: 12px 4px;
+  gap: 12px;
+}
+.card-file-details > div + div {
+  border-top: 1px solid var(--color-divider);
+}
+.card-file-details dd {
+  overflow-wrap: anywhere;
+}
+.card-file-details code {
+  font-size: 12px;
+  color: var(--color-muted);
+  font-family: var(--font-mono), monospace;
+}
+.card-writer .card-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 7px;
+  background: var(--color-subtle);
+}
+.card-writer .card-notice.warning {
+  background: var(--color-warning-subtle);
+}
+.card-notice.warning svg {
+  color: var(--color-warning);
+}
+.card-writer .card-notice.success {
+  background: var(--color-success-subtle);
+  color: var(--color-success);
+}
+.card-progress {
+  display: grid;
+  gap: 8px;
+}
+.card-progress progress {
+  accent-color: var(--color-primary);
+  width: 100%;
+}
+@media (max-width: 740px) {
+  .card-image-slot {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 16px;
+    gap: 12px;
+  }
+  .card-image-slot button {
+    grid-column: 2;
+    justify-self: start;
+  }
+  .card-destination {
+    grid-template-columns: minmax(100px, 28%) minmax(0, 1fr);
+  }
+}
+.disk-file-symbol {
+  position: relative;
+  background: #284563;
+  color: #f5f8fc;
+  border-color: #355775;
+  box-shadow: 3px 3px 0 #b0c7da;
+}
+.card-writer .disk-file-symbol svg {
+  width: 32px;
+  height: 32px;
+}
+.disk-file-symbol b {
+  position: absolute;
+  bottom: 9px;
+  right: 6px;
+  min-width: 24px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  background: #cfdfed;
+  color: #183a57;
+  text-align: center;
+  font-size: 10px;
+  line-height: 1.25;
+}

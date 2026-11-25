@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { invokeCommand, subscribeEvent } from '../../Platform/IPC';
 import { formatErrorMessage } from '../../Utils';
+import { LynxIcon } from '../../CoreUI';
 
 type Target = { vendor: string; key: string; pid: number; loader: boolean };
 export function EmmcErase({ model }: { model: string }) {
@@ -68,7 +69,7 @@ export function EmmcErase({ model }: { model: string }) {
           scan();
         }}
       >
-        擦除 eMMC…
+        <LynxIcon name="delete" size={16} /> 擦除 eMMC…
       </button>
       <dialog
         ref={dialog}
@@ -82,7 +83,10 @@ export function EmmcErase({ model }: { model: string }) {
           setMessage('');
         }}
       >
-        <h3 id="erase-title">擦除 eMMC 用户区</h3>
+        <div className="erase-heading">
+          <LynxIcon name="database" size={24} />
+          <h3 id="erase-title">擦除 eMMC 用户区</h3>
+        </div>
         <p>当前选择 {model}。请按 USB 端口核对设备。此操作会清空系统、分区表和用户数据。</p>
         <label>
           目标 USB 端口
@@ -104,9 +108,16 @@ export function EmmcErase({ model }: { model: string }) {
           </select>
         </label>
         {preview && (
-          <p>
-            将清空 USB {key} 的整个 eMMC 用户区，共 {preview.bytes.toLocaleString()} 字节。
-          </p>
+          <div className="erase-preview">
+            <span>待擦除容量</span>
+            <strong>
+              {(preview.bytes / 1024 ** 3).toLocaleString(undefined, { maximumFractionDigits: 2 })}{' '}
+              GiB
+            </strong>
+            <small>
+              USB {key} · {preview.bytes.toLocaleString()} 字节
+            </small>
+          </div>
         )}
         <p role="status">
           {phase === 'erase'

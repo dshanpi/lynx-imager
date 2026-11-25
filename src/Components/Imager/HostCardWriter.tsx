@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { LynxIcon } from '../../CoreUI';
+import './HostCardWriter.css';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invokeCommand, subscribeEvent } from '../../Platform/IPC';
 import type { ImagerCard, ImagerCardImage } from '../../Platform/IPC/contracts/Workbench';
@@ -71,143 +73,229 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
       setProgress({ phase: '', bytes: 0 });
     }
   }, [step]);
+  async function chooseImage() {
+    const path = await open({
+      multiple: false,
+      directory: false,
+      filters: [{ name: 'SD 整盘镜像', extensions: ['img', 'raw', 'wic', 'gz', 'xz'] }],
+    });
+    if (typeof path !== 'string') return;
+    ++generation.current;
+    setIssue('');
+    setImage(null);
+    setCard(null);
+    onPath('');
+    const file = await invokeCommand('imager_card_image', { path });
+    setImage(file);
+    onPath(path);
+    try {
+      localStorage.setItem(historyKey, path);
+    } catch {
+      /* The selected file still works for this session. */
+    }
+  }
+  const filename = image?.path.split(/[\\/]/).pop();
+  const writing = step === 4 && !!busy;
+  const heading =
+    step === 2
+      ? '选择 SD 整盘镜像'
+      : step === 3
+        ? '选择读卡器'
+        : finished
+          ? '写卡完成'
+          : '确认写入 TF / SD 卡';
   return (
     <section className="card-writer">
       <header className="image-desk-title">
-        <h2>
-          {step === 2
-            ? '选择 SD 整盘镜像'
-            : step === 3
-              ? '选择读卡器'
-              : finished
-                ? '写卡完成'
-                : '确认写入 TF / SD 卡'}
-        </h2>
+        <h2>{heading}</h2>
         <div className="image-target-summary">
           <strong>{model}</strong>
           <span>TF / SD</span>
           <span>电脑读卡器</span>
         </div>
       </header>
+
       {step === 2 && (
-        <>
-          <p>
-            选择板卡可启动的 .img、.raw 或 .wic 整盘镜像，也支持 .img 和 .wic 的 gzip、xz 压缩包。
-          </p>
-          <button
-            onClick={() =>
-              void run('分析卡镜像', async () => {
-                const path = await open({
-                  multiple: false,
-                  directory: false,
-                  filters: [{ name: 'SD 整盘镜像', extensions: ['img', 'raw', 'wic', 'gz', 'xz'] }],
-                });
-                if (typeof path !== 'string') return;
-                ++generation.current;
-                setIssue('');
-                setImage(null);
-                setCard(null);
-                onPath('');
-                const file = await invokeCommand('imager_card_image', { path });
-                setImage(file);
-                onPath(path);
-                try {
-                  localStorage.setItem(historyKey, path);
-                } catch {
-                  /* The selected file still works for this session. */
-                }
-              })
-            }
-          >
+        <div className="card-image-slot">
+          <div className="disk-file-symbol" aria-hidden="true">
+            <LynxIcon name="document" size={40} />
+            {filename?.includes('.') && <b>{filename.split('.').pop()?.toUpperCase()}</b>}
+          </div>
+          <div>
+            <small>整盘镜像</small>
+            <h3 title={image?.path}>{filename || '选择要写入卡中的文件'}</h3>
+            <p>
+              {image
+                ? '解压后 ' + size(image.bytes)
+                : '支持 IMG、RAW、WIC，以及 IMG / WIC 的 XZ、GZ 压缩包。'}
+            </p>
+          </div>
+          <button disabled={!!busy} onClick={() => void run('分析卡镜像', chooseImage)}>
+            <LynxIcon name="folder" size={16} />
             {image ? '更换镜像' : '选择镜像'}
           </button>
-          {issue && <p role="status">{issue}</p>}
-          {image && (
-            <p>
-              {image.path.split(/[\\/]/).pop()} · 解压后 {size(image.bytes)}
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="reader-list">
+          <div className="reader-list-title">
+            <h3>可写入的存储卡</h3>
+            <button disabled={!!busy} onClick={() => void run('检测读卡器', list)}>
+              <LynxIcon name="refresh" size={16} />
+              重新检测
+            </button>
+          </div>
+          {cards.map((d) => {
+            const reason =
+              image &&
+              (image.bytes > d.bytes
+                ? '容量不足'
+                : image.bytes % d.sector !== 0
+                  ? '扇区大小不匹配'
+                  : '');
+            return (
+              <label className="reader-row" key={d.key}>
+                <LynxIcon name="plug" size={20} />
+                <span>
+                  <strong>{d.name}</strong>
+                  <small>物理磁盘 {d.key}</small>
+                </span>
+                <span>{reason || size(d.bytes)}</span>
+                <input
+                  type="radio"
+                  name="host-card"
+                  checked={card?.key === d.key}
+                  disabled={!!busy || !image || !!reason}
+                  onChange={() => setCard(d)}
+                />
+              </label>
+            );
+          })}
+          {!cards.length && (
+            <div className="reader-empty">
+              <LynxIcon name="plug" size={24} />
+              <p role="status">{issue || '正在查找读卡器…'}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {step === 4 && card && image && (
+        <>
+          <div className="card-destination">
+            <div className="card-specimen" aria-hidden="true">
+              <div className="sd-body">
+                <span className="sd-label">SD</span>
+                <span className="sd-stripe" />
+                <span className="sd-size">{size(card.bytes)}</span>
+              </div>
+            </div>
+            <div className="card-destination-copy">
+              <small>目标存储卡</small>
+              <h3>{card.name}</h3>
+              <dl>
+                <div>
+                  <dt>物理磁盘</dt>
+                  <dd>{card.key}</dd>
+                </div>
+                <div>
+                  <dt>容量</dt>
+                  <dd>{size(card.bytes)}</dd>
+                </div>
+                <div>
+                  <dt>逻辑扇区</dt>
+                  <dd>{card.sector} B</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+          {finished ? (
+            <p className="card-notice success" role="status">
+              <LynxIcon name="check-circle" size={20} />
+              已回读写入范围，SHA-256 与源镜像一致。
+            </p>
+          ) : writing ? (
+            <div className="card-progress" role="status">
+              <strong>{progress.phase || '正在申请写卡权限'}</strong>
+              <progress
+                aria-label={progress.phase || '正在申请写卡权限'}
+                max={image.bytes}
+                value={progress.phase ? progress.bytes : undefined}
+              />
+            </div>
+          ) : (
+            <p className="card-notice warning">
+              <LynxIcon name="warning" size={20} />
+              写入将覆盖这张卡上的分区表和数据。
             </p>
           )}
-          <footer>
-            <button
-              className="v2-primary"
-              disabled={!image || !!busy}
-              onClick={() => {
-                onStep(3);
-                void run('检测读卡器', list);
-              }}
-            >
-              下一步：选择读卡器
-            </button>
-          </footer>
         </>
       )}
-      {step === 3 && (
-        <>
-          <p>选择插入 TF / SD 卡的读卡器。</p>
-          <button onClick={() => void run('检测读卡器', list)}>重新检测</button>
-          {cards.map((d) => (
-            <label className="reader-row" key={d.key}>
-              <input
-                type="radio"
-                name="host-card"
-                checked={card?.key === d.key}
-                disabled={!image || image.bytes > d.bytes || image.bytes % d.sector !== 0}
-                onChange={() => setCard(d)}
-              />
-              <strong>{d.name}</strong>
-              <span>
-                {size(d.bytes)} · 磁盘 {d.key}
-              </span>
-              {image && image.bytes > d.bytes && <small>容量不足</small>}
-            </label>
-          ))}
-          <p role="status">{issue}</p>
-          <footer>
-            <button onClick={() => onStep(2)}>上一步</button>
-            <button className="v2-primary" disabled={!card || !image} onClick={() => onStep(4)}>
-              下一步：确认写卡
-            </button>
-          </footer>
-        </>
-      )}
-      {step === 4 && image && card && (
-        <>
-          <p>
-            {card.name} · 磁盘 {card.key} · {size(card.bytes)}
-          </p>
-          <p>
-            {image.path.split(/[\\/]/).pop()} · {size(image.bytes)}
-          </p>
-          {finished ? (
-            <p role="status">已回读写入范围，SHA-256 与源镜像一致。</p>
-          ) : (
-            <>
-              <p>写入将覆盖这张卡的分区表和数据。</p>
-              {busy && (
-                <div role="status">
-                  {progress.phase || '正在申请写卡权限'}{' '}
-                  <progress max={image.bytes} value={progress.bytes} />
-                </div>
-              )}
-              <footer>
-                <button onClick={() => onStep(3)}>上一步</button>
-                <button
-                  className="v2-primary"
-                  disabled={!!busy}
-                  onClick={() =>
-                    void run('写卡和回读校验', async () => {
-                      setProgress({ phase: '', bytes: 0 });
-                      await invokeCommand('imager_card_write', { card, image });
-                      setFinished(true);
-                    })
-                  }
-                >
-                  擦写所选卡
-                </button>
-              </footer>
-            </>
+
+      {image && (
+        <dl className="card-file-details">
+          {step === 2 && (
+            <div>
+              <dt>本地路径</dt>
+              <dd>{image.path}</dd>
+            </div>
           )}
-          {finished && (
+          {step !== 2 && (
+            <div>
+              <dt>源镜像</dt>
+              <dd title={image.path}>{filename}</dd>
+            </div>
+          )}
+          {step !== 2 && (
+            <div>
+              <dt>写入大小</dt>
+              <dd>{size(image.bytes)}</dd>
+            </div>
+          )}
+          <div>
+            <dt>SHA-256</dt>
+            <dd>
+              <code>{image.sha256}</code>
+            </dd>
+          </div>
+        </dl>
+      )}
+      {step === 2 && (busy || issue) && <p role="status">{busy ? busy + '…' : issue}</p>}
+
+      <footer>
+        {step > 2 && !finished && (
+          <button disabled={!!busy} onClick={() => onStep(step === 4 ? 3 : 2)}>
+            上一步
+          </button>
+        )}
+        {step === 2 && (
+          <button
+            className="v2-primary"
+            disabled={!image || !!busy}
+            onClick={() => {
+              onStep(3);
+              void run('检测读卡器', list);
+            }}
+          >
+            下一步：选择读卡器
+            <LynxIcon name="chevron-right" size={16} />
+          </button>
+        )}
+        {step === 3 && (
+          <button
+            className="v2-primary"
+            disabled={!card || !image || !!busy}
+            onClick={() => onStep(4)}
+          >
+            下一步：确认写卡
+            <LynxIcon name="chevron-right" size={16} />
+          </button>
+        )}
+        {step === 4 &&
+          image &&
+          card &&
+          (finished ? (
             <button
               onClick={() => {
                 onStep(3);
@@ -216,10 +304,23 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
             >
               选择另一张卡
             </button>
-          )}
-        </>
-      )}
-      {busy && step !== 4 && <p role="status">{busy}…</p>}
+          ) : (
+            <button
+              className="v2-primary"
+              disabled={!!busy}
+              onClick={() =>
+                void run('写卡和回读校验', async () => {
+                  setProgress({ phase: '', bytes: 0 });
+                  await invokeCommand('imager_card_write', { card, image });
+                  setFinished(true);
+                })
+              }
+            >
+              <LynxIcon name="download" size={16} />
+              擦写所选卡
+            </button>
+          ))}
+      </footer>
     </section>
   );
 }

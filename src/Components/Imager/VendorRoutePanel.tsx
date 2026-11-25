@@ -1,4 +1,5 @@
 import type { ReactNode, RefObject } from 'react';
+import { LynxIcon } from '../../CoreUI';
 import type {
   WorkbenchDevice,
   WorkbenchFlasherDevice,
@@ -102,11 +103,14 @@ export function VendorRoutePanel({
           </div>
         </div>
         <p>{descriptions[s.route]}</p>
-        <div className="vendor-file" ref={dropRef}>
-          <span>{s.route === 'nxp-uuu' ? 'UUU 脚本' : '镜像文件'}</span>
-          <strong title={imagePath}>{imagePath ? basename(imagePath) : '选择或拖入文件'}</strong>
+        <div className="vendor-file vendor-image-slot" ref={dropRef}>
+          <LynxIcon name={s.route === 'nxp-uuu' ? 'code' : 'document'} size={24} />
+          <div>
+            <small>{s.route === 'nxp-uuu' ? 'UUU 脚本' : '镜像文件'}</small>
+            <strong title={imagePath}>{imagePath ? basename(imagePath) : '选择或拖入文件'}</strong>
+          </div>
           <button type="button" onClick={onChooseImage}>
-            {imagePath ? '更换文件' : '选择文件'}
+            <LynxIcon name="folder" size={16} /> {imagePath ? '更换文件' : '选择文件'}
           </button>
         </div>
         {s.route === 'rk-emmc' && (

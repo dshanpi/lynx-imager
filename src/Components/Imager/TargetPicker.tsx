@@ -149,8 +149,20 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
   return (
     <div className="target-picker">
       <div className="target-page-heading">
-        <h2>选择你的烧录目标</h2>
-        <p>找到主控型号，再选择板上实际使用的存储器。</p>
+        <div className="target-heading-copy">
+          <h2>选择烧录目标</h2>
+          <p>
+            {query.trim()
+              ? '正在所有厂商中查找匹配的型号和板名。'
+              : '按主控丝印找到型号，再选择板上使用的存储器。'}
+          </p>
+        </div>
+        {!query.trim() && (
+          <div className="target-package" aria-hidden="true">
+            <span>{vendor.brand}</span>
+            <strong>{part?.name || family + ' 系列'}</strong>
+          </div>
+        )}
       </div>
       <header className="target-heading">
         <div className="target-vendors" aria-label="主控厂商">
@@ -284,7 +296,7 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
                   <LynxIcon name="info" size={16} />
                   {part.profile
                     ? '选择介质后查看镜像和引导文件要求。'
-                    : '此型号已收录，尚无可执行的存储配方。'}
+                    : '此型号可使用电脑读卡器写入 TF / SD 卡。'}
                 </p>
               )}
               {choice?.medium === 'eMMC' && part.vendor === 'rockchip' && (
@@ -368,7 +380,7 @@ export function V2BoardPicker({ active, choice, onChoice, boardName, onBoardName
                       <strong>{m.name}</strong>
                       <small>{chipBrief[m.name] ?? m.profile?.aliases[0]}</small>
                     </span>
-                    <span className="target-model-route">{m.profile?.routes ?? '—'}</span>
+                    <span className="target-model-route">{m.profile?.routes ?? 'SD 整盘镜像'}</span>
                     <small className="target-model-media">
                       {Array.from(new Set([...(m.profile?.media ?? []), 'SD'])).join(' / ')}
                     </small>
