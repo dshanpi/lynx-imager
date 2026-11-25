@@ -53,7 +53,7 @@ fn sync_native_skills(
         let host = storage::host_by_id(&db, project.host_id).map_err(|error| error.to_string())?;
         (host, project)
     };
-    if project.sdk_dir.is_empty() || !Path::new(&project.sdk_dir).is_absolute() {
+    if !project.sdk_dir.starts_with('/') {
         return Err("SKILLS_SYNC_SDK_PATH_INVALID".to_owned());
     }
     if host.host_fingerprint.is_empty() {
@@ -86,7 +86,11 @@ fn sync_native_skills(
     let documents = crate::skills::native_documents(crate::skills::SkillDomain::Linux)?;
     let mut results = Vec::new();
     for (provider, relative) in roots {
-        let root = PathBuf::from(&project.sdk_dir).join(relative);
+        let root = PathBuf::from(format!(
+            "{}/{}",
+            project.sdk_dir.trim_end_matches('/'),
+            relative
+        ));
         validate_remote_root(&root, Path::new(&project.sdk_dir))?;
         ensure_remote_directory(&sftp, &root)?;
         let manifest_path = root.join(MANIFEST_NAME);
@@ -134,7 +138,8 @@ fn sync_native_skills(
 }
 
 fn validate_remote_root(root: &Path, sdk_root: &Path) -> Result<(), String> {
-    if !root.is_absolute()
+    // These are paths on the Linux SSH host, even when Imager runs on Windows.
+    if !sdk_root.to_str().is_some_and(|path| path.starts_with('/'))
         || !root.starts_with(sdk_root)
         || root
             .components()
@@ -213,5 +218,9 @@ mod tests {
         );
         assert!(validate_remote_root(Path::new("/srv/other"), Path::new("/srv/sdk")).is_err());
         assert!(validate_remote_root(Path::new("relative"), Path::new("/srv/sdk")).is_err());
+        assert!(
+            validate_remote_root(Path::new("/srv/sdk/../other"), Path::new("/srv/sdk")).is_err()
+        );
+        assert!(validate_remote_root(Path::new("relative/child"), Path::new("relative")).is_err());
     }
 }
