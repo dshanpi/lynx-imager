@@ -40,11 +40,22 @@ mockIPC(
         if (qa.readerScanError) throw Error('存储服务不可用');
         if (qa.readerDisconnected) return [];
         return [
-          { key: '8', name: 'QA Reader', identity: 'fixture', sector: 512, bytes: 8589934592 },
+          {
+            key: '8',
+            name: qa.readerName || 'QA Reader',
+            identity: 'fixture',
+            sector: 512,
+            bytes: 8589934592,
+          },
         ];
       case 'imager_card_write':
         if (args.card.identity !== 'fixture' || args.image.bytes !== 1048576)
           throw Error('wrong target');
+        if (qa.holdCardWrite)
+          await new Promise((resolve) => {
+            qa.finishCardWrite = resolve;
+          });
+        if (qa.failCardWrite) throw Error('读卡器连接中断，回读校验未完成');
         return;
       case 'plugin:app|version':
         return '0.1.0-rc.11';

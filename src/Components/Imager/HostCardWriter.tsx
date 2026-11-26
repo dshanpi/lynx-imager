@@ -21,6 +21,7 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
   const [cards, setCards] = useState<ImagerCard[]>([]);
   const [card, setCard] = useState<ImagerCard | null>(null);
   const [finished, setFinished] = useState(false);
+  const [writeError, setWriteError] = useState('');
   const [progress, setProgress] = useState({ phase: '', bytes: 0 });
   const [issue, setIssue] = useState('');
   const generation = useRef(0);
@@ -91,6 +92,7 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
   useEffect(() => {
     if (step === 2 || step === 3) {
       setFinished(false);
+      setWriteError('');
       setProgress({ phase: '', bytes: 0 });
     }
   }, [step]);
@@ -124,7 +126,11 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
         ? '选择读卡器'
         : finished
           ? '写卡完成'
-          : '确认写入 TF / SD 卡';
+          : writing
+            ? '正在写卡与校验'
+            : writeError
+              ? '写卡未完成'
+              : '确认写入 TF / SD 卡';
   return (
     <section className="card-writer">
       <header className="image-desk-title">
@@ -236,6 +242,15 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
               <LynxIcon name="check-circle" size={20} />
               已回读写入范围，SHA-256 与源镜像一致。
             </p>
+          ) : writeError ? (
+            <div className="card-notice failure" role="alert">
+              <LynxIcon name="warning" size={20} />
+              <div>
+                <strong>写卡未完成，请重新检测存储卡</strong>
+                <p>{writeError}</p>
+                <small>卡内数据可能已被部分覆盖。检查连接后重新选择目标卡，再确认写入。</small>
+              </div>
+            </div>
           ) : writing ? (
             <div className="card-progress" role="status">
               <strong>{progress.phase || '正在申请写卡权限'}</strong>
@@ -311,6 +326,10 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
           card &&
           (finished ? (
             <button onClick={() => onStep(3)}>选择另一张卡</button>
+          ) : writeError ? (
+            <button className="v2-primary" onClick={() => onStep(3)}>
+              重新检测存储卡
+            </button>
           ) : (
             <button
               className="v2-primary"
@@ -318,8 +337,13 @@ export function HostCardWriter({ model, step, onStep, run, onPath, busy }: Props
               onClick={() =>
                 void run('写卡和回读校验', async () => {
                   setProgress({ phase: '', bytes: 0 });
-                  await invokeCommand('imager_card_write', { card, image });
-                  setFinished(true);
+                  setWriteError('');
+                  try {
+                    await invokeCommand('imager_card_write', { card, image });
+                    setFinished(true);
+                  } catch (error) {
+                    setWriteError(formatErrorMessage(error));
+                  }
                 })
               }
             >
