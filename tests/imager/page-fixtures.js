@@ -63,7 +63,7 @@ mockIPC(
         if (qa.failCardWrite) throw Error('读卡器连接中断，回读校验未完成');
         return;
       case 'plugin:app|version':
-        return '0.1.0-rc.11';
+        return '0.1.0-rc.13';
       case 'get_system_proxy':
         return null;
       case 'plugin:updater|check':
