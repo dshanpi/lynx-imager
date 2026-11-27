@@ -54,18 +54,36 @@ export function DriverSetup({
   }
   if (!windows && info.platform !== 'linux')
     return <p className="vi-help">当前系统暂未提供驱动安装。</p>;
+  const help = !windows
+    ? {
+        title: 'Linux USB 访问规则',
+        description: '授权后，当前桌面用户可访问下列 USB 下载口。安装完成后请重新插拔开发板。',
+        action: '安装 USB 访问规则',
+      }
+    : vendor === 'allwinner'
+      ? {
+          title: '全志 FEL 下载口驱动',
+          description:
+            '首次使用从百问网下载全志驱动包。Windows 会请求管理员授权，为 FEL 下载口安装 usbUDisc 驱动。',
+          action: '安装全志 FEL 驱动',
+        }
+      : rockusb
+        ? {
+            title: '瑞芯微 Rockusb 驱动',
+            description:
+              '解压瑞芯微官方 DriverAssistant 驱动包，选择与 Windows 架构匹配的 rockusb.inf。系统将验证驱动包并为匹配的下载口安装。',
+            action: '选择 Rockusb 驱动…',
+          }
+        : {
+            title: 'Windows 下载口驱动',
+            description:
+              '首次使用将从官方源下载 Zadig。打开后按 USB ID 选择开发板的下载口，在目标驱动中选择 WinUSB 并安装。',
+            action: '打开 WinUSB 安装器',
+          };
   return (
     <section className="vi-help" aria-label="下载口驱动安装">
-      <strong>
-        {rockusb ? '瑞芯微 Rockusb 驱动' : windows ? 'Windows 下载口驱动' : 'Linux USB 访问规则'}
-      </strong>
-      <p>
-        {rockusb
-          ? '解压瑞芯微官方 DriverAssistant 驱动包，选择与 Windows 架构匹配的 rockusb.inf。系统将验证驱动包并为匹配的下载口安装。'
-          : windows
-            ? '首次使用将从官方源下载 Zadig。打开后按 USB ID 选择开发板的下载口，在目标驱动中选择 WinUSB 并安装。'
-            : '授权后，当前桌面用户可访问下列 USB 下载口。安装完成后请重新插拔开发板。'}
-      </p>
+      <strong>{help.title}</strong>
+      <p>{help.description}</p>
       {windows && vendor === 'nxp' && (
         <p>
           i.MX6ULL 的 SDP 阶段使用系统 HID 驱动。仅在后续 Fastboot 接口缺少驱动时为该接口安装
@@ -77,13 +95,7 @@ export function DriverSetup({
         <code>{info.ids.join(' · ')}</code>
       </details>
       <button type="button" disabled={installing} onClick={() => void selectDriver()}>
-        {installing
-          ? '等待系统安装…'
-          : rockusb
-            ? '选择 Rockusb 驱动…'
-            : windows
-              ? '打开 WinUSB 安装器'
-              : '安装 USB 访问规则'}
+        {installing ? '等待系统安装…' : help.action}
       </button>
       {error && <p role="alert">{error}</p>}
     </section>

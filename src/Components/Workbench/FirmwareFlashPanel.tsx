@@ -954,8 +954,8 @@ export default function FirmwareFlashPanel({
                 detected &&
                 /device not found|failed to open device/i.test(latest.error ?? '') && (
                   <div className="firmware-error" role="alert">
-                    系统已检测到 USB，但烧录器未能打开设备。请检查是否被其他烧录软件占用；Windows 下
-                    Allwinner FEL/FES 还需绑定 WinUSB 驱动。处理后由你手动重新开始。
+                    系统已检测到 USB，但烧录器未能打开设备。请检查是否有其他烧录软件正在使用下载口。
+                    Windows 上的全志 FEL 设备可在「烧录系统 → 设备连接 → 安装驱动」安装全志驱动，然后重新检测。
                   </div>
                 )}
             </section>

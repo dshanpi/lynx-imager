@@ -430,6 +430,16 @@ def test_pages(page, results, capture):
             page.locator('.v2-foot-actions .v2-primary').click()
             rows=page.locator('.vi-device')
             expect(rows).to_have_count(2)
+            if page.evaluate("navigator.userAgent.includes('Windows')"):
+                driver_help = page.locator('.vi-bar').get_by_role('button',name='安装驱动')
+                driver_help.click()
+                panel = page.get_by_role('region',name='下载口驱动安装')
+                expect(panel).to_contain_text('1f3a:efe8')
+                expect(panel).not_to_contain_text('Zadig')
+                panel.get_by_role('button',name='安装全志 FEL 驱动').click()
+                expect(page.locator('body')).to_contain_text('已确认全志 FEL 设备正在使用 usbUDisc 驱动。')
+                capture('windows-fel-driver')
+                results.append('全志设备连接页调用 FEL 驱动安装并显示设备绑定结果（模拟 IPC）')
             for i in (1,0):
                 rows.nth(i).click()
                 expect(rows.nth(i).get_by_role('radio')).to_be_checked()

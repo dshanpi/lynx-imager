@@ -18,6 +18,11 @@ mockIPC(
   async (cmd, args) => {
     qa.calls.push(cmd);
     switch (cmd) {
+      case 'imager_driver_info':
+        return { platform: navigator.userAgent.includes('Windows') ? 'windows' : 'macos', ids: ['1f3a:efe8'] };
+      case 'imager_install_driver':
+        if (args.vendor !== 'allwinner') throw Error('Unexpected driver vendor');
+        return '已确认全志 FEL 设备正在使用 usbUDisc 驱动。';
       case 'imager_usb_targets':
         return qa.attached || [];
       case 'imager_board_loader':
